@@ -1,0 +1,48 @@
+suspects:
+  - id: viktor
+    name: Viktor Blackwood
+    gender: male
+    hair: dark
+    hobby: intellectual
+
+  - id: marcus
+    name: Marcus Stone
+    gender: male
+    hair: dark
+    hobby: physical
+
+  - id: sebastian
+    name: Sebastian Frost
+    gender: male
+    hair: light
+    hobby: intellectual
+
+  - id: dimitri
+    name: Dimitri Volkov
+    gender: male
+    hair: light
+    hobby: physical
+
+  - id: mei
+    name: Mei Lin
+    gender: female
+    hair: dark
+    hobby: intellectual
+
+  - id: natasha
+    name: Natasha Petrova
+    gender: female
+    hair: dark
+    hobby: physical
+
+  - id: scarlett
+    name: Scarlett Viper
+    gender: female
+    hair: light
+    hobby: intellectual
+
+  - id: isabella
+    name: Isabella Frost
+    gender: female
+    hair: light
+    hobby: physical

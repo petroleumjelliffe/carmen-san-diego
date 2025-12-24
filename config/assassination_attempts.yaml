@@ -1,0 +1,18 @@
+assassination_attempts:
+  - id: sniper
+    text: "A sniper's bullet whizzes past your ear, shattering a window behind you! You dive for cover as the shooter disappears into the crowd."
+
+  - id: car
+    text: "A car accelerates toward you on the sidewalk! You leap aside at the last second, crashing through a fruit stand as the vehicle speeds away."
+
+  - id: poison
+    text: "You notice your coffee tastes bitter. Knocking it aside, you see a shadowy figure slip out the café's back door. Too close!"
+
+  - id: knife
+    text: "A knife blade gleams in the crowd! You twist away as an assassin lunges past you, disappearing into an alley before you can react."
+
+  - id: elevator
+    text: "The elevator cables snap! You grab the emergency hatch and pull yourself up as the car plummets. Someone tampered with this..."
+
+  - id: electric
+    text: "Your hotel room doorknob is electrified! Your rubber-soled shoes save you. Someone really doesn't want you on this case."

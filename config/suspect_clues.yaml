@@ -1,0 +1,36 @@
+suspect_clues:
+  gender:
+    male:
+      - "The suspect is male"
+      - "Witnesses describe a man"
+      - "He was in a hurry"
+      - "A man matching the description was seen"
+    female:
+      - "The suspect is female"
+      - "Witnesses describe a woman"
+      - "She seemed nervous"
+      - "A woman matching the description was seen"
+
+  hair:
+    dark:
+      - "The suspect has dark hair"
+      - "I noticed black or brown hair"
+      - "Dark-haired, for sure"
+      - "Their hair was definitely dark colored"
+    light:
+      - "The suspect has light hair"
+      - "Blonde or gray hair"
+      - "Light-haired, maybe reddish"
+      - "Their hair was light colored"
+
+  hobby:
+    intellectual:
+      - "The suspect enjoys intellectual pursuits"
+      - "They mentioned loving chess"
+      - "Seemed bookish, talked about poetry"
+      - "They were carrying a book of philosophy"
+    physical:
+      - "The suspect is athletic"
+      - "They talked about fencing"
+      - "Mentioned going hunting"
+      - "They seemed very physically fit"

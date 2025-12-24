@@ -1,0 +1,24 @@
+investigation_spots:
+  - id: informant
+    name: Local Informant
+    time_cost: 2
+    gives: [destination, suspect]
+    flavor:
+      - "A shady figure in a trench coat approaches..."
+      - "Your contact slides into the booth..."
+
+  - id: police
+    name: Police Station
+    time_cost: 4
+    gives: [destination]
+    flavor:
+      - "The detective pulls up the case file..."
+      - "Officers check their records..."
+
+  - id: vendor
+    name: Street Vendor
+    time_cost: 8
+    gives: [destination]
+    flavor:
+      - "The vendor squints, remembering..."
+      - "After some haggling for information..."

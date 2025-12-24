@@ -1,0 +1,15 @@
+settings:
+  total_time: 72
+  cities_per_case: 4
+  travel_time: 4
+
+difficulty:
+  easy:
+    total_time: 96
+    cities_per_case: 3
+  normal:
+    total_time: 72
+    cities_per_case: 4
+  hard:
+    total_time: 48
+    cities_per_case: 5

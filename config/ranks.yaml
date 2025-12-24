@@ -1,0 +1,32 @@
+ranks:
+  - id: rookie
+    label: Rookie
+    min_cases: 0
+
+  - id: gumshoe
+    label: Gumshoe
+    min_cases: 1
+
+  - id: sleuth
+    label: Sleuth
+    min_cases: 3
+
+  - id: inspector
+    label: Inspector
+    min_cases: 5
+
+  - id: detective
+    label: Detective
+    min_cases: 8
+
+  - id: senior_detective
+    label: Senior Detective
+    min_cases: 12
+
+  - id: chief
+    label: Chief Inspector
+    min_cases: 17
+
+  - id: master
+    label: Master Detective
+    min_cases: 25

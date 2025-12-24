@@ -1,0 +1,24 @@
+stolen_items:
+  - id: crown_jewels
+    name: the Crown Jewels
+    description: Priceless gems stolen from the Tower of London
+
+  - id: mona_lisa
+    name: the Mona Lisa
+    description: Da Vinci's masterpiece vanished from the Louvre
+
+  - id: hope_diamond
+    name: the Hope Diamond
+    description: The legendary cursed diamond has disappeared
+
+  - id: ancient_scrolls
+    name: ancient scrolls
+    description: Priceless manuscripts stolen from a museum vault
+
+  - id: rare_artifact
+    name: a rare artifact
+    description: An irreplaceable historical treasure
+
+  - id: classified_documents
+    name: classified documents
+    description: Top secret files that could compromise national security
