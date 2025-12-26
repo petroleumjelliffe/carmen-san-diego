@@ -1,0 +1,135 @@
+# Henchman Encounters - Mid-game in correct cities
+henchman_encounters:
+  - id: street_tailing
+    type: henchman
+    name: Street Tailing
+    description: A shadowy figure is following you through the crowded market...
+    correct_gadget: smoke_bomb
+    time_penalty_wrong: 4
+    time_penalty_none: 6
+    success_text: You deploy the Smoke Bomb! The henchman loses sight of you in the thick cloud. You escape without losing any time!
+    failure_text: By the time backup arrives, the henchman has already slowed you down and escaped.
+    no_gadget_text: You try to evade manually but the henchman is persistent. After a lengthy chase through back alleys, you finally lose them.
+
+  - id: alley_ambush
+    type: henchman
+    name: Alley Ambush
+    description: Someone jumps out from the shadows! They're blocking your path!
+    correct_gadget: smoke_bomb
+    time_penalty_wrong: 4
+    time_penalty_none: 6
+    success_text: You throw the Smoke Bomb at your feet! In the confusion, you slip past your attacker unseen.
+    failure_text: Your chosen gadget doesn't help in this close-quarters situation. You're forced to fight your way out.
+    no_gadget_text: A dangerous scuffle ensues. You eventually overcome your attacker but precious time is lost.
+
+  - id: booby_trap
+    type: henchman
+    name: Booby Trap
+    description: Your hotel room door is rigged with a trap... A tripwire glints in the dim light.
+    correct_gadget: xray_glasses
+    time_penalty_wrong: 4
+    time_penalty_none: 6
+    success_text: Using the X-Ray Glasses, you spot the entire mechanism! You carefully disarm it without incident.
+    failure_text: Your gadget can't detect the hidden components. You trigger the trap and barely escape.
+    no_gadget_text: You try to disarm it blind. The trap springs, filling the room with gas. You stumble out, coughing and disoriented.
+
+  - id: suspicious_package
+    type: henchman
+    name: Suspicious Package
+    description: A package addressed to you arrives at the hotel desk. It's ticking...
+    correct_gadget: xray_glasses
+    time_penalty_wrong: 4
+    time_penalty_none: 6
+    success_text: The X-Ray Glasses reveal it's a harmless clock attached to confetti! A distraction, but now you know.
+    failure_text: You waste time trying to defuse what turns out to be a elaborate fake. They've bought time to escape.
+    no_gadget_text: You evacuate the building and call the bomb squad. Hours pass before the all-clear is given.
+
+  - id: surrounded_by_goons
+    type: henchman
+    name: Surrounded by Goons
+    description: Three burly henchmen corner you in an alley. They're cracking their knuckles menacingly.
+    correct_gadget: shoe_phone
+    time_penalty_wrong: 4
+    time_penalty_none: 6
+    success_text: You activate the Shoe Phone! Backup arrives in minutes, and the goons scatter.
+    failure_text: Your gadget won't help against multiple attackers. You take a beating before they flee.
+    no_gadget_text: You fight valiantly but you're outnumbered. Eventually they retreat, but you're bruised and exhausted.
+
+  - id: police_interrogation
+    type: henchman
+    name: Police Interrogation
+    description: Corrupt local police have detained you for "questioning." They're working for the Syndicate!
+    correct_gadget: shoe_phone
+    time_penalty_wrong: 4
+    time_penalty_none: 6
+    success_text: The Shoe Phone connects you to your agency. They apply diplomatic pressure and you're released immediately.
+    failure_text: Your gadget doesn't help with bureaucracy. You're stuck in the cell for hours.
+    no_gadget_text: You argue your case but they're unmoved. It takes hours before your credentials are verified.
+
+# Assassination Attempts - Final city encounters (higher stakes)
+assassination_attempts:
+  - id: rooftop_sniper
+    type: assassination
+    name: Rooftop Sniper
+    description: A glint of light from a rooftop! A sniper is taking aim at you!
+    correct_gadget: grappling_hook
+    time_penalty_wrong: 6
+    time_penalty_none: 8
+    success_text: You fire the Grappling Hook and swing up to the roof! The sniper flees before you can reach them, but the threat is neutralized.
+    failure_text: Your gadget won't help you reach the sniper. You dive for cover as bullets chip the pavement. You're pinned down for hours.
+    no_gadget_text: You sprint for cover as shots ring out! After a harrowing chase through the streets, you finally lose your pursuer.
+
+  - id: building_escape
+    type: assassination
+    name: Building Escape
+    description: You're trapped on the 8th floor! The stairwell is rigged to explode and the elevator is disabled!
+    correct_gadget: grappling_hook
+    time_penalty_wrong: 6
+    time_penalty_none: 8
+    success_text: The Grappling Hook lets you rappel down the outside of the building to safety!
+    failure_text: Your gadget can't help you escape vertically. You risk the stairs and barely escape the blast.
+    no_gadget_text: You fashion a rope from bedsheets. The descent is terrifying and slow, costing precious time.
+
+  - id: poisoned_drink
+    type: assassination
+    name: Poisoned Drink
+    description: Your coffee tastes bitter. Something's wrong... Your vision is already blurring!
+    correct_gadget: antidote_pills
+    time_penalty_wrong: 6
+    time_penalty_none: 8
+    success_text: You immediately swallow the Antidote Pills! The effects are reversed within minutes. Close call!
+    failure_text: Your gadget won't cure poison! You barely make it to the hospital. Hours pass in recovery.
+    no_gadget_text: You force yourself to vomit and stumble to a hospital. The doctors work for hours to stabilize you.
+
+  - id: nerve_gas
+    type: assassination
+    name: Nerve Gas
+    description: You smell almonds... Nerve gas is flooding the room! The door is sealed!
+    correct_gadget: antidote_pills
+    time_penalty_wrong: 6
+    time_penalty_none: 8
+    success_text: The Antidote Pills protect you from the toxin! You use the Laser Watch to cut through the door.
+    failure_text: Your gadget doesn't protect against gas! You hold your breath and smash through a window. You're sick for hours.
+    no_gadget_text: Holding your breath, you desperately break the door down. You collapse outside, gasping. Paramedics treat you for hours.
+
+  - id: locked_room
+    type: assassination
+    name: Locked Room
+    description: The door slams shut! The room is filling with gas! The lock is sophisticated...
+    correct_gadget: laser_watch
+    time_penalty_wrong: 6
+    time_penalty_none: 8
+    success_text: The Laser Watch cuts through the lock mechanism like butter! You escape before the gas takes effect.
+    failure_text: Your gadget won't cut metal! You eventually force the door but you've inhaled dangerous amounts of gas.
+    no_gadget_text: You bash at the door until your shoulder is bruised. You finally break through, weak and gasping.
+
+  - id: tied_up_scenario
+    type: assassination
+    name: Tied Up
+    description: You wake up bound to a chair! The ropes are industrial-strength and the building is rigged to explode in minutes!
+    correct_gadget: laser_watch
+    time_penalty_wrong: 6
+    time_penalty_none: 8
+    success_text: The Laser Watch makes quick work of the ropes! You escape the building moments before detonation.
+    failure_text: Your gadget can't cut the ropes! You struggle free just in time, but the explosion injures you.
+    no_gadget_text: You work at the knots desperately. You break free seconds before the blast, stumbling out injured and disoriented.
