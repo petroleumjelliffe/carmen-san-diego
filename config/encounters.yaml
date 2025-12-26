@@ -67,69 +67,94 @@ henchman_encounters:
     no_gadget_text: You argue your case but they're unmoved. It takes hours before your credentials are verified.
 
 # Assassination Attempts - Final city encounters (higher stakes)
+# ALL assassination attempts have time pressure (timer_duration in seconds)
 assassination_attempts:
   - id: rooftop_sniper
     type: assassination
     name: Rooftop Sniper
     description: A glint of light from a rooftop! A sniper is taking aim at you!
+    timer_duration: 5
+    animation: crosshairs_zeroing
+    animation_description: Sniper crosshairs slowly zeroing in, red laser dot on chest
     correct_gadget: grappling_hook
     time_penalty_wrong: 6
     time_penalty_none: 8
     success_text: You fire the Grappling Hook and swing up to the roof! The sniper flees before you can reach them, but the threat is neutralized.
     failure_text: Your gadget won't help you reach the sniper. You dive for cover as bullets chip the pavement. You're pinned down for hours.
     no_gadget_text: You sprint for cover as shots ring out! After a harrowing chase through the streets, you finally lose your pursuer.
-
-  - id: building_escape
-    type: assassination
-    name: Building Escape
-    description: You're trapped on the 8th floor! The stairwell is rigged to explode and the elevator is disabled!
-    correct_gadget: grappling_hook
-    time_penalty_wrong: 6
-    time_penalty_none: 8
-    success_text: The Grappling Hook lets you rappel down the outside of the building to safety!
-    failure_text: Your gadget can't help you escape vertically. You risk the stairs and barely escape the blast.
-    no_gadget_text: You fashion a rope from bedsheets. The descent is terrifying and slow, costing precious time.
+    timeout_text: Time runs out! The shot rings out and you barely dodge, crashing through a window. You're injured and disoriented for hours.
 
   - id: poisoned_drink
     type: assassination
     name: Poisoned Drink
     description: Your coffee tastes bitter. Something's wrong... Your vision is already blurring!
+    timer_duration: 6
+    animation: poison_spreading
+    animation_description: Dark poison visibly spreading through the liquid in slow motion
     correct_gadget: antidote_pills
     time_penalty_wrong: 6
     time_penalty_none: 8
     success_text: You immediately swallow the Antidote Pills! The effects are reversed within minutes. Close call!
     failure_text: Your gadget won't cure poison! You barely make it to the hospital. Hours pass in recovery.
     no_gadget_text: You force yourself to vomit and stumble to a hospital. The doctors work for hours to stabilize you.
-
-  - id: nerve_gas
-    type: assassination
-    name: Nerve Gas
-    description: You smell almonds... Nerve gas is flooding the room! The door is sealed!
-    correct_gadget: antidote_pills
-    time_penalty_wrong: 6
-    time_penalty_none: 8
-    success_text: The Antidote Pills protect you from the toxin! You use the Laser Watch to cut through the door.
-    failure_text: Your gadget doesn't protect against gas! You hold your breath and smash through a window. You're sick for hours.
-    no_gadget_text: Holding your breath, you desperately break the door down. You collapse outside, gasping. Paramedics treat you for hours.
+    timeout_text: You collapse! The poison spreads through your system. You wake up hours later in a hospital bed.
 
   - id: locked_room
     type: assassination
     name: Locked Room
     description: The door slams shut! The room is filling with gas! The lock is sophisticated...
+    timer_duration: 7
+    animation: gas_filling
+    animation_description: Deadly gas slowly filling the room from floor to ceiling
     correct_gadget: laser_watch
     time_penalty_wrong: 6
     time_penalty_none: 8
     success_text: The Laser Watch cuts through the lock mechanism like butter! You escape before the gas takes effect.
     failure_text: Your gadget won't cut metal! You eventually force the door but you've inhaled dangerous amounts of gas.
     no_gadget_text: You bash at the door until your shoulder is bruised. You finally break through, weak and gasping.
+    timeout_text: The gas reaches your face! You barely break free but you're severely affected. Hours of medical treatment follow.
 
-  - id: tied_up_scenario
+  - id: falling_safe
     type: assassination
-    name: Tied Up
-    description: You wake up bound to a chair! The ropes are industrial-strength and the building is rigged to explode in minutes!
-    correct_gadget: laser_watch
+    name: Falling Safe
+    description: You hear a loud CRACK above you! A massive safe is plummeting toward you!
+    timer_duration: 5
+    animation: safe_falling
+    animation_description: Heavy safe falling from above with growing shadow beneath
+    correct_gadget: grappling_hook
     time_penalty_wrong: 6
     time_penalty_none: 8
-    success_text: The Laser Watch makes quick work of the ropes! You escape the building moments before detonation.
-    failure_text: Your gadget can't cut the ropes! You struggle free just in time, but the explosion injures you.
-    no_gadget_text: You work at the knots desperately. You break free seconds before the blast, stumbling out injured and disoriented.
+    success_text: You fire the Grappling Hook and swing clear! The safe crashes where you were standing moments ago.
+    failure_text: Your gadget won't help you escape! You dive aside at the last second but you're injured by debris.
+    no_gadget_text: You roll aside desperately! The safe misses by inches but falling debris pins you down for hours.
+    timeout_text: CRASH! You're too slow! The safe doesn't hit you directly but the impact throws you into a wall. You're badly injured.
+
+  - id: ticking_bomb
+    type: assassination
+    name: Ticking Bomb
+    description: A package under the table starts beeping! The timer shows 5 seconds and counting!
+    timer_duration: 5
+    animation: burning_fuse
+    animation_description: Sparking fuse burning toward explosive, digital timer counting down
+    correct_gadget: xray_glasses
+    time_penalty_wrong: 6
+    time_penalty_none: 8
+    success_text: The X-Ray Glasses let you see which wire to cut! You defuse it with one second to spare!
+    failure_text: Your gadget can't help identify the right wire! You run but the blast still catches you.
+    no_gadget_text: You grab the bomb and hurl it out the window! It detonates mid-air. The blast still knocks you down.
+    timeout_text: BOOM! You didn't act fast enough! The explosion throws you across the room. You're unconscious for hours.
+
+  - id: knife_assassin
+    type: assassination
+    name: Knife Assassin
+    description: A shadowy figure lunges from behind! A gleaming knife arcs toward you in slow motion!
+    timer_duration: 6
+    animation: knife_arc
+    animation_description: Knife slowly arcing through air toward player, assassin's silhouette
+    correct_gadget: smoke_bomb
+    time_penalty_wrong: 6
+    time_penalty_none: 8
+    success_text: You deploy the Smoke Bomb! The assassin's blade cuts through empty smoke as you vanish!
+    failure_text: Your gadget won't make you disappear! You deflect the blade but suffer a deep cut. Medical treatment takes hours.
+    no_gadget_text: You twist away at the last second! The knife grazes your shoulder. You fight off the assassin but you're injured.
+    timeout_text: The blade strikes! You barely deflect it but you're badly cut. The assassin escapes while you seek medical help.

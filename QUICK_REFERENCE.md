@@ -19,14 +19,17 @@
 
 1. **BRIEFING** → Shows case + gadgets
 2. **AT CITY** → Investigate locations
-3. **HENCHMAN** → Gadget puzzle (mid-game)
-4. **TRAVELING** → Animated plane flight
-5. **SLEEPING** → Forced at 11pm
-6. **ASSASSINATION** → Gadget puzzle (final city)
-7. **CATCH** → Automatic arrest
-8. **WARRANT** → Conspiracy board
-9. **TRIAL** → Verdict reveal
-10. **DEBRIEF** → Stats + promotion
+3. **GOOD DEED** → Optional NPC help (builds karma)
+4. **ROGUE OPTION** → Optional destructive shortcut (builds notoriety)
+5. **HENCHMAN** → Gadget puzzle (mid-game)
+6. **TRAVELING** → Animated plane flight
+7. **SLEEPING** → Forced at 11pm
+8. **ASSASSINATION** → Gadget puzzle (final city)
+9. **NPC RESCUE** → Saved NPC may appear and save you!
+10. **CATCH** → Automatic arrest
+11. **WARRANT** → Conspiracy board
+12. **TRIAL** → Verdict reveal
+13. **DEBRIEF** → Stats + promotion (clean/dirty/pragmatic)
 
 ## 🔧 Gadget System
 
@@ -92,6 +95,7 @@ All 8 combinations = 8 suspects exactly
 - **Investigation**: 2-8 hours (varies by location)
 - **Travel**: 4 hours
 - **Sleep**: 7 hours (11pm → 6am)
+- **Good Deed**: 2-4 hours (optional!)
 - **Wrong gadget**: 4-6 hours
 - **No gadget**: 6-8 hours
 
@@ -102,6 +106,104 @@ All 8 combinations = 8 suspects exactly
 - Forces 7-hour rest (advance to 6am)
 - Creates day/night cycle
 - Adds urgency to investigations
+
+## ❤️ Karma System (Good Deeds)
+
+### How It Works
+1. **Random encounter**: 25% chance during correct city investigation
+2. **Help NPC**: Costs 2-4 hours, NPC is saved
+3. **Persists across cases**: Saved NPCs remembered in profile
+4. **Payoff**: May save you during assassination attempts in future cases
+
+### Good Deed Types
+- Burning cart → Save vendor's merchandise
+- Child in traffic → Save child from cars
+- Lost wallet → Return wallet across town
+- Elderly groceries → Carry bags up stairs
+- Stop pickpocket → Recover stolen camera
+- Lost traveler → Guide to destination
+- Injured animal → Help vet save dog
+- Falling scaffolding → Save worker
+
+### Rescue Chances
+- **1 NPC saved**: 30% chance of rescue
+- **2+ NPCs saved**: 60% chance of rescue
+- **5+ NPCs saved**: 100% chance of rescue (guaranteed!)
+- Each NPC can only save you once
+
+### Strategic Decision
+**RISK**: Costs precious time, might miss deadline
+**REWARD**: Might save your life in future case
+
+**The Dilemma**: Help now and risk failing current case, or ignore and risk assassination later?
+
+### ⚠️ Fake Good Deed Traps (High Karma Penalty)
+**Trigger**: When karma ≥ 5 (helped 5+ NPCs)
+**Chance**: 25% of good deed encounters are syndicate traps
+**The Syndicate's Revenge**: They study your patterns and exploit your predictability
+
+**What Happens**:
+- Appears identical to real good deed (no way to tell!)
+- Tasks take WAY longer (8 hours vs normal 2-4 hours)
+- Always include "saving every cat in the burning house" escalation
+- 75% chance of permanent injury
+- Creates paranoia: "Is this one real or another trap?"
+
+**Example Traps**:
+- Burning building → Collapses on you → Limp (+2h to all investigations)
+- Elderly person → Leads to ambush → Broken hand (gadgets 2x slower)
+- Drowning child → Chemical trap → Scarred lungs (+1h to all time costs)
+- Lost child → Syndicate beating → Head trauma (33% miss clues)
+- Scaffolding → Debris falls → Eye patch (miss visual clues)
+- Poisoned vendor → Contamination → Nerve damage (25% gadget failure)
+
+**Prevention**:
+- Keep karma below 5 (stop helping after 4 good deeds)
+- Build notoriety (syndicate fears you, won't bait)
+- Accept the risk and help anyway (paranoid detective path)
+
+## 🔥 Notoriety System (Rogue Actions)
+
+### How It Works
+1. **Optional choice**: Alternative to normal investigation/travel that saves time
+2. **Destructive methods**: Break rules, threaten, bribe, or use violence
+3. **Persists across cases**: Notoriety level remembered in profile
+4. **Consequences**: Closes off options, harder trials, bad endings
+
+### Rogue Action Types
+- Threaten Informant → Save 2h (informant unavailable in future)
+- Break Into Police → Save 4h (police cooperation ends forever)
+- Steal Vehicle → Save 4h (wanted status, police pursuit)
+- Rough Up Witness → Save 6h (witness can't testify, harder trial)
+- Plant Evidence → Save 0h (wrongful conviction risk, termination chance)
+- Bribe Security → Save 7h (skip sleep, gadget lost to debts)
+- Destroy Property → Save 3h (arson, suspension risk)
+- Fake Credentials → Save 4h (countries refuse entry)
+- Intimidate Suspect → Save 0h (confession inadmissible, brutality charges)
+
+### Notoriety Tiers
+- **Low (1-2 actions)**: ⭐ - 1 investigation option unavailable, Chief's warning
+- **Medium (3-5 actions)**: ⭐⭐ - 2 options unavailable, +1 evidence needed, NPCs fear you, promotion denied
+- **High (6+ actions)**: ⭐⭐⭐ - 3 options unavailable, perfect evidence needed, police pursue you, 33% suspension risk, **bad ending even if you win**
+
+### Strategic Decision
+**REWARD**: Save precious time, guaranteed results
+**RISK**: Burn bridges, face consequences, corruption path
+
+**The Dilemma**: Get results fast and risk your career, or play clean and risk running out of time?
+
+### Cross-Pollination with Karma
+- **High Karma (≥3)**: Reduces notoriety gain by 50% (reputation protects you)
+- **Very High Karma (≥5)**: Syndicate sets fake good deed traps (predictable = exploitable)
+- **High Notoriety (≥3)**: NPCs refuse good deed opportunities (nobody trusts you)
+- **Redemption Path**: 5 good deeds with notoriety ≥3 → Reset to 0
+- **Corruption Path**: 5 rogue actions with karma ≥3 → Reputation shattered, reset to 0
+
+### The Optimal Balance
+- **Karma Sweet Spot**: 3-4 good deeds (60% rescue chance, no fake traps)
+- **Notoriety Sweet Spot**: 1-2 rogue actions (some shortcuts, no death spiral)
+- **Both extremes are dangerous**: Too good OR too bad = injuries & consequences
+- **Pragmatic Detective**: Know when to help, when to cut corners, when to walk away
 
 ## 🗺️ Investigation Locations
 
@@ -129,13 +231,21 @@ Each city has 3 investigation spots:
 - Surrounded by Goons → 📱 Shoe Phone
 - Police Interrogation → 📱 Shoe Phone
 
-### Assassination (Final City)
-- Rooftop Sniper → 🎯 Grappling Hook
-- Building Escape → 🎯 Grappling Hook
-- Poisoned Drink → 💊 Antidote Pills
-- Nerve Gas → 💊 Antidote Pills
-- Locked Room → ⚡ Laser Watch
-- Tied Up → ⚡ Laser Watch
+### Assassination (Final City) ⚠️ TIME PRESSURE!
+**ALL have 5-8 second timer with slow-mo effect**
+- Rooftop Sniper → 🎯 Grappling Hook (5s)
+- Falling Safe → 🎯 Grappling Hook (5s)
+- Poisoned Drink → 💊 Antidote Pills (6s)
+- Locked Room → ⚡ Laser Watch (7s)
+- Ticking Bomb → 👓 X-Ray Glasses (5s)
+- Knife Assassin → 💨 Smoke Bomb (6s)
+
+**Timer Features**:
+- Slow motion visuals (desaturated)
+- Speech bubble: "N..." → "NOOOOOO!"
+- Progress bar counting down
+- Screen shake intensifies
+- Timeout = "no gadget" penalty (8h)
 
 ## 📊 Win/Lose Conditions
 
@@ -227,44 +337,98 @@ Each city has 3 investigation spots:
 10. `final_city_clues.yaml` - Final city investigation text
 11. **NEW:** `gadgets.yaml` - Gadget definitions
 12. **NEW:** `encounters.yaml` - Henchman & assassination encounters
+13. **NEW:** `good_deeds.yaml` - Karma system NPC encounters + fake good deed traps
+14. **NEW:** `rogue_actions.yaml` - Notoriety system destructive options
 
-## 🚀 Implementation Priority
+## 🚀 Implementation Priority (MECHANICS FIRST!)
 
-### Phase 1: UI Structure ⭐ START HERE
-- [ ] Panel layout (top/main/bottom)
-- [ ] Responsive breakpoints
-- [ ] Background image system
-- [ ] Bottom navigation
-- [ ] Basic state transitions
+### Phase 1: Minimal Viable UI ⭐ START HERE
+**Goal**: Get basic game loop working with zero polish
+- [ ] Simple 3-panel layout (top/main/bottom) - text only
+- [ ] Basic state machine (briefing → city → travel → trial)
+- [ ] Time tracking system
+- [ ] Navigation between states
+- [ ] Simple button-based UI (no animations yet)
 
-### Phase 2: Game States
-- [ ] Briefing screen
-- [ ] Sleeping state + trigger
-- [ ] Henchman encounters
-- [ ] Assassination attempts
-- [ ] Catch suspect
-- [ ] Trial screen
+**Deliverable**: You can play through one case start-to-finish
 
-### Phase 3: Conspiracy Board
-- [ ] Suspect photo grid
-- [ ] Auto-elimination logic
-- [ ] Manual toggle (X out)
-- [ ] Clue display
+---
+
+### Phase 2: Core Investigation Loop
+**Goal**: Make the detective work functional
+- [ ] Investigation options (informant/police/vendor)
+- [ ] Clue gathering and storage
+- [ ] Destination selection (travel between cities)
+- [ ] Dead ends vs correct cities
+- [ ] Sleep trigger at 11pm (simple time check)
+- [ ] Basic conspiracy board (8 suspects, manual elimination)
+- [ ] Auto-elimination based on clues
 - [ ] Warrant issuance
+- [ ] Trial verdict (correct/wrong)
+- [ ] Basic debrief with stats
 
-### Phase 4: Gadget System
-- [ ] Gadget inventory state
-- [ ] Encounter type selection
-- [ ] Gadget choice UI
-- [ ] Success/failure feedback
+**Deliverable**: Core gameplay loop is complete and winnable
+
+---
+
+### Phase 3: Karma & Notoriety Systems 🎯 **THE INNOVATION**
+**Goal**: Test the dual-pressure mechanics ASAP - this is what makes the game unique!
+- [ ] Good deed random encounters (25% chance)
+- [ ] Good deed choice UI (simple modals)
+- [ ] **Fake good deed traps (karma ≥5 trigger)**
+- [ ] **Permanent injury system (6 injury types)**
+- [ ] **Injury effects on gameplay** (time penalties, gadget failures, missed clues)
+- [ ] **Paranoia text on good deeds after first trap**
+- [ ] Rogue action options (investigation/travel alternatives)
+- [ ] Notoriety tracking and tier system
+- [ ] Cross-pollination logic (karma vs notoriety)
+- [ ] LocalStorage persistence across cases
+- [ ] Three debrief variants (clean/dirty/pragmatic/injured)
+- [ ] NPC save tracking in player profile
+- [ ] NPC rescue logic during assassinations (basic)
+
+**Deliverable**: Can test if the paranoia/death spiral mechanics are fun ← CRITICAL TEST
+
+---
+
+### Phase 4: Gadget Encounters
+**Goal**: Add tactical challenge
+- [ ] Gadget inventory
+- [ ] Henchman encounters (no timer, simple choice)
+- [ ] Assassination attempts (WITH simple countdown timer)
+- [ ] Gadget success/failure outcomes
 - [ ] Time penalty logic
+- [ ] NPC rescue dramatic reveal
 
-### Phase 5: Animations & Polish
-- [ ] Time advancement animation
-- [ ] Travel animation
-- [ ] Clue reveal animations
-- [ ] Sleep transitions
-- [ ] Touch interactions
+**Deliverable**: Full tactical gameplay with life-or-death decisions
+
+---
+
+### Phase 5: Polish & "Good Friction" 🎨
+**Goal**: Make it feel cinematic (ONLY after mechanics are proven fun)
+- [ ] Assassination timer with slow-motion visuals
+- [ ] "NOOOO" speech bubble animation (incremental)
+- [ ] Time advancement animations
+- [ ] Travel/plane animation
+- [ ] Sleep transitions (fade to black)
+- [ ] Background images for cities
+- [ ] Cork board aesthetic for conspiracy board
+- [ ] Pitch-shifted "noooo" audio
+- [ ] Screen shake effects
+- [ ] Touch interactions polish
+- [ ] Responsive breakpoints refinement
+
+**Deliverable**: Game feels polished and dramatic
+
+---
+
+## 🧪 Testing Milestones
+
+**After Phase 1**: Can I click through a case?
+**After Phase 2**: Can I win a case by solving clues? ← First real playtest
+**After Phase 3**: Is the dual-pressure system fun? Does paranoia feel good? ← MAKE OR BREAK TEST
+**After Phase 4**: Do gadgets add tension?
+**After Phase 5**: Does it look/feel cinematic?
 
 ---
 

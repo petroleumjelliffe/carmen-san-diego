@@ -1,0 +1,242 @@
+# Good Deed Encounters - Optional random events that build karma
+# NPCs saved persist across cases and may save the player during assassination attempts
+
+good_deeds:
+  - id: burning_cart
+    name: Burning Cart
+    npc_name: Maria
+    npc_title: Street Vendor
+    city_type: any  # Can appear in any city
+    time_cost: 3
+    description: A street vendor's cart is on fire! They're frantically trying to save their merchandise while people run past.
+    plea: "Please! My livelihood!"
+    help_text: You help extinguish the fire and save most of the vendor's goods.
+    gratitude: "Thank you! I'll never forget this! If you're ever in trouble, I'll be there for you!"
+    rescue_text: "You saved my life once. Now we're even, detective!"
+
+  - id: child_traffic
+    name: Child in Traffic
+    npc_name: Chen
+    npc_title: Grateful Father
+    city_type: any
+    time_cost: 2
+    description: A small child has wandered into busy traffic! Cars are swerving and honking!
+    plea: "Someone help my child!"
+    help_text: You dash into traffic and pull the child to safety. The father rushes over, tears in his eyes.
+    gratitude: "You saved my son! I am forever in your debt!"
+    rescue_text: "You saved my son. I won't let anything happen to you!"
+
+  - id: lost_wallet
+    name: Lost Wallet
+    npc_name: James
+    npc_title: Retired Officer
+    city_type: any
+    time_cost: 4
+    description: You find a wallet on the ground, packed with cash and ID. The owner's hotel is across town.
+    plea: "I've been searching everywhere! My heart medication prescription was in there!"
+    help_text: You track down the owner and return the wallet intact. He's overwhelmed with relief.
+    gratitude: "You're a good soul. The world needs more people like you!"
+    rescue_text: "Good people look out for each other. Now it's my turn!"
+
+  - id: elderly_groceries
+    name: Elderly Person's Groceries
+    npc_name: Ruth
+    npc_title: Grandmother
+    city_type: any
+    time_cost: 3
+    description: An elderly woman struggles with heavy grocery bags. She looks exhausted and the stairs to her apartment are steep.
+    plea: "I'll manage, dear... eventually."
+    help_text: You carry her groceries up four flights of stairs and help her unpack.
+    gratitude: "Such a kind soul! May fortune smile upon you!"
+    rescue_text: "No one hurts my guardian angel!"
+
+  - id: stop_pickpocket
+    name: Stop Pickpocket
+    npc_name: Yuki
+    npc_title: Tourist
+    city_type: any
+    time_cost: 2
+    description: You spot a pickpocket targeting a distracted tourist. They're reaching for the tourist's camera!
+    plea: "That camera has all my vacation photos!"
+    help_text: You grab the pickpocket's wrist and recover the camera. The tourist is grateful and shaken.
+    gratitude: "I can't believe you noticed! Thank you so much!"
+    rescue_text: "You helped a stranger. Now this stranger helps you!"
+
+  - id: lost_traveler
+    name: Lost Traveler
+    npc_name: Ahmed
+    npc_title: Business Traveler
+    city_type: any
+    time_cost: 4
+    description: A businessman is desperately lost, trying to reach an important meeting. His phone is dead and no one speaks his language.
+    plea: "Please, I'm late for the biggest deal of my life!"
+    help_text: You guide him personally to his destination. He makes his meeting with minutes to spare.
+    gratitude: "You saved my career! Please, take this as thanks." (gives expensive pen)
+    rescue_text: "You helped me in my darkest hour. Now it's my turn!"
+
+  - id: injured_animal
+    name: Injured Animal
+    npc_name: Sofia
+    npc_title: Veterinarian
+    city_type: any
+    time_cost: 3
+    description: A injured dog lies in an alley, whimpering. People walk past, but a young vet is trying to coax it out alone.
+    plea: "I need help! It's scared and hurt!"
+    help_text: You help the vet catch the dog and drive them to her clinic. She treats the dog's injuries.
+    gratitude: "You have a good heart. The world will reward you for it."
+    rescue_text: "I save lives every day. Today, I save yours!"
+
+  - id: falling_scaffolding
+    name: Falling Scaffolding
+    npc_name: Marco
+    npc_title: Construction Worker
+    city_type: any
+    time_cost: 2
+    description: Construction scaffolding is about to collapse! A worker is directly underneath, oblivious with headphones on!
+    plea: "[Unaware of danger]"
+    help_text: You tackle the worker out of the way just as the scaffolding crashes down.
+    gratitude: "You... you saved my life! I can't... thank you!"
+    rescue_text: "You saved me. I save you. Simple!"
+
+# Karma System Configuration
+karma_settings:
+  rescue_chance_1_saved: 0.30    # 30% chance if helped 1 NPC
+  rescue_chance_2_saved: 0.60    # 60% chance if helped 2+ NPCs
+  rescue_chance_5_saved: 1.00    # 100% chance if helped 5+ NPCs
+
+  max_rescues_per_npc: 1         # Each NPC can only save you once
+  good_deed_chance: 0.25         # 25% chance per correct city
+
+  # Rescue animations based on assassination type
+  rescues:
+    rooftop_sniper: "A figure tackles you from the side! You tumble to safety as the bullet strikes where you were standing!"
+    poisoned_drink: "Someone knocks the cup from your hand! \"Don't drink that!\" they shout."
+    locked_room: "The door bursts open from outside! Strong hands pull you to safety as gas billows out!"
+    falling_safe: "You're shoved aside! The safe crashes down, missing you by inches!"
+    ticking_bomb: "Someone grabs the package and hurls it out the window! It explodes harmlessly in the air!"
+    knife_assassin: "A figure interposes themselves! The knife meant for you strikes them instead!"
+
+# Fake Good Deeds - Syndicate Traps (When Karma ≥ 5)
+# The syndicate exploits your predictable altruism by setting elaborate traps
+fake_good_deeds:
+  - id: burning_building_trap
+    name: Burning Building (All The Cats)
+    trigger_karma: 5
+    chance: 0.25  # 25% chance when karma ≥ 5
+    time_cost: 8  # Way longer than normal good deeds
+    injury_chance: 0.75  # 75% chance of permanent injury
+    description: A building is on fire! You hear crying from inside - it sounds like a child!
+    plea: "Please! My daughter is inside! And our cats! All seventeen of them!"
+    setup_reveal: As you help the "child" (actually a small adult syndicate member), the situation escalates. Every time you think you're done, there's another cat. The building is structurally unsound.
+    injury_result: A beam collapses on your leg. Permanent limp. -2 hours per investigation going forward.
+    gratitude_fake: "Thank you so much! All the cats are safe!" (They were syndicate operatives)
+
+  - id: elderly_trap
+    name: Elderly Person (Elaborate Setup)
+    trigger_karma: 5
+    chance: 0.25
+    time_cost: 8
+    injury_chance: 0.75
+    description: An elderly person has fallen and can't get up! They need help getting to the hospital across town.
+    plea: "Help! I've fallen! My medication is at home, we need to go there first!"
+    setup_reveal: The "elderly person" keeps adding complications. First medication at home, then the pharmacy, then visiting a friend, then groceries. When you finally realize it's a trap, the syndicate ambushes you.
+    injury_result: Attacked during the ambush. Broken hand. Gadgets take 2x as long to deploy going forward.
+    gratitude_fake: "You're so kind, dearie!" (Then: "The syndicate sends their regards.")
+
+  - id: drowning_child_trap
+    name: Drowning Child (Gas Trap)
+    trigger_karma: 5
+    chance: 0.25
+    time_cost: 8
+    injury_chance: 0.75
+    description: A child is drowning in the canal! You need to jump in and save them immediately!
+    plea: "Help! I can't swim! HELP!"
+    setup_reveal: The "child" is actually a robotic decoy. When you jump in, the water is laced with a chemical agent that affects your respiratory system.
+    injury_result: Chemical exposure. Scarred lungs. Reduced stamina - all time costs increase by 1 hour.
+    gratitude_fake: (The "child" shorts out and sinks. You've been had.)
+
+  - id: lost_child_trap
+    name: Lost Child (Kidnapping Setup)
+    trigger_karma: 5
+    chance: 0.25
+    time_cost: 8
+    injury_chance: 0.75
+    description: A crying child says they're lost and can't find their parents. They need help!
+    plea: "I can't find my mommy! Can you help me find her? She said to meet at... I don't remember!"
+    setup_reveal: The "child" leads you on a wild goose chase through increasingly dangerous areas. Finally leads you into an ambush. The "child" is the mastermind's actual child, trained in manipulation.
+    injury_result: Brutal beating by waiting syndicate members. Head trauma. Migraines reduce investigation effectiveness - may miss clues (33% chance).
+    gratitude_fake: "Thanks for playing, detective!" (The child laughs and runs away)
+
+  - id: injured_worker_trap
+    name: Injured Construction Worker (Scaffolding Collapse)
+    trigger_karma: 5
+    chance: 0.25
+    time_cost: 8
+    injury_chance: 0.75
+    description: A construction worker is pinned under fallen scaffolding! They need immediate help!
+    plea: "Help! I'm pinned! I can't feel my legs!"
+    setup_reveal: The worker is real but the syndicate rigged the rest of the scaffolding. As you help free them, the entire structure collapses on both of you.
+    injury_result: Crushed by debris. Multiple injuries. Eye patch required - visual clues harder to spot (some clues may be missed).
+    gratitude_fake: (The worker disappears. Setup confirmed.)
+
+  - id: poisoned_vendor_trap
+    name: Poisoned Street Vendor (Contamination)
+    trigger_karma: 5
+    chance: 0.25
+    time_cost: 8
+    injury_chance: 0.75
+    description: A street vendor collapses, foaming at the mouth! They've been poisoned!
+    plea: (Vendor can't speak, just points desperately at their throat)
+    setup_reveal: When you try to help, you're exposed to the same poison on their skin. The vendor was a syndicate plant, immunized against the toxin. You aren't.
+    injury_result: Nerve damage from poison exposure. Trembling hands - gadget deployment failure chance (25%).
+    gratitude_fake: (The vendor "recovers" quickly and vanishes)
+
+# Fake Good Deed System Configuration
+fake_deed_settings:
+  trigger_karma_threshold: 5  # Activates when player has ≥ 5 karma
+  encounter_chance: 0.25      # 25% of good deed encounters are fake
+
+  # Visual tells (subtle hints it might be fake):
+  tells_enabled: false  # No way to tell before choosing!
+
+  # Consequences
+  time_penalty: 8  # Twice as long as longest real good deed
+  injury_enabled: true
+  injury_types:
+    - type: limp
+      effect: "+2 hours to all investigations"
+      description: "Permanent leg injury from collapsed beam"
+      icon: "🦵"
+
+    - type: broken_hand
+      effect: "Gadgets take 2x as long to deploy"
+      description: "Broken hand from assault"
+      icon: "✋"
+
+    - type: scarred_lungs
+      effect: "+1 hour to all time costs"
+      description: "Chemical exposure, reduced stamina"
+      icon: "🫁"
+
+    - type: head_trauma
+      effect: "33% chance to miss clues"
+      description: "Migraines from head injury"
+      icon: "🤕"
+
+    - type: eye_patch
+      effect: "Visual clues may be missed"
+      description: "Lost eye to debris"
+      icon: "👁️"
+
+    - type: nerve_damage
+      effect: "25% gadget failure chance"
+      description: "Trembling hands from poison"
+      icon: "🤚"
+
+  # Paranoia mechanic
+  creates_paranoia: true
+  paranoia_text: "Is this one real? Or another trap?"
+
+  # Prevention
+  can_be_prevented: true
+  prevention_method: "Lower karma below 5 (stop helping) OR increase notoriety (syndicate fears you)"

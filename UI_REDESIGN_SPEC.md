@@ -144,7 +144,341 @@
 
 ---
 
-### 3. ON THE RIGHT TRACK (Henchman Encounter)
+### 3A. GOOD DEED OPPORTUNITY (Optional Random Event)
+**When**: Random chance during city investigation (before henchman encounter)
+**Background**: City location with NPC in trouble
+
+**Mechanics**:
+- Random encounter with civilian needing help
+- Costs time to help (2-4 hours)
+- NPC is saved and remembers you
+- **PERSISTS ACROSS CASES** - saved NPCs tracked in player profile
+- On future case assassination attempts, saved NPC may appear and save you
+
+**Content**:
+```
+┌─────────────────────────────────────┐
+│  💡 GOOD DEED OPPORTUNITY           │
+│                                     │
+│  A street vendor's cart is on fire! │
+│  They're frantically trying to save │
+│  their merchandise while people run │
+│  past. You could help...            │
+│                                     │
+│  [Help Vendor] (-3 hours)           │
+│  [Keep Moving] (no time lost)       │
+│                                     │
+│  "Please! My livelihood!"           │
+└─────────────────────────────────────┘
+```
+
+**If Player Helps**:
+```
+┌─────────────────────────────────────┐
+│  ✨ GOOD DEED COMPLETED             │
+│                                     │
+│  You help extinguish the fire and   │
+│  save most of the vendor's goods.   │
+│                                     │
+│  "Thank you! I'll never forget this!│
+│   If you're ever in trouble, I'll   │
+│   be there for you!"                │
+│                                     │
+│  Time lost: 3 hours                 │
+│  NPC Saved: Maria (Street Vendor)   │
+│                                     │
+│  [Continue]                         │
+└─────────────────────────────────────┘
+```
+
+**Types of Good Deeds**:
+- Help vendor with fire
+- Save child from traffic
+- Return lost wallet to tourist
+- Help elderly person with groceries
+- Stop a pickpocket and return stolen items
+- Give directions to lost traveler (+ small gift)
+
+**Strategic Considerations**:
+- Costs valuable time (risk missing deadline)
+- No immediate benefit
+- **BUT** may save your life in a future case
+- Creates moral dilemma: efficiency vs. compassion
+- Builds karma system
+
+### 3A-1. FAKE GOOD DEED TRAP (High Karma Exploitation)
+**When**: Good deed encounters when player has karma ≥ 5
+**Chance**: 25% of good deed encounters are actually syndicate traps
+**The Cruel Irony**: Your predictable altruism makes you exploitable
+
+**Philosophy**:
+- The syndicate studies your patterns
+- When you help NPCs consistently (≥5 times), they know you can't resist helping
+- They set up fake emergencies that waste time AND injure you permanently
+- **No way to tell it's fake before choosing to help**
+- Creates paranoia: "Is this one real?"
+
+**Example Flow** (Appears identical to real good deed):
+```
+┌─────────────────────────────────────┐
+│  💡 GOOD DEED OPPORTUNITY           │
+│                                     │
+│  A building is on fire! You hear    │
+│  crying from inside - it sounds     │
+│  like a child!                      │
+│                                     │
+│  [Help!] (-3 hours?)                │
+│  [Keep Moving] (no time lost)       │
+│                                     │
+│  "Please! My daughter is inside!    │
+│   And our cats! All seventeen of    │
+│   them!"                            │
+└─────────────────────────────────────┘
+```
+
+**If Player Falls for Trap**:
+```
+┌─────────────────────────────────────┐
+│  💥 IT'S A TRAP!                    │
+│                                     │
+│  As you help the "child" (actually  │
+│  a small adult syndicate member),   │
+│  the situation escalates.           │
+│                                     │
+│  Every time you think you're done,  │
+│  there's another cat. The building  │
+│  is structurally unsound.           │
+│                                     │
+│  CRASH! A beam collapses on you!    │
+│                                     │
+│  [Continue]                         │
+└─────────────────────────────────────┘
+```
+
+**Injury Result**:
+```
+┌─────────────────────────────────────┐
+│  🏥 PERMANENT INJURY                │
+│                                     │
+│  Medical Report:                    │
+│  Crushed leg from falling debris    │
+│                                     │
+│  Injury: LIMP 🦵                    │
+│  Effect: +2 hours to all future     │
+│          investigations             │
+│                                     │
+│  Time lost: 8 hours (medical care)  │
+│                                     │
+│  The syndicate knew you couldn't    │
+│  resist helping. They exploited     │
+│  your good nature.                  │
+│                                     │
+│  [Continue]                         │
+└─────────────────────────────────────┘
+```
+
+**Permanent Injuries from Fake Good Deeds**:
+- **🦵 Limp**: +2 hours to all investigations (collapsed beam)
+- **✋ Broken Hand**: Gadgets take 2x as long to deploy (assault)
+- **🫁 Scarred Lungs**: +1 hour to all time costs (chemical exposure)
+- **🤕 Head Trauma**: 33% chance to miss clues (migraines)
+- **👁️ Eye Patch**: May miss visual clues (lost eye)
+- **🤚 Nerve Damage**: 25% gadget failure chance (poison tremors)
+
+**Fake Good Deed Types**:
+1. **Burning Building (All The Cats)** - Structure collapses, limp
+2. **Elderly Person (Elaborate Setup)** - Leads to ambush, broken hand
+3. **Drowning Child (Gas Trap)** - Chemical in water, scarred lungs
+4. **Lost Child (Kidnapping Setup)** - Leads to beating, head trauma
+5. **Scaffolding Collapse** - Debris falls on you, eye patch
+6. **Poisoned Vendor (Contamination)** - Poison exposure, nerve damage
+
+**The Paranoia Effect**:
+After first fake good deed, ALL future good deeds show:
+```
+┌─────────────────────────────────────┐
+│  💡 GOOD DEED OPPORTUNITY... OR IS IT?│
+│                                     │
+│  An elderly person needs help with  │
+│  groceries up steep stairs...       │
+│                                     │
+│  [Help] (-3 hours... or -8h + injury?)│
+│  [Keep Moving] (safe but no karma)  │
+│                                     │
+│  💭 "Is this one real? Or another   │
+│      trap? I can't tell..."         │
+└─────────────────────────────────────┘
+```
+
+**How to Avoid Fake Good Deeds**:
+1. **Stop Helping**: Keep karma below 5 (no exploitation trigger)
+2. **Go Rogue**: Build notoriety (syndicate fears you, won't bait)
+3. **Accept Risk**: Help anyway, roll the dice (75% injury chance)
+4. **Paranoid Detective**: Refuse all good deeds after karma hits 5
+
+**The Dual Pressure System**:
+
+**Too Good (Karma ≥ 5)**:
+- ⚠️ Syndicate exploits your predictability
+- ⚠️ Fake good deeds waste time (8h vs normal 2-4h)
+- ⚠️ Permanent injuries from traps
+- ⚠️ Creates paranoia (can't trust any good deed)
+- ✅ NPCs will still save you (if you survive)
+
+**Too Bad (Notoriety ≥ 6)**:
+- ⚠️ Multiple assassination attempts per case
+- ⚠️ Permanent injuries from failed encounters
+- ⚠️ Death spiral (injuries → slower → more rogue actions needed)
+- ⚠️ Bad ending even if you win
+- ✅ Syndicate won't bait you (they fear you)
+
+**Optimal Play**:
+- **Karma 3-4**: Enough for NPC rescue chance (60%), not enough to trigger traps
+- **Notoriety 1-2**: Some shortcuts when needed, not enough for multiple assassinations
+- **Pragmatic Detective**: Mix of helping and getting results
+- **Strategic Risk**: Know when to help, when to walk away
+
+---
+
+### 3A-2. ROGUE OPTION (Destructive Fast Action)
+**When**: During investigations or when traveling
+**The "Dirty Harry" Choice**: Get results NOW, consequences LATER
+
+**Philosophy**:
+- Opposite of karma system
+- "I get results, Chief!" mentality
+- Skip time costs by being ruthless/destructive
+- Closes off options and creates enemies
+- Tracked as "Heat" or "Notoriety"
+
+**Examples During Investigation**:
+
+**Threaten Informant** (instead of paying time):
+```
+┌─────────────────────────────────────┐
+│  🔥 ROGUE OPTION AVAILABLE          │
+│                                     │
+│  Local Informant (Normal: 2h)       │
+│                                     │
+│  [Investigate Normally] (-2h)       │
+│                                     │
+│  [Threaten Informant] (FREE!)       │
+│   "Tell me what I want to know      │
+│    or I'll make sure you regret it."│
+│                                     │
+│   ⚠️ Notoriety +1                  │
+│   ⚠️ Source burned for future cases │
+└─────────────────────────────────────┘
+```
+
+**If Player Chooses Rogue Option**:
+```
+┌─────────────────────────────────────┐
+│  💥 RESULTS OBTAINED                │
+│                                     │
+│  You slam the informant against the │
+│  wall. They talk immediately, terror│
+│  in their eyes.                     │
+│                                     │
+│  Clue obtained: [destination clue]  │
+│  Time saved: 2 hours!               │
+│                                     │
+│  Notoriety: ⭐ (Low)                │
+│  "You'll pay for this, cop!"        │
+│                                     │
+│  [Continue]                         │
+└─────────────────────────────────────┘
+```
+
+**Other Rogue Actions**:
+
+1. **Break Into Police Station** (skip 4h cost)
+   - Get records immediately
+   - Police won't cooperate in future cases
+   - May face corruption charges at trial
+
+2. **Steal Vehicle** (skip travel time)
+   - Instant travel (0h instead of 4h)
+   - Wanted level increases
+   - Police pursuit on arrival
+
+3. **Rough Up Witness** (skip time, get all clues)
+   - Get suspect clue without specific investigation
+   - Witness won't testify at trial (makes trial harder)
+   - International incident risk
+
+4. **Plant Evidence** (guarantee conviction)
+   - Auto-win trial even with wrong suspect
+   - Career ending if discovered
+   - Haunted by injustice (bad ending)
+
+5. **Bribe Airport Security** (skip sleep, keep investigating)
+   - Override 11pm sleep requirement once
+   - Pay with future salary (fewer resources later)
+   - Security won't help with threats
+
+6. **Destroy Property** (intimidate sources)
+   - Set fire to building to force evacuation
+   - Get info from fleeing suspects
+   - Major property damage = suspension risk
+
+### Notoriety System
+
+**Tracked Across Cases**:
+- Low (⭐): "Aggressive" - minor heat
+- Medium (⭐⭐): "Dangerous" - serious attention
+- High (⭐⭐⭐): "Rogue Cop" - hunted by both sides
+
+**Consequences by Notoriety Level**:
+
+**Low Notoriety (⭐)**:
+- Chief warns you at briefing
+- One investigation option unavailable per city
+- NPCs are wary but cooperate
+
+**Medium Notoriety (⭐⭐)**:
+- Internal Affairs investigating you
+- Two investigation options unavailable
+- Some destinations refuse entry
+- Henchman encounters are more violent
+- No NPC rescues (they fear you)
+
+**High Notoriety (⭐⭐⭐)**:
+- Suspended, working "off the books"
+- Three investigation options unavailable
+- Interpol warrant for your arrest
+- Must dodge police AND syndicate
+- Trial requires perfect evidence (no mistakes)
+- Bad ending even if you win
+
+**The Trade-Off**:
+
+**Karma Path (Good Cop)**:
+- ✅ NPCs help you
+- ✅ More options available
+- ✅ Easier trial
+- ✅ Good ending
+- ❌ Costs time
+- ❌ May fail deadline
+
+**Rogue Path (Dirty Cop)**:
+- ✅ Save time
+- ✅ Skip obstacles
+- ✅ Fast results
+- ❌ Fewer options later
+- ❌ Harder trial
+- ❌ Bad ending
+- ❌ No help when needed
+
+**Mixed Path (Pragmatic Cop)**:
+- Balance both approaches
+- Make tough calls situationally
+- Accept some consequences for some benefits
+- Morally gray ending
+
+---
+
+### 3B. ON THE RIGHT TRACK (Henchman Encounter)
 **When**: First investigation in a CORRECT city (not final city)
 **Background**: City location + shadowy figure overlay
 
@@ -155,10 +489,11 @@
 
 **Example Flow**:
 1. Player investigates at correct city
-2. Henchman encounter triggers (see Gadget System section for full UI)
-3. Player selects gadget or chooses to risk it
-4. Result shown (success/failure with time impact)
-5. Continue to investigation results
+2. **OPTIONAL**: Good deed opportunity may appear first (see above)
+3. Henchman encounter triggers (see Gadget System section for full UI)
+4. Player selects gadget or chooses to risk it
+5. Result shown (success/failure with time impact)
+6. Continue to investigation results
 
 ---
 
@@ -225,17 +560,98 @@
 
 **Mechanics**:
 - Random assassination attempt type selected (Rooftop Sniper, Poisoned Drink, or Locked Room)
+- **TIME PRESSURE**: Player has limited time to choose gadget (5-8 seconds)
+- Slow-motion animation shows threat approaching
+- Speech bubble with incremental "NOOOOOO" and pitch-shifted audio
+- If time runs out, treated as "no gadget" choice
 - Higher stakes than henchman encounters (more time lost if wrong)
-- Player must choose correct gadget or face larger time penalty
-- See detailed gadget system below for assassination types and correct gadgets
+
+**Dramatic Tension Elements**:
+- **Slow Motion Effect**: Screen slows down, desaturated color
+- **Animated Threat**: Visual timer showing danger approaching
+  - Burning fuse crackling toward bomb
+  - Knife slowly falling toward player
+  - Safe dropping from above
+  - Sniper crosshairs zeroing in
+  - Poison spreading through drink
+  - Gas filling room
+- **Incremental Speech Bubble**:
+  - 0-1s: "N..."
+  - 1-2s: "NO..."
+  - 2-3s: "NOO..."
+  - 3-4s: "NOOO..."
+  - 4-5s: "NOOOO..."
+  - 5s+: "NOOOOOO!" (time up)
+- **Audio**: Pitch-shifted "noooo" sound effect getting longer
+- **Visual shake/pulse**: Screen shakes as timer runs down
 
 **Example Flow**:
 1. Player arrives at final city and investigates
-2. Assassination attempt triggers (see Gadget System section for full UI)
-3. Player selects gadget or chooses to risk it
-4. Result shown (success/failure with time impact)
-5. Continue to investigation results
-6. Signals player is close to suspect
+2. Assassination attempt triggers with dramatic reveal
+3. **SLOW MOTION SEQUENCE** begins with 5-8 second countdown
+4. **SPECIAL**: If player helped NPC in past case, there's a chance they appear
+5. Player must quickly select correct gadget (or NPC saves them!)
+6. If successful: Slow motion breaks, player escapes
+7. If wrong/timeout BUT saved NPC present: NPC takes the hit, saves player
+8. If wrong/timeout with no NPC: Dramatic failure, time penalty
+9. Continue to investigation results
+10. Signals player is close to suspect
+
+### NPC RESCUE (Karma Payoff)
+
+**When**: Assassination attempt at final city + player has saved NPCs in previous cases
+**Chance**: 30% if 1 NPC saved, 60% if 2+ NPCs saved, 100% if 5+ NPCs saved
+
+**Sequence** (When timer reaches 0 or wrong gadget selected):
+```
+┌─────────────────────────────────────┐
+│  💭 "NOOOOOO!"                      │
+│  ⏱️ ░░░░░░░░░░ 0.0s                 │
+│                                     │
+│  [Sniper shot fired!]               │
+│                                     │
+│  💨 SUDDENLY...                     │
+│                                     │
+│  A figure tackles you from the side!│
+│  You tumble to safety as the bullet │
+│  strikes where you were standing!   │
+│                                     │
+│  [Continue]                         │
+└─────────────────────────────────────┘
+```
+
+**Reveal**:
+```
+┌─────────────────────────────────────┐
+│  ✨ SAVED BY KARMA!                 │
+│                                     │
+│  It's Maria, the street vendor you  │
+│  helped in Paris! She was visiting  │
+│  Tokyo and recognized you in danger.│
+│                                     │
+│  "You saved my life once. Now we're │
+│   even, detective!"                 │
+│                                     │
+│  Maria is injured but alive.        │
+│                                     │
+│  Time lost: 0 hours (no penalty!)   │
+│  Good Deed Paid Forward ❤️          │
+│                                     │
+│  [Continue]                         │
+└─────────────────────────────────────┘
+```
+
+**Results**:
+- **No time penalty** despite wrong/no gadget
+- **No gadget consumed** (NPC saved you instead)
+- **Emotional payoff** for doing good deeds
+- **NPC is injured** but survives (you visit them in hospital)
+- **That specific NPC can't save you again** (each NPC saves you once)
+
+**Post-Game Stats**:
+- "Times Saved by NPCs: 2"
+- "NPCs Helped: 7"
+- "Karma Balance: Positive"
 
 ---
 
@@ -349,22 +765,132 @@
 **When**: After trial
 **Background**: ACME office
 
-**Content** (Success):
+**Content** (Success - Clean Record):
 ```
 ┌─────────────────────────────────────┐
 │  ✅ CASE CLOSED                     │
 │                                     │
 │  Excellent work, Detective!         │
 │                                     │
+│  CASE STATS:                        │
 │  Time remaining: 12 hours           │
 │  Cities visited: 4/4 (perfect)      │
 │  Gadgets used: 2/3                  │
+│  Good deeds: 1 ❤️                   │
+│  Rogue actions: 0 🔥                │
+│  Saved by NPCs: 0                   │
+│  Injuries sustained: 0              │
 │                                     │
 │  PROMOTION!                         │
 │  Rookie → Gumshoe                   │
 │                                     │
+│  CAREER STATS:                      │
 │  Cases solved: 1                    │
 │  Rank: Gumshoe                      │
+│  NPCs helped (total): 3             │
+│  Karma: ⭐⭐⭐ (Good Cop)            │
+│  Notoriety: ☆☆☆ (Clean Record)     │
+│  Permanent injuries: None           │
+│                                     │
+│  [New Case] [Main Menu]             │
+└─────────────────────────────────────┘
+```
+
+**Content** (Success - Dirty Record):
+```
+┌─────────────────────────────────────┐
+│  ✅ CASE CLOSED... BUT AT WHAT COST? │
+│                                     │
+│  You got results, Detective.        │
+│  But your methods are questioned.   │
+│                                     │
+│  CASE STATS:                        │
+│  Time remaining: 24 hours           │
+│  Cities visited: 4/4                │
+│  Gadgets used: 1/3                  │
+│  Good deeds: 0 ❤️                   │
+│  Rogue actions: 4 🔥                │
+│  Saved by NPCs: 0                   │
+│                                     │
+│  UNDER REVIEW                       │
+│  Internal Affairs is investigating  │
+│  your conduct during this case.     │
+│                                     │
+│  CAREER STATS:                      │
+│  Cases solved: 1                    │
+│  Rank: Rookie (promotion denied)    │
+│  NPCs helped (total): 0             │
+│  Karma: ☆☆☆ (None)                 │
+│  Notoriety: ⭐⭐ (Rogue Cop)         │
+│                                     │
+│  [New Case] [Main Menu]             │
+└─────────────────────────────────────┘
+```
+
+**Content** (Success - Pragmatic):
+```
+┌─────────────────────────────────────┐
+│  ✅ CASE CLOSED                     │
+│                                     │
+│  The job got done, Detective.       │
+│  You made some tough calls.         │
+│                                     │
+│  CASE STATS:                        │
+│  Time remaining: 18 hours           │
+│  Cities visited: 4/4                │
+│  Gadgets used: 2/3                  │
+│  Good deeds: 2 ❤️                   │
+│  Rogue actions: 1 🔥                │
+│  Saved by NPCs: 0                   │
+│                                     │
+│  PROMOTION!                         │
+│  Rookie → Gumshoe                   │
+│                                     │
+│  CAREER STATS:                      │
+│  Cases solved: 1                    │
+│  Rank: Gumshoe                      │
+│  NPCs helped (total): 4             │
+│  Karma: ⭐⭐ (Mostly Good)           │
+│  Notoriety: ⭐ (Some Heat)          │
+│                                     │
+│  [New Case] [Main Menu]             │
+└─────────────────────────────────────┘
+```
+
+**Content** (Success - Injured Detective):
+```
+┌─────────────────────────────────────┐
+│  ✅ CASE CLOSED... BUT SCARRED      │
+│                                     │
+│  You got results, but you paid a    │
+│  heavy price.                       │
+│                                     │
+│  CASE STATS:                        │
+│  Time remaining: 6 hours            │
+│  Cities visited: 4/4                │
+│  Gadgets used: 3/3                  │
+│  Good deeds: 5 ❤️ (1 was FAKE!)    │
+│  Rogue actions: 2 🔥                │
+│  Saved by NPCs: 1                   │
+│  Injuries sustained: 2              │
+│                                     │
+│  PERMANENT INJURIES:                │
+│  🦵 Limp (+2h investigations)       │
+│  🤕 Head Trauma (33% miss clues)    │
+│                                     │
+│  PROMOTION!                         │
+│  Rookie → Gumshoe                   │
+│                                     │
+│  CAREER STATS:                      │
+│  Cases solved: 1                    │
+│  Rank: Gumshoe                      │
+│  NPCs helped (total): 7             │
+│  Karma: ⭐⭐⭐⭐⭐ (Too Predictable) │
+│  Notoriety: ⭐⭐ (Rogue Cop)         │
+│  Permanent injuries: 2              │
+│                                     │
+│  ⚠️ WARNING: High karma makes you   │
+│  vulnerable to syndicate traps!     │
 │                                     │
 │  [New Case] [Main Menu]             │
 └─────────────────────────────────────┘
@@ -381,6 +907,8 @@
 │                                     │
 │  Time used: 68/72 hours             │
 │  Cities visited: 4/4                │
+│  Injuries sustained: 1              │
+│  🦵 Limp (+2h investigations)       │
 │                                     │
 │  Better luck next time, Detective.  │
 │                                     │
@@ -684,27 +1212,53 @@ Each playthrough randomly selects from:
 #### Assassination Attempts (Final City)
 Each playthrough randomly selects from:
 
+**IMPORTANT**: All assassination attempts include time pressure (5-8 seconds to choose)
+
 1. **Rooftop Sniper**
    - *"A glint of light from a rooftop! Sniper taking aim!"*
    - **Correct gadget**: 🎯 Grappling Hook Ring (reach sniper)
    - **Wrong gadget**: Lose 6 hours
-   - **No gadget**: Lose 8 hours
+   - **No gadget/Timeout**: Lose 8 hours
+   - **Animation**: Crosshairs slowly zeroing in, laser dot on chest
 
 2. **Poisoned Drink**
    - *"Your coffee tastes bitter. Something's wrong..."*
    - **Correct gadget**: 💊 Antidote Pills
    - **Wrong gadget**: Lose 6 hours
-   - **No gadget**: Lose 8 hours
+   - **No gadget/Timeout**: Lose 8 hours
+   - **Animation**: Poison spreading through liquid in slow motion
 
 3. **Locked Room**
    - *"The door slams shut! The room is filling with gas!"*
    - **Correct gadget**: ⚡ Laser Watch (cut through lock)
    - **Wrong gadget**: Lose 6 hours
-   - **No gadget**: Lose 8 hours
+   - **No gadget/Timeout**: Lose 8 hours
+   - **Animation**: Gas slowly filling room from floor up
+
+4. **Falling Safe**
+   - *"You hear a loud CRACK above you! A safe is falling!"*
+   - **Correct gadget**: 🎯 Grappling Hook Ring (swing away)
+   - **Wrong gadget**: Lose 6 hours
+   - **No gadget/Timeout**: Lose 8 hours
+   - **Animation**: Safe slowly falling from above with shadow growing
+
+5. **Ticking Bomb**
+   - *"A package under the table starts beeping! The timer shows 5 seconds!"*
+   - **Correct gadget**: 👓 X-Ray Glasses (identify wire to cut)
+   - **Wrong gadget**: Lose 6 hours
+   - **No gadget/Timeout**: Lose 8 hours
+   - **Animation**: Burning fuse crackling toward explosive
+
+6. **Knife Assassin**
+   - *"A shadowy figure lunges from behind! A knife gleams in slow motion!"*
+   - **Correct gadget**: 💨 Smoke Bomb (disappear before strike)
+   - **Wrong gadget**: Lose 6 hours
+   - **No gadget/Timeout**: Lose 8 hours
+   - **Animation**: Knife slowly arcing toward player
 
 ### Gadget Choice UI
 
-**Example: Henchman Encounter**
+**Example: Henchman Encounter** (No time pressure)
 ```
 ┌─────────────────────────────────────┐
 │  ⚠️  HENCHMAN SPOTTED!               │
@@ -727,6 +1281,48 @@ Each playthrough randomly selects from:
 │   (May lose 6 hours!)               │
 └─────────────────────────────────────┘
 ```
+
+**Example: Assassination Attempt** (WITH time pressure - 5 seconds)
+```
+┌─────────────────────────────────────┐
+│  ⚠️⚠️  ASSASSINATION!  ⚠️⚠️           │
+│                                     │
+│  [Slow motion effect: Desaturated]  │
+│  [Sniper crosshairs zeroing in...]  │
+│                                     │
+│     💭 "NOOO..."  ←──────────────┐  │
+│                                  │  │
+│  ⏱️ ████████░░ 3.2s               │  │
+│                                     │
+│  QUICK! Select Gadget:              │
+│                                     │
+│  [🎯 Grappling Hook Ring] ⚡        │
+│  [💊 Antidote Pills]                │
+│  [⚡ Laser Watch]                   │
+│  [💨 Smoke Bomb]                    │
+│                                     │
+│  [Screen shaking intensifies...]    │
+└─────────────────────────────────────┘
+```
+
+**Timer States**:
+```
+0-1s: ⏱️ ██████████ 5.0s  💭 "N..."
+1-2s: ⏱️ ████████░░ 4.0s  💭 "NO..."
+2-3s: ⏱️ ██████░░░░ 3.0s  💭 "NOO..."
+3-4s: ⏱️ ████░░░░░░ 2.0s  💭 "NOOO..." [shake]
+4-5s: ⏱️ ██░░░░░░░░ 1.0s  💭 "NOOOO..." [shake++]
+5s+:  ⏱️ ░░░░░░░░░░ 0.0s  💭 "NOOOOOO!" [FLASH]
+```
+
+**Visual Effects During Timer**:
+- Background desaturates (grayscale with slight sepia)
+- Threat animation plays (sniper scope, knife falling, etc.)
+- Speech bubble appears above player character
+- "O"s added to speech bubble each second
+- Screen shake increases as time runs down
+- Gadget buttons pulse/glow to indicate urgency
+- Audio: Low pitched, stretched "noooooo" sound
 
 ### Gadget Feedback
 
@@ -788,6 +1384,23 @@ Each playthrough randomly selects from:
   - "room rigged with trap" → need detection (X-Ray Glasses)
   - "three burly henchmen" → need help (Shoe Phone)
 - **Replay value**: Different encounters each playthrough
+- **Escalating tension**:
+  - Henchman encounters = Think carefully, no rush
+  - Assassination attempts = Quick thinking under pressure!
+
+### Key Differences: Henchman vs. Assassination
+
+| Feature | Henchman | Assassination |
+|---------|----------|---------------|
+| **Timer** | ❌ No timer | ✅ 5-8 second countdown |
+| **Visual** | Normal colors | Slow-mo, desaturated |
+| **Audio** | Ambient sounds | Pitch-shifted "NOOOO" |
+| **Animation** | Static scene | Threat approaching |
+| **Speech Bubble** | None | Incremental "N...NOOOO!" |
+| **Pressure** | Think it through | React quickly! |
+| **Wrong Penalty** | -4 hours | -6 hours |
+| **No Gadget Penalty** | -6 hours | -8 hours |
+| **Timeout Penalty** | N/A | -8 hours (same as no gadget) |
 
 ---
 
