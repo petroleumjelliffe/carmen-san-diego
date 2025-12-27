@@ -24,38 +24,37 @@ function ClueButton({ spot, onInvestigate, disabled, investigated, index }) {
   );
 }
 
-function RogueActionButton({ rogueAction, spot, onRogueAction, disabled, investigated, index, notoriety }) {
-  const timeSaved = spot.time_cost - rogueAction.time_saved;
-  const effectiveTime = Math.max(1, timeSaved);
+function RogueActionButton({ rogueAction, onRogueAction, disabled, used }) {
+  const ROGUE_TIME_COST = 2; // Fixed 2h - fastest option
 
   return (
     <button
-      onClick={() => onRogueAction(index, rogueAction)}
-      disabled={disabled || investigated}
+      onClick={() => onRogueAction(rogueAction)}
+      disabled={disabled || used}
       className={`w-full p-4 text-left rounded-lg transition-all border-2 ${
-        investigated
+        used
           ? 'bg-gray-700 text-gray-400 cursor-not-allowed border-gray-600'
           : disabled
           ? 'bg-gray-800 text-gray-500 cursor-not-allowed border-gray-700'
           : 'bg-orange-900 hover:bg-orange-800 text-yellow-100 cursor-pointer border-orange-500'
       }`}
     >
-      <div className="flex justify-between items-start">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <Zap size={16} className="text-orange-400" />
-            <span className="font-bold">{rogueAction.name}</span>
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <Zap size={16} className="text-orange-400" />
+          <span className="font-bold">{used ? `✓ ${rogueAction.name}` : rogueAction.name}</span>
+          <span className="text-xs text-green-300">⚡ Get BOTH clues!</span>
+        </div>
+        <div className="flex items-center gap-3 text-sm">
+          <div className="flex items-center gap-1">
+            <Clock size={14} />
+            {ROGUE_TIME_COST}h
           </div>
-          <p className="text-xs text-yellow-200/70 mb-2">{rogueAction.choice_text}</p>
-          <div className="flex items-center gap-2 text-xs">
-            <AlertTriangle size={12} className="text-red-400" />
-            <span className="text-red-300">+{rogueAction.notoriety_gain} Notoriety</span>
+          <div className="flex items-center gap-1 text-xs text-red-300">
+            <AlertTriangle size={12} />
+            +{rogueAction.notoriety_gain}
           </div>
         </div>
-        <span className="flex items-center gap-1 text-sm ml-3">
-          <Clock size={14} />
-          {effectiveTime}h
-        </span>
       </div>
     </button>
   );
@@ -70,6 +69,7 @@ export function InvestigateTab({
   collectedClues,
   lastFoundClue,
   lastRogueAction,
+  rogueUsedInCity,
   onInvestigate,
   rogueActions,
   onRogueAction,
@@ -77,13 +77,10 @@ export function InvestigateTab({
 }) {
   if (!cityClues) return null;
 
-  // Helper to find matching rogue action for a spot
-  const findRogueAction = (spot) => {
-    if (!rogueActions) return null;
-    return rogueActions.find(action =>
-      action.replaces_spot === spot.type || action.replaces_spot === 'any'
-    );
-  };
+  const ROGUE_TIME_COST = 2;
+
+  // Pick any rogue action (just use first one for now)
+  const availableRogueAction = rogueActions && rogueActions.length > 0 ? rogueActions[0] : null;
 
   return (
     <div className="space-y-4">
@@ -110,33 +107,31 @@ export function InvestigateTab({
         </div>
       )}
 
+      {/* Investigation Spots - Normal 3 options */}
       {cityClues.map((clue, i) => {
-        const rogueAction = findRogueAction(clue.spot);
         const investigated = investigatedLocations.includes(clue.spot.id);
 
         return (
-          <div key={clue.spot.id} className="space-y-2">
-            <ClueButton
-              spot={clue.spot}
-              index={i}
-              onInvestigate={onInvestigate}
-              disabled={timeRemaining < clue.spot.time_cost}
-              investigated={investigated}
-            />
-            {rogueAction && onRogueAction && (
-              <RogueActionButton
-                rogueAction={rogueAction}
-                spot={clue.spot}
-                index={i}
-                onRogueAction={onRogueAction}
-                disabled={timeRemaining < Math.max(1, clue.spot.time_cost - rogueAction.time_saved)}
-                investigated={investigated}
-                notoriety={notoriety}
-              />
-            )}
-          </div>
+          <ClueButton
+            key={clue.spot.id}
+            spot={clue.spot}
+            index={i}
+            onInvestigate={onInvestigate}
+            disabled={timeRemaining < clue.spot.time_cost}
+            investigated={investigated}
+          />
         );
       })}
+
+      {/* Rogue Cop Tactic - 4th option */}
+      {availableRogueAction && onRogueAction && (
+        <RogueActionButton
+          rogueAction={availableRogueAction}
+          onRogueAction={onRogueAction}
+          disabled={timeRemaining < ROGUE_TIME_COST}
+          used={rogueUsedInCity}
+        />
+      )}
 
       {lastFoundClue.city && (
         <div className="mt-6 bg-red-950/50 p-4 rounded-lg border border-yellow-400/30">

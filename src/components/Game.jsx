@@ -34,6 +34,7 @@ export function Game({ gameData }) {
     wrongCityData,
     cityClues,
     lastFoundClue,
+    rogueUsedInCity,
     isFinalCity,
     destinations,
     karma,
@@ -192,6 +193,7 @@ export function Game({ gameData }) {
             collectedClues={collectedClues}
             lastFoundClue={lastFoundClue}
             lastRogueAction={lastRogueAction}
+            rogueUsedInCity={rogueUsedInCity}
             onInvestigate={investigate}
             rogueActions={rogueActions}
             onRogueAction={rogueInvestigate}

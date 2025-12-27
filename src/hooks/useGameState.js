@@ -25,6 +25,7 @@ export function useGameState(gameData) {
   const [wrongCityData, setWrongCityData] = useState(null);
   const [cityClues, setCityClues] = useState(null);
   const [lastFoundClue, setLastFoundClue] = useState({ city: null, suspect: null });
+  const [rogueUsedInCity, setRogueUsedInCity] = useState(false); // Track if rogue was used in current city
 
   // Phase 3: Karma & Notoriety System (persists across cases)
   const [karma, setKarma] = useState(0); // Good deeds completed
@@ -263,54 +264,51 @@ export function useGameState(gameData) {
     }
   }, [timeRemaining, cityClues, investigatedLocations, advanceTime, wrongCity, karma, goodDeeds, fakeGoodDeeds, getInjuryTimePenalty, shouldMissClue]);
 
-  // Rogue investigate - Fast but increases notoriety
-  const rogueInvestigate = useCallback((locationIndex, rogueAction) => {
-    if (!cityClues || !cityClues[locationIndex]) return;
+  // Rogue investigate - Fast but increases notoriety, gets BOTH clues
+  const rogueInvestigate = useCallback((rogueAction) => {
+    if (!cityClues) return;
+    if (rogueUsedInCity) return; // Already used in this city
 
-    const clue = cityClues[locationIndex];
-    const spot = clue.spot;
+    const ROGUE_TIME_COST = 2; // Fixed 2h - fastest option
 
-    // Calculate rogue action time (faster than normal)
-    const effectiveTime = Math.max(1, spot.time_cost - rogueAction.time_saved);
-
-    if (timeRemaining < effectiveTime) {
+    if (timeRemaining < ROGUE_TIME_COST) {
       setMessage("Not enough time for this action!");
       return;
     }
 
-    if (investigatedLocations.includes(spot.id)) {
-      return;
-    }
+    // Find one location clue and one suspect clue from available spots
+    const locationClue = cityClues.find(c => c.destinationClue)?.destinationClue;
+    const suspectClue = cityClues.find(c => c.suspectClue)?.suspectClue;
 
-    // Mark as investigated
-    setInvestigatedLocations(prev => [...prev, spot.id]);
+    // Rogue actions always get BOTH clues (if available)
+    setLastFoundClue({ city: locationClue, suspect: suspectClue });
+    setLastRogueAction(rogueAction);
 
-    // Rogue actions always get clues (faster, more aggressive, ignore injuries)
-    setLastFoundClue({ city: clue.destinationClue, suspect: clue.suspectClue });
-    setLastRogueAction(rogueAction); // Track that this was a rogue action
-
-    if (clue.destinationClue) {
+    if (locationClue) {
       setCollectedClues(prev => ({
         ...prev,
-        city: [...prev.city, clue.destinationClue],
+        city: [...prev.city, locationClue],
       }));
     }
 
-    if (clue.suspectClue) {
+    if (suspectClue) {
       setCollectedClues(prev => ({
         ...prev,
-        suspect: [...prev.suspect, clue.suspectClue],
+        suspect: [...prev.suspect, suspectClue],
       }));
     }
+
+    // Mark rogue as used in this city (can't use again)
+    setRogueUsedInCity(true);
 
     // Increase notoriety
     setNotoriety(prev => prev + rogueAction.notoriety_gain);
 
-    // Advance time (faster than normal investigation)
-    advanceTime(effectiveTime);
+    // Advance time (fixed 2h cost)
+    advanceTime(ROGUE_TIME_COST);
 
     // No good deed encounters after rogue actions (you're being ruthless)
-  }, [timeRemaining, cityClues, investigatedLocations, advanceTime]);
+  }, [timeRemaining, cityClues, rogueUsedInCity, advanceTime]);
 
   // Get available destinations
   const destinations = useMemo(() => {
@@ -332,6 +330,7 @@ export function useGameState(gameData) {
     // Clear city-specific state
     setInvestigatedLocations([]);
     setLastFoundClue({ city: null, suspect: null });
+    setRogueUsedInCity(false); // Reset rogue action for new city
 
     if (destination.isCorrect) {
       // Show assassination cutscene
@@ -452,6 +451,7 @@ export function useGameState(gameData) {
     wrongCityData,
     cityClues,
     lastFoundClue,
+    rogueUsedInCity,
     isFinalCity,
     destinations,
 
