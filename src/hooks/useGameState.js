@@ -39,7 +39,11 @@ export function useGameState(gameData) {
   const [currentRogueAction, setCurrentRogueAction] = useState(null);
   const [lastRogueAction, setLastRogueAction] = useState(null); // Track last rogue action used
 
-  const { settings, citiesById, investigationSpots, assassinationAttempts, goodDeeds, fakeGoodDeeds, rogueActions } = gameData;
+  // Phase 4: Gadget Encounters (henchman & assassination)
+  const [currentEncounter, setCurrentEncounter] = useState(null); // Current henchman/assassination encounter
+  const [usedGadgets, setUsedGadgets] = useState([]); // Gadgets used in current case
+
+  const { settings, citiesById, investigationSpots, assassinationAttempts, goodDeeds, fakeGoodDeeds, rogueActions, encounters, gadgets } = gameData;
 
   // Current city data
   const currentCity = useMemo(() => {
@@ -243,10 +247,13 @@ export function useGameState(gameData) {
     }
 
     // Advance time with injury penalties (checks for sleep and game over)
-    advanceTime(totalTimeCost);
+    const gameOver = advanceTime(totalTimeCost);
+
+    if (gameOver) return; // Don't trigger encounters if game is over
 
     // Check for good deed encounter (25% chance in correct cities only)
-    if (!wrongCity && goodDeeds && Math.random() < 0.25) {
+    // Good deeds appear inline in the investigation tab, not as a separate state
+    if (!wrongCity && goodDeeds && !currentGoodDeed && Math.random() < 0.25) {
       // Check if high karma triggers fake good deed trap
       const isFakeTrap = karma >= 5 && fakeGoodDeeds && Math.random() < 0.25;
 
@@ -257,11 +264,16 @@ export function useGameState(gameData) {
         const deed = pickRandom(goodDeeds);
         setCurrentGoodDeed({ ...deed, isFake: false });
       }
-
-      // Change game state to show good deed encounter (not a modal)
-      setGameState('good_deed');
+      return; // Don't trigger henchman if good deed is shown
     }
-  }, [timeRemaining, cityClues, investigatedLocations, advanceTime, wrongCity, karma, goodDeeds, fakeGoodDeeds, getInjuryTimePenalty, shouldMissClue]);
+
+    // Check for henchman encounter (100% in correct cities - signals "you're on the right track!")
+    if (!wrongCity && encounters?.henchman_encounters) {
+      const henchmanEncounter = pickRandom(encounters.henchman_encounters);
+      setCurrentEncounter(henchmanEncounter);
+      setGameState('henchman');
+    }
+  }, [timeRemaining, cityClues, investigatedLocations, advanceTime, wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, getInjuryTimePenalty, shouldMissClue]);
 
   // Rogue investigate - Fast but increases notoriety, gets BOTH clues
   const rogueInvestigate = useCallback((rogueAction) => {
@@ -315,6 +327,15 @@ export function useGameState(gameData) {
     return getDestinations(gameData, currentCase, currentCityIndex);
   }, [gameData, currentCase, currentCityIndex, gameState]);
 
+  // Get available gadgets with used status
+  const availableGadgets = useMemo(() => {
+    if (!gadgets) return [];
+    return gadgets.map(gadget => ({
+      ...gadget,
+      used: usedGadgets.includes(gadget.id)
+    }));
+  }, [gadgets, usedGadgets]);
+
   // Travel to a destination
   const travel = useCallback((destination) => {
     // Apply injury time penalties to travel
@@ -334,10 +355,7 @@ export function useGameState(gameData) {
     setRogueUsedInCity(false); // Reset rogue action for new city
 
     if (destination.isCorrect) {
-      // Show assassination cutscene
-      const attempt = pickRandom(assassinationAttempts);
-      setCutsceneText(attempt.text);
-      setShowCutscene(true);
+      // Advance to next city (no cutscene - assassination only happens when issuing warrant in final city)
       setWrongCity(false);
       setWrongCityData(null);
       setCurrentCityIndex(prev => prev + 1);
@@ -350,9 +368,9 @@ export function useGameState(gameData) {
 
     // Advance time (checks for sleep and game over)
     advanceTime(travelTime);
-  }, [timeRemaining, settings.travel_time, assassinationAttempts, advanceTime, getInjuryTimePenalty]);
+  }, [timeRemaining, settings.travel_time, advanceTime, getInjuryTimePenalty]);
 
-  // Issue a warrant (moves to trial)
+  // Issue a warrant (moves to trial or assassination in final city)
   const issueWarrant = useCallback(() => {
     if (!selectedWarrant) {
       setMessage("Select a suspect first!");
@@ -364,9 +382,16 @@ export function useGameState(gameData) {
       return;
     }
 
-    // Move to trial state
-    setGameState('trial');
-  }, [selectedWarrant, isFinalCity]);
+    // FINAL CITY ONLY: Trigger assassination attempt (100% guaranteed)
+    if (encounters?.assassination_attempts) {
+      const assassinationEncounter = pickRandom(encounters.assassination_attempts);
+      setCurrentEncounter(assassinationEncounter);
+      setGameState('assassination');
+    } else {
+      // No assassination data available - move directly to trial
+      setGameState('trial');
+    }
+  }, [selectedWarrant, isFinalCity, encounters]);
 
   // Complete trial (moves to debrief)
   const completeTrial = useCallback(() => {
@@ -442,10 +467,77 @@ export function useGameState(gameData) {
       setLastGoodDeedResult(null); // No result to show
     }
 
-    // Return to playing state
-    setGameState('playing');
+    // Clear good deed (stay in playing state - good deeds are inline)
     setCurrentGoodDeed(null);
   }, [currentGoodDeed, advanceTime]);
+
+  // Handle henchman gadget choice
+  const handleHenchmanGadget = useCallback((gadgetId) => {
+    if (!currentEncounter) return;
+
+    const isCorrect = gadgetId === currentEncounter.correct_gadget;
+    const timePenalty = gadgetId === null
+      ? currentEncounter.time_penalty_none
+      : isCorrect
+      ? 0
+      : currentEncounter.time_penalty_wrong;
+
+    // Mark gadget as used
+    if (gadgetId) {
+      setUsedGadgets(prev => [...prev, gadgetId]);
+    }
+
+    // Advance time based on choice
+    advanceTime(timePenalty);
+
+    // Set message based on outcome
+    if (isCorrect) {
+      setMessage(currentEncounter.success_text);
+    } else if (gadgetId === null) {
+      setMessage(currentEncounter.no_gadget_text);
+    } else {
+      setMessage(currentEncounter.failure_text);
+    }
+
+    // Clear encounter and return to playing
+    setCurrentEncounter(null);
+    setGameState('playing');
+  }, [currentEncounter, advanceTime]);
+
+  // Handle assassination gadget choice
+  const handleAssassinationGadget = useCallback((gadgetId) => {
+    if (!currentEncounter) return;
+
+    const isCorrect = gadgetId === currentEncounter.correct_gadget;
+    const timePenalty = gadgetId === null
+      ? currentEncounter.time_penalty_none
+      : isCorrect
+      ? 0
+      : currentEncounter.time_penalty_wrong;
+
+    // Mark gadget as used
+    if (gadgetId) {
+      setUsedGadgets(prev => [...prev, gadgetId]);
+    }
+
+    // Advance time based on choice
+    advanceTime(timePenalty);
+
+    // Set message based on outcome
+    if (isCorrect) {
+      setMessage(currentEncounter.success_text);
+    } else if (gadgetId === null) {
+      setMessage(currentEncounter.timeout_text || currentEncounter.no_gadget_text);
+    } else {
+      setMessage(currentEncounter.failure_text);
+    }
+
+    // TODO: Check for NPC rescue if failed and karma is high
+
+    // Clear encounter and move to trial
+    setCurrentEncounter(null);
+    setGameState('trial');
+  }, [currentEncounter, advanceTime]);
 
   // Return to menu
   const returnToMenu = useCallback(() => {
@@ -488,6 +580,10 @@ export function useGameState(gameData) {
     currentRogueAction,
     lastRogueAction,
 
+    // Phase 4: Gadget Encounters
+    currentEncounter,
+    availableGadgets,
+
     // Actions
     startNewCase,
     acceptBriefing,
@@ -499,6 +595,8 @@ export function useGameState(gameData) {
     dismissCutscene,
     returnToMenu,
     handleGoodDeed,
+    handleHenchmanGadget,
+    handleAssassinationGadget,
     setActiveTab,
     setSelectedWarrant,
     setMessage,

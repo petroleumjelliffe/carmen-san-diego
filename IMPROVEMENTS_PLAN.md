@@ -32,7 +32,7 @@ Game States → Main Content Display:
 - menu       → Menu component
 - briefing   → Briefing component
 - playing    → Game component (with tabs: Investigate, Airport, Dossier)
-- sleeping   → Sleep component (NEEDS REFACTOR: currently splash screen)
+- good_deed  → GoodDeedEncounter component (help NPC choice) ✅ IMPLEMENTED
 - trial      → Trial component
 - debrief    → Debrief component
 ```
@@ -40,21 +40,22 @@ Game States → Main Content Display:
 #### Proposed State Expansion
 ```
 Additional States → Main Content Display:
-- good_deed       → GoodDeedEncounter component (help NPC choice)
-- fake_deed       → FakeGoodDeedTrap component (trap reveal)
 - henchman        → HenchmanEncounter component (gadget puzzle)
 - assassination   → AssassinationAttempt component (timed gadget puzzle)
 - npc_rescue      → NPCRescue component (saved NPC appears)
 - traveling       → TravelAnimation component (plane animation)
-- rogue_result    → RogueActionResult component (consequence reveal)
 ```
 
 #### Content Display Patterns
 
-**Investigation Results** (already working):
+**Investigation Results** ✅ IMPLEMENTED:
 - Displayed within InvestigateTab component
-- "Latest Intel" section shows clues found
-- Rogue action results shown inline with orange highlight
+- Unified "Latest Activity" section at top shows:
+  - Good deed outcomes (help/trap results)
+  - Sleep notifications (auto-sleep at 11pm)
+  - Rogue action results with notoriety warnings
+  - Investigation intel (clues found)
+- Results appear ABOVE investigation options
 - No state change - stays in 'playing' state
 
 **Travel** (needs enhancement):
@@ -65,24 +66,22 @@ Additional States → Main Content Display:
   - Auto-advance to new city after animation
   - Return to 'playing' state with Investigate tab active
 
-**Sleep** (needs refactor):
-- Currently: Full splash screen component (disruptive)
-- Proposed: Main content area component
-  - Show hotel room background
-  - Display "You rest for 7 hours" message
-  - Show time change (11pm → 6am)
-  - Button to continue to next day
-  - OR: Auto-sleep with toast notification only
+**Sleep** ✅ IMPLEMENTED:
+- Auto-sleep when time crosses 11pm during any action
+- Automatically adds 7 hours (11pm → 6am)
+- Notification appears in unified results area
+- No separate state or splash screen needed
 
-**Good Deeds** (to be implemented):
-- Trigger: After investigation, 25% chance
-- State: Change to 'good_deed' or 'fake_deed'
-- Display in main content area:
+**Good Deeds** ✅ IMPLEMENTED:
+- Trigger: After investigation, 25% chance (correct cities only)
+- State: Change to 'good_deed'
+- Display in main content area using GameLayout:
   - NPC in distress scene
-  - Situation description
+  - Situation description (or fake trap reveal)
   - Time cost indicator
-  - Two buttons: "Help (costs Xh, +1 karma)" vs "Ignore (no cost)"
-- After choice: Return to 'playing' state
+  - Paranoia warnings if karma ≥ 1
+  - Two buttons: "Help (costs Xh, +1 karma)" vs "Keep Moving (no cost)"
+- After choice: Return to 'playing' state with result in unified area
 
 **Henchmen Encounters** (to be implemented):
 - Trigger: Random when traveling/investigating

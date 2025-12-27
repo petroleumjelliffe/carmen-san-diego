@@ -11,7 +11,8 @@ import { DossierTab } from './DossierTab';
 import { Briefing } from './Briefing';
 import { Trial } from './Trial';
 import { Debrief } from './Debrief';
-import { GoodDeedEncounter } from './GoodDeedEncounter';
+import { HenchmanEncounter } from './HenchmanEncounter';
+import { AssassinationAttempt } from './AssassinationAttempt';
 
 export function Game({ gameData }) {
   const {
@@ -44,6 +45,8 @@ export function Game({ gameData }) {
     permanentInjuries,
     currentGoodDeed,
     lastRogueAction,
+    currentEncounter,
+    availableGadgets,
     startNewCase,
     acceptBriefing,
     investigate,
@@ -54,6 +57,8 @@ export function Game({ gameData }) {
     dismissCutscene,
     returnToMenu,
     handleGoodDeed,
+    handleHenchmanGadget,
+    handleAssassinationGadget,
     setActiveTab,
     setSelectedWarrant,
   } = useGameState(gameData);
@@ -84,14 +89,26 @@ export function Game({ gameData }) {
     );
   }
 
-  // Good Deed Encounter
-  if (gameState === 'good_deed') {
+  // Henchman Encounter
+  if (gameState === 'henchman') {
     return (
-      <GoodDeedEncounter
-        goodDeed={currentGoodDeed}
-        karma={karma}
+      <HenchmanEncounter
+        encounter={currentEncounter}
+        availableGadgets={availableGadgets}
         timeRemaining={timeRemaining}
-        onChoice={handleGoodDeed}
+        onGadgetChoice={handleHenchmanGadget}
+      />
+    );
+  }
+
+  // Assassination Attempt (FINAL CITY ONLY)
+  if (gameState === 'assassination') {
+    return (
+      <AssassinationAttempt
+        encounter={currentEncounter}
+        availableGadgets={availableGadgets}
+        timeRemaining={timeRemaining}
+        onGadgetChoice={handleAssassinationGadget}
       />
     );
   }
@@ -196,9 +213,12 @@ export function Game({ gameData }) {
             lastSleepResult={lastSleepResult}
             lastRogueAction={lastRogueAction}
             rogueUsedInCity={rogueUsedInCity}
+            currentGoodDeed={currentGoodDeed}
+            karma={karma}
             onInvestigate={investigate}
             rogueActions={rogueActions}
             onRogueAction={rogueInvestigate}
+            onGoodDeedChoice={handleGoodDeed}
             notoriety={notoriety}
           />
         )}

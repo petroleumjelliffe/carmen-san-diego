@@ -1,4 +1,4 @@
-import { Clock, Zap, AlertTriangle } from 'lucide-react';
+import { Clock, Zap, AlertTriangle, Heart, X } from 'lucide-react';
 
 function ClueButton({ spot, onInvestigate, disabled, investigated, index }) {
   return (
@@ -72,9 +72,12 @@ export function InvestigateTab({
   lastGoodDeedResult,
   lastSleepResult,
   rogueUsedInCity,
+  currentGoodDeed,
+  karma,
   onInvestigate,
   rogueActions,
   onRogueAction,
+  onGoodDeedChoice,
   notoriety,
 }) {
   if (!cityClues) return null;
@@ -101,6 +104,62 @@ export function InvestigateTab({
         <div className="text-sm text-yellow-200/70 mb-4">
           Suspect clues collected: {collectedClues.suspect.length} / 3
           {collectedClues.suspect.length < 3 && " (check the Local Informant for suspect info)"}
+        </div>
+      )}
+
+      {/* Good Deed Encounter - Appears inline */}
+      {currentGoodDeed && onGoodDeedChoice && (
+        <div className="bg-blue-900/50 border-2 border-blue-400 p-4 rounded-lg mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            {currentGoodDeed.isFake ? (
+              <AlertTriangle size={24} className="text-red-400" />
+            ) : (
+              <Heart size={24} className="text-yellow-400" />
+            )}
+            <h3 className="text-xl font-bold text-yellow-400">
+              {currentGoodDeed.isFake ? '❗ URGENT SITUATION' : '💡 GOOD DEED OPPORTUNITY'}
+            </h3>
+          </div>
+
+          <div className="bg-black bg-opacity-40 p-3 rounded mb-3">
+            <p className="text-yellow-100 mb-2">{currentGoodDeed.description}</p>
+            {currentGoodDeed.plea && (
+              <p className="text-yellow-300 italic border-l-4 border-yellow-500 pl-3">
+                "{currentGoodDeed.plea}"
+              </p>
+            )}
+          </div>
+
+          {/* Paranoia warning */}
+          {karma >= 1 && !currentGoodDeed.isFake && (
+            <div className="bg-red-800/50 border border-red-400 p-2 rounded mb-3">
+              <p className="text-red-200 text-sm flex items-center gap-2">
+                <AlertTriangle size={14} />
+                <span>Is this one real? Or another trap? You can't tell...</span>
+              </p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => onGoodDeedChoice(true)}
+              disabled={timeRemaining < (currentGoodDeed.time_cost || 3)}
+              className="bg-green-700 hover:bg-green-600 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-all flex flex-col items-center gap-1"
+            >
+              <Heart size={20} />
+              <span>HELP</span>
+              <span className="text-xs">Costs {currentGoodDeed.time_cost || 3}h, +1 karma</span>
+            </button>
+
+            <button
+              onClick={() => onGoodDeedChoice(false)}
+              className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-all flex flex-col items-center gap-1"
+            >
+              <X size={20} />
+              <span>KEEP MOVING</span>
+              <span className="text-xs">No time to spare</span>
+            </button>
+          </div>
         </div>
       )}
 

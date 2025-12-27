@@ -18,18 +18,17 @@
 ## 🎮 Game Flow States
 
 1. **BRIEFING** → Shows case + gadgets
-2. **AT CITY** → Investigate locations
-3. **GOOD DEED** → Optional NPC help (builds karma)
-4. **ROGUE OPTION** → Optional destructive shortcut (builds notoriety)
+2. **AT CITY** → Investigate locations (with unified results display)
+3. **GOOD DEED** → Optional NPC help (builds karma) ✅ IMPLEMENTED
+4. **ROGUE OPTION** → Optional destructive shortcut (builds notoriety) ✅ IMPLEMENTED
 5. **HENCHMAN** → Gadget puzzle (mid-game)
 6. **TRAVELING** → Animated plane flight
-7. **SLEEPING** → Forced at 11pm
-8. **ASSASSINATION** → Gadget puzzle (final city)
-9. **NPC RESCUE** → Saved NPC may appear and save you!
-10. **CATCH** → Automatic arrest
-11. **WARRANT** → Conspiracy board
-12. **TRIAL** → Verdict reveal
-13. **DEBRIEF** → Stats + promotion (clean/dirty/pragmatic)
+7. **ASSASSINATION** → Gadget puzzle (final city)
+8. **NPC RESCUE** → Saved NPC may appear and save you!
+9. **CATCH** → Automatic arrest
+10. **WARRANT** → Conspiracy board
+11. **TRIAL** → Verdict reveal
+12. **DEBRIEF** → Stats + promotion (clean/dirty/pragmatic)
 
 ## 🔧 Gadget System
 
@@ -101,9 +100,10 @@ All 8 combinations = 8 suspects exactly
 
 ### Total Time: 72 hours (Normal difficulty)
 
-### Sleep Mechanic
-- Triggers automatically at 11pm
+### Sleep Mechanic ✅ IMPLEMENTED
+- Triggers automatically when any action crosses 11pm
 - Forces 7-hour rest (advance to 6am)
+- Notification appears in unified results area (no separate screen)
 - Creates day/night cycle
 - Adds urgency to investigations
 
@@ -373,18 +373,22 @@ Each city has 3 investigation spots:
 
 ### Phase 3: Karma & Notoriety Systems 🎯 **THE INNOVATION**
 **Goal**: Test the dual-pressure mechanics ASAP - this is what makes the game unique!
-- [ ] Good deed random encounters (25% chance)
-- [ ] Good deed choice UI (simple modals)
-- [ ] **Fake good deed traps (karma ≥5 trigger)**
-- [ ] **Permanent injury system (6 injury types)**
+- [x] Good deed random encounters (25% chance) ✅
+- [x] Good deed choice UI (state-based full-screen) ✅
+- [x] **Fake good deed traps (karma ≥5 trigger)** ✅
+- [x] **Permanent injury system (6 injury types)** ✅
 - [ ] **Injury effects on gameplay** (time penalties, gadget failures, missed clues)
-- [ ] **Paranoia text on good deeds after first trap**
-- [ ] Rogue action options (investigation/travel alternatives)
-- [ ] Notoriety tracking and tier system
-- [ ] Cross-pollination logic (karma vs notoriety)
+- [x] **Paranoia text on good deeds after first trap** ✅
+- [x] **Unified results display** (all results in one area above actions) ✅
+- [x] **Auto-sleep system** (no separate state, notification only) ✅
+- [x] Rogue action options (4th investigation option) ✅
+- [x] Notoriety tracking ✅
+- [ ] Notoriety tier consequences (investigation unavailability, trial difficulty)
+- [ ] Cross-pollination logic (karma reduces notoriety, notoriety blocks good deeds)
 - [ ] LocalStorage persistence across cases
+- [x] Debrief component exists ✅
 - [ ] Three debrief variants (clean/dirty/pragmatic/injured)
-- [ ] NPC save tracking in player profile
+- [x] NPC save tracking in player profile ✅
 - [ ] NPC rescue logic during assassinations (basic)
 
 **Deliverable**: Can test if the paranoia/death spiral mechanics are fun ← CRITICAL TEST
