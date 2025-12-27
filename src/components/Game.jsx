@@ -8,6 +8,10 @@ import { TabBar } from './TabBar';
 import { InvestigateTab } from './InvestigateTab';
 import { AirportTab } from './AirportTab';
 import { DossierTab } from './DossierTab';
+import { Briefing } from './Briefing';
+import { Sleep } from './Sleep';
+import { Trial } from './Trial';
+import { Debrief } from './Debrief';
 
 export function Game({ gameData }) {
   const {
@@ -16,6 +20,7 @@ export function Game({ gameData }) {
     currentCity,
     currentCityIndex,
     timeRemaining,
+    currentHour,
     collectedClues,
     investigatedLocations,
     selectedWarrant,
@@ -31,9 +36,12 @@ export function Game({ gameData }) {
     isFinalCity,
     destinations,
     startNewCase,
+    acceptBriefing,
+    sleep,
     investigate,
     travel,
     issueWarrant,
+    completeTrial,
     dismissCutscene,
     returnToMenu,
     setActiveTab,
@@ -53,7 +61,59 @@ export function Game({ gameData }) {
     );
   }
 
-  // Game over screen
+  // Briefing screen
+  if (gameState === 'briefing') {
+    const startingCity = currentCase ? gameData.citiesById[currentCase.cities[0]] : null;
+    return (
+      <Briefing
+        currentCase={currentCase}
+        startingCity={startingCity}
+        settings={settings}
+        onAccept={acceptBriefing}
+      />
+    );
+  }
+
+  // Sleep screen
+  if (gameState === 'sleeping') {
+    return (
+      <Sleep
+        currentCity={currentCity}
+        timeRemaining={timeRemaining}
+        onSleep={sleep}
+      />
+    );
+  }
+
+  // Trial screen
+  if (gameState === 'trial') {
+    return (
+      <Trial
+        currentCase={currentCase}
+        selectedWarrant={selectedWarrant}
+        timeRemaining={timeRemaining}
+        onContinue={completeTrial}
+      />
+    );
+  }
+
+  // Debrief screen
+  if (gameState === 'debrief') {
+    const isWon = selectedWarrant?.id === currentCase?.suspect.id;
+    return (
+      <Debrief
+        isWon={isWon}
+        currentCase={currentCase}
+        timeRemaining={timeRemaining}
+        solvedCases={solvedCases}
+        ranks={ranks}
+        onNewCase={startNewCase}
+        onReturnToMenu={returnToMenu}
+      />
+    );
+  }
+
+  // Game over screen (legacy - can be replaced by debrief)
   if (gameState === 'won' || gameState === 'lost') {
     return (
       <GameOver

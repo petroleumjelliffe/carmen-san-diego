@@ -7,10 +7,12 @@ import { pickRandom } from '../utils/helpers';
  * Custom hook for managing all game state
  */
 export function useGameState(gameData) {
-  const [gameState, setGameState] = useState('menu'); // menu, playing, won, lost
+  // Game states: menu, briefing, playing, sleeping, warrant, trial, debrief, won, lost
+  const [gameState, setGameState] = useState('menu');
   const [currentCase, setCurrentCase] = useState(null);
   const [currentCityIndex, setCurrentCityIndex] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(72);
+  const [currentHour, setCurrentHour] = useState(8); // Time of day (0-23), starts at 8am
   const [collectedClues, setCollectedClues] = useState({ city: [], suspect: [] });
   const [investigatedLocations, setInvestigatedLocations] = useState([]);
   const [selectedWarrant, setSelectedWarrant] = useState(null);
@@ -47,7 +49,7 @@ export function useGameState(gameData) {
     }
   }, [currentCase, currentCity, currentCityIndex, wrongCity, gameState, gameData]);
 
-  // Start a new case
+  // Start a new case (show briefing)
   const startNewCase = useCallback(() => {
     const newCase = generateCase(gameData);
     const initialClues = generateCluesForCity(gameData, newCase, 0, false);
@@ -55,11 +57,12 @@ export function useGameState(gameData) {
     setCurrentCase(newCase);
     setCurrentCityIndex(0);
     setTimeRemaining(settings.total_time);
+    setCurrentHour(8); // Start at 8am
     setCollectedClues({ city: [], suspect: [] });
     setInvestigatedLocations([]);
     setSelectedWarrant(null);
     setActiveTab('investigate');
-    setGameState('playing');
+    setGameState('briefing'); // Show briefing first
     setMessage(null);
     setShowCutscene(false);
     setWrongCity(false);
@@ -67,6 +70,46 @@ export function useGameState(gameData) {
     setCityClues(initialClues);
     setLastFoundClue({ city: null, suspect: null });
   }, [gameData, settings.total_time]);
+
+  // Accept briefing and start playing
+  const acceptBriefing = useCallback(() => {
+    setGameState('playing');
+  }, []);
+
+  // Helper function to advance time and check for sleep
+  const advanceTime = useCallback((hours) => {
+    const newHour = (currentHour + hours) % 24;
+    setCurrentHour(newHour);
+    setTimeRemaining(prev => prev - hours);
+
+    // Check if we hit 11pm (23:00) - trigger sleep
+    if (currentHour < 23 && newHour >= 23) {
+      setGameState('sleeping');
+    }
+
+    // Check if time ran out
+    if (timeRemaining - hours <= 0) {
+      setGameState('lost');
+      setMessage("Time's up! The suspect got away!");
+      return true; // Indicate game over
+    }
+
+    return false; // Game continues
+  }, [currentHour, timeRemaining]);
+
+  // Sleep through the night
+  const sleep = useCallback(() => {
+    const sleepHours = 7; // Sleep 7 hours (11pm to 6am)
+    setCurrentHour(6); // Wake up at 6am
+    setTimeRemaining(prev => prev - sleepHours);
+
+    if (timeRemaining - sleepHours <= 0) {
+      setGameState('lost');
+      setMessage("Time's up! The suspect got away!");
+    } else {
+      setGameState('playing');
+    }
+  }, [timeRemaining]);
 
   // Investigate a location
   const investigate = useCallback((locationIndex) => {
@@ -148,7 +191,7 @@ export function useGameState(gameData) {
     }
   }, [timeRemaining, settings.travel_time, assassinationAttempts]);
 
-  // Issue a warrant
+  // Issue a warrant (moves to trial)
   const issueWarrant = useCallback(() => {
     if (!selectedWarrant) {
       setMessage("Select a suspect first!");
@@ -160,15 +203,18 @@ export function useGameState(gameData) {
       return;
     }
 
-    if (selectedWarrant.id === currentCase.suspect.id) {
+    // Move to trial state
+    setGameState('trial');
+  }, [selectedWarrant, isFinalCity]);
+
+  // Complete trial (moves to debrief)
+  const completeTrial = useCallback(() => {
+    // Update solved cases if correct
+    if (selectedWarrant?.id === currentCase?.suspect.id) {
       setSolvedCases(prev => prev + 1);
-      setGameState('won');
-      setMessage(`Excellent work! You've captured ${currentCase.suspect.name}!`);
-    } else {
-      setGameState('lost');
-      setMessage(`Wrong suspect! ${currentCase.suspect.name} escaped while you arrested ${selectedWarrant.name}!`);
     }
-  }, [selectedWarrant, isFinalCity, currentCase]);
+    setGameState('debrief');
+  }, [selectedWarrant, currentCase]);
 
   // Dismiss cutscene
   const dismissCutscene = useCallback(() => {
@@ -187,6 +233,7 @@ export function useGameState(gameData) {
     currentCity,
     currentCityIndex,
     timeRemaining,
+    currentHour,
     collectedClues,
     investigatedLocations,
     selectedWarrant,
@@ -204,9 +251,12 @@ export function useGameState(gameData) {
 
     // Actions
     startNewCase,
+    acceptBriefing,
+    sleep,
     investigate,
     travel,
     issueWarrant,
+    completeTrial,
     dismissCutscene,
     returnToMenu,
     setActiveTab,
