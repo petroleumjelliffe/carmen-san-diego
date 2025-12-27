@@ -250,6 +250,9 @@ export function InvestigateTab({
   availableGadgets,
   onHenchmanGadget,
   onAssassinationGadget,
+  isApprehended,
+  selectedWarrant,
+  onProceedToTrial,
 }) {
   if (!cityClues) return null;
 
@@ -271,7 +274,27 @@ export function InvestigateTab({
           : "Gather Intel"}
       </h2>
 
-      {!isFinalCity && !wrongCity && (
+      {/* Apprehended - Shows inline with Continue button */}
+      {isApprehended && (
+        <div className="bg-green-900/50 border-2 border-green-400 p-6 rounded-lg text-center">
+          <div className="text-5xl mb-3">🚔</div>
+          <h3 className="text-2xl font-bold text-green-400 mb-2">SUSPECT APPREHENDED!</h3>
+          <p className="text-yellow-100 text-lg mb-2">
+            {selectedWarrant?.name} is now in custody.
+          </p>
+          <p className="text-yellow-200/70 mb-4">
+            Time to face the court and see if you got the right person...
+          </p>
+          <button
+            onClick={onProceedToTrial}
+            className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 px-6 rounded-lg text-lg transition-all"
+          >
+            Continue to Trial
+          </button>
+        </div>
+      )}
+
+      {!isApprehended && !isFinalCity && !wrongCity && (
         <div className="text-sm text-yellow-200/70 mb-4">
           Suspect clues collected: {collectedClues.suspect.length} / 3
           {collectedClues.suspect.length < 3 && " (check the Local Informant for suspect info)"}

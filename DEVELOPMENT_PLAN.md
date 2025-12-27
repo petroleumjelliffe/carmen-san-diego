@@ -227,6 +227,7 @@ FINAL CITY (city 4):
 3. **Two-investigation final city** - First = assassination, Second = apprehension
 4. **First-investigation-only triggers** - Encounters don't repeat on subsequent investigations in same city
 5. **Gadgets are one-use per case** - Track `usedGadgets` array, reset on new case
+6. **NO SPLASH PAGES** - ALWAYS use the main content area for messages, encounters, and transitions. Never create full-screen splash components. All interactive moments (apprehended, encounters, good deeds, results) render inline in InvestigateTab.
 
 ---
 

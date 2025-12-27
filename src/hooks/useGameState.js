@@ -304,8 +304,9 @@ export function useGameState(gameData) {
     // If we're at final city after the assassination attempt
     if (isFinalCity && hadEncounterInCity && !currentEncounter) {
       if (selectedWarrant) {
-        // Apprehend the suspect! Show apprehended screen with Continue button
-        setGameState('apprehended');
+        // Apprehend the suspect! Show inline in content area with Continue button
+        setMessage(`SUSPECT APPREHENDED! ${selectedWarrant.name} is now in custody.`);
+        setGameState('apprehended'); // Triggers inline UI in InvestigateTab
         return;
       } else {
         // No warrant issued yet - guide the player

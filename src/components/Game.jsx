@@ -91,30 +91,6 @@ export function Game({ gameData }) {
     );
   }
 
-  // Apprehended screen - shows before trial with Continue button
-  if (gameState === 'apprehended') {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-red-900 to-red-950 flex items-center justify-center p-4">
-        <div className="bg-black/70 rounded-lg p-8 max-w-lg text-center">
-          <div className="text-6xl mb-4">🚔</div>
-          <h1 className="text-3xl font-bold text-green-400 mb-4">SUSPECT APPREHENDED!</h1>
-          <p className="text-yellow-100 text-xl mb-2">
-            {selectedWarrant?.name} is now in custody.
-          </p>
-          <p className="text-yellow-200/70 mb-6">
-            Time to face the court and see if you got the right person...
-          </p>
-          <button
-            onClick={proceedToTrial}
-            className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 px-8 rounded-lg text-xl transition-all"
-          >
-            Continue to Trial
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   // Trial screen
   if (gameState === 'trial') {
     return (
@@ -227,6 +203,9 @@ export function Game({ gameData }) {
             availableGadgets={availableGadgets}
             onHenchmanGadget={handleHenchmanGadget}
             onAssassinationGadget={handleAssassinationGadget}
+            isApprehended={gameState === 'apprehended'}
+            selectedWarrant={selectedWarrant}
+            onProceedToTrial={proceedToTrial}
           />
         )}
 
