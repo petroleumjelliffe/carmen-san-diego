@@ -37,10 +37,12 @@ export function loadGameData() {
   const gadgetsList = gadgetsConfig.gadgets;
   const gameSettings = settings.settings;
   const difficultySettings = settings.difficulty;
+  const encounterTimers = settings.encounter_timers;
 
   const gameData = {
     settings: gameSettings,
     difficulty: difficultySettings,
+    encounterTimers: encounterTimers,
 
     // Raw arrays
     cities: citiesList,

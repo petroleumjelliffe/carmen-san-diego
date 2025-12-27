@@ -61,17 +61,55 @@ function RogueActionButton({ rogueAction, onRogueAction, disabled, used }) {
   );
 }
 
-function InlineHenchmanEncounter({ encounter, availableGadgets, timeRemaining, onGadgetChoice }) {
+function InlineHenchmanEncounter({ encounter, availableGadgets, timeRemaining, onGadgetChoice, timerDuration }) {
+  const [timeLeft, setTimeLeft] = useState(timerDuration || 10);
+  const [hasTimedOut, setHasTimedOut] = useState(false);
+
+  useEffect(() => {
+    if (!encounter || hasTimedOut) return;
+
+    const interval = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 0.1) {
+          setHasTimedOut(true);
+          clearInterval(interval);
+          // Auto-resolve with no gadget (worst penalty)
+          setTimeout(() => onGadgetChoice(null), 500);
+          return 0;
+        }
+        return prev - 0.1;
+      });
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [encounter, hasTimedOut, onGadgetChoice]);
+
   const wrongPenalty = encounter.time_penalty_wrong || 4;
   const noPenalty = encounter.time_penalty_none || 6;
+  const timerPercent = (timeLeft / (timerDuration || 10)) * 100;
+  const urgencyClass = timeLeft < 3 ? 'animate-pulse' : '';
 
   return (
-    <div className="bg-orange-900/50 border-2 border-orange-500 p-4 rounded-lg mb-4">
+    <div className={`bg-orange-900/50 border-2 border-orange-500 p-4 rounded-lg mb-4 ${urgencyClass}`}>
       <div className="flex items-center gap-2 mb-3">
         <Zap size={24} className="text-orange-400" />
         <div>
           <h3 className="text-xl font-bold text-orange-400">HENCHMAN ENCOUNTER</h3>
           <p className="text-green-400 text-sm">"You're on the right track..." - They're trying to stop you!</p>
+        </div>
+      </div>
+
+      {/* Timer Bar */}
+      <div className="bg-gray-800 rounded-full h-4 overflow-hidden mb-3">
+        <div
+          className={`h-full transition-all duration-100 flex items-center justify-center ${
+            timeLeft < 3 ? 'bg-red-600 animate-pulse' : timeLeft < 6 ? 'bg-orange-500' : 'bg-blue-500'
+          }`}
+          style={{ width: `${timerPercent}%` }}
+        >
+          <span className="text-white font-bold text-xs">
+            {hasTimedOut ? "TIME'S UP!" : `${timeLeft.toFixed(1)}s`}
+          </span>
         </div>
       </div>
 
@@ -82,7 +120,7 @@ function InlineHenchmanEncounter({ encounter, availableGadgets, timeRemaining, o
 
       <div className="bg-blue-900/40 p-2 rounded mb-3 text-sm">
         <p className="text-blue-200">
-          💡 <span className="font-bold">Think carefully:</span> Correct gadget = <span className="text-green-400">0h</span>, Wrong = <span className="text-orange-400">-{wrongPenalty}h</span>, None = <span className="text-red-400">-{noPenalty}h</span>
+          💡 <span className="font-bold">Think carefully:</span> Correct gadget = <span className="text-green-400">0h</span>, Wrong = <span className="text-orange-400">-{wrongPenalty}h</span>, Timeout = <span className="text-red-400">-{noPenalty}h</span>
         </p>
       </div>
 
@@ -91,11 +129,11 @@ function InlineHenchmanEncounter({ encounter, availableGadgets, timeRemaining, o
           <button
             key={gadget.id}
             onClick={() => onGadgetChoice(gadget.id)}
-            disabled={gadget.used || timeRemaining < wrongPenalty}
+            disabled={gadget.used || timeRemaining < wrongPenalty || hasTimedOut}
             className={`p-2 rounded-lg flex flex-col items-center gap-1 transition-all ${
               gadget.used
                 ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                : timeRemaining < wrongPenalty
+                : timeRemaining < wrongPenalty || hasTimedOut
                 ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
                 : 'bg-blue-700 hover:bg-blue-600 text-white cursor-pointer'
             }`}
@@ -108,20 +146,114 @@ function InlineHenchmanEncounter({ encounter, availableGadgets, timeRemaining, o
       </div>
 
       <button
-        onClick={() => onGadgetChoice(null)}
-        disabled={timeRemaining < noPenalty}
-        className={`w-full p-2 rounded-lg transition-all flex items-center justify-center gap-2 ${
-          timeRemaining < noPenalty
-            ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-            : 'bg-red-700 hover:bg-red-600 text-white cursor-pointer'
-        }`}
+        disabled={true}
+        className="w-full p-2 rounded-lg bg-gray-800 text-gray-500 cursor-not-allowed text-sm"
       >
-        <span>No Gadget - Try to Escape</span>
-        <span className="flex items-center gap-1 text-sm">
-          <Clock size={14} />
-          -{noPenalty}h
-        </span>
+        No Gadget - If timer runs out... (-{noPenalty}h)
       </button>
+    </div>
+  );
+}
+
+function InlineGoodDeed({ goodDeed, timeRemaining, karma, onChoice, timerDuration }) {
+  const [timeLeft, setTimeLeft] = useState(timerDuration || 8);
+  const [hasTimedOut, setHasTimedOut] = useState(false);
+
+  useEffect(() => {
+    if (!goodDeed || hasTimedOut) return;
+
+    const interval = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 0.1) {
+          setHasTimedOut(true);
+          clearInterval(interval);
+          // Auto-skip (decline to help)
+          setTimeout(() => onChoice(false), 500);
+          return 0;
+        }
+        return prev - 0.1;
+      });
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [goodDeed, hasTimedOut, onChoice]);
+
+  const timerPercent = (timeLeft / (timerDuration || 8)) * 100;
+  const urgencyClass = timeLeft < 2 ? 'animate-pulse' : '';
+
+  return (
+    <div className={`bg-blue-900/50 border-2 border-blue-400 p-4 rounded-lg mb-4 ${urgencyClass}`}>
+      <div className="flex items-center gap-2 mb-3">
+        {goodDeed.isFake ? (
+          <AlertTriangle size={24} className="text-red-400" />
+        ) : (
+          <Heart size={24} className="text-yellow-400" />
+        )}
+        <div>
+          <h3 className="text-xl font-bold text-yellow-400">
+            {goodDeed.isFake ? '❗ URGENT SITUATION' : '💡 GOOD DEED OPPORTUNITY'}
+          </h3>
+          <p className="text-blue-300 text-sm">Quick decision needed!</p>
+        </div>
+      </div>
+
+      {/* Timer Bar */}
+      <div className="bg-gray-800 rounded-full h-4 overflow-hidden mb-3">
+        <div
+          className={`h-full transition-all duration-100 flex items-center justify-center ${
+            timeLeft < 2 ? 'bg-red-600 animate-pulse' : timeLeft < 4 ? 'bg-orange-500' : 'bg-blue-500'
+          }`}
+          style={{ width: `${timerPercent}%` }}
+        >
+          <span className="text-white font-bold text-xs">
+            {hasTimedOut ? "TOO LATE!" : `${timeLeft.toFixed(1)}s`}
+          </span>
+        </div>
+      </div>
+
+      <div className="bg-black bg-opacity-40 p-3 rounded mb-3">
+        <p className="text-yellow-100 mb-2">{goodDeed.description}</p>
+        {goodDeed.plea && (
+          <p className="text-yellow-300 italic border-l-4 border-yellow-500 pl-3">
+            "{goodDeed.plea}"
+          </p>
+        )}
+      </div>
+
+      {/* Paranoia warning */}
+      {karma >= 1 && !goodDeed.isFake && (
+        <div className="bg-red-800/50 border border-red-400 p-2 rounded mb-3">
+          <p className="text-red-200 text-sm flex items-center gap-2">
+            <AlertTriangle size={14} />
+            <span>Is this one real? Or another trap? You can't tell...</span>
+          </p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          onClick={() => onChoice(true)}
+          disabled={timeRemaining < (goodDeed.time_cost || 3) || hasTimedOut}
+          className={`text-white font-bold py-3 px-4 rounded-lg transition-all flex flex-col items-center gap-1 ${
+            timeRemaining < (goodDeed.time_cost || 3) || hasTimedOut
+              ? 'bg-gray-700 cursor-not-allowed'
+              : 'bg-green-700 hover:bg-green-600'
+          }`}
+        >
+          <Heart size={20} />
+          <span>HELP</span>
+          <span className="text-xs">Costs {goodDeed.time_cost || 3}h, +1 karma</span>
+        </button>
+
+        <button
+          disabled={hasTimedOut}
+          className="bg-gray-700 text-gray-400 cursor-not-allowed font-bold py-3 px-4 rounded-lg transition-all flex flex-col items-center gap-1"
+        >
+          <X size={20} />
+          <span>KEEP MOVING</span>
+          <span className="text-xs">Timer runs out = skip</span>
+        </button>
+      </div>
     </div>
   );
 }
@@ -253,6 +385,7 @@ export function InvestigateTab({
   isApprehended,
   selectedWarrant,
   onProceedToTrial,
+  encounterTimers,
 }) {
   if (!cityClues) return null;
 
@@ -308,6 +441,7 @@ export function InvestigateTab({
           availableGadgets={availableGadgets}
           timeRemaining={timeRemaining}
           onGadgetChoice={onHenchmanGadget}
+          timerDuration={encounterTimers?.henchman_duration || 10}
         />
       )}
 
@@ -321,60 +455,15 @@ export function InvestigateTab({
         />
       )}
 
-      {/* Good Deed Encounter - Appears inline */}
+      {/* Good Deed Encounter - Appears inline with timer */}
       {currentGoodDeed && onGoodDeedChoice && (
-        <div className="bg-blue-900/50 border-2 border-blue-400 p-4 rounded-lg mb-4">
-          <div className="flex items-center gap-2 mb-3">
-            {currentGoodDeed.isFake ? (
-              <AlertTriangle size={24} className="text-red-400" />
-            ) : (
-              <Heart size={24} className="text-yellow-400" />
-            )}
-            <h3 className="text-xl font-bold text-yellow-400">
-              {currentGoodDeed.isFake ? '❗ URGENT SITUATION' : '💡 GOOD DEED OPPORTUNITY'}
-            </h3>
-          </div>
-
-          <div className="bg-black bg-opacity-40 p-3 rounded mb-3">
-            <p className="text-yellow-100 mb-2">{currentGoodDeed.description}</p>
-            {currentGoodDeed.plea && (
-              <p className="text-yellow-300 italic border-l-4 border-yellow-500 pl-3">
-                "{currentGoodDeed.plea}"
-              </p>
-            )}
-          </div>
-
-          {/* Paranoia warning */}
-          {karma >= 1 && !currentGoodDeed.isFake && (
-            <div className="bg-red-800/50 border border-red-400 p-2 rounded mb-3">
-              <p className="text-red-200 text-sm flex items-center gap-2">
-                <AlertTriangle size={14} />
-                <span>Is this one real? Or another trap? You can't tell...</span>
-              </p>
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => onGoodDeedChoice(true)}
-              disabled={timeRemaining < (currentGoodDeed.time_cost || 3)}
-              className="bg-green-700 hover:bg-green-600 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-all flex flex-col items-center gap-1"
-            >
-              <Heart size={20} />
-              <span>HELP</span>
-              <span className="text-xs">Costs {currentGoodDeed.time_cost || 3}h, +1 karma</span>
-            </button>
-
-            <button
-              onClick={() => onGoodDeedChoice(false)}
-              className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-all flex flex-col items-center gap-1"
-            >
-              <X size={20} />
-              <span>KEEP MOVING</span>
-              <span className="text-xs">No time to spare</span>
-            </button>
-          </div>
-        </div>
+        <InlineGoodDeed
+          goodDeed={currentGoodDeed}
+          timeRemaining={timeRemaining}
+          karma={karma}
+          onChoice={onGoodDeedChoice}
+          timerDuration={encounterTimers?.good_deed_duration || 8}
+        />
       )}
 
       {wrongCity && (

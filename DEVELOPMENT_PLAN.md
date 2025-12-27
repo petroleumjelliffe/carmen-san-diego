@@ -239,3 +239,24 @@ Try a variation where henchman encounters put a bystander at risk. After the gad
 - **Ignore them** - No time cost, no karma
 
 This would merge the henchman encounter and good deed mechanics into a single cohesive moment, making encounters feel more dynamic and morally weighted.
+
+### Trivia-Based Encounters (TODO: Flesh out and templatize)
+Replace gadget puzzles with geography/trivia questions. Examples:
+- **City ordering**: "Order these cities by population: Tokyo, Paris, Cairo" (timer running)
+- **Geography facts**: "Which country does this city belong to?"
+- **Capital cities**: "What is the capital of [country]?"
+- **Landmark matching**: "Which city has [famous landmark]?"
+
+**Implementation ideas:**
+- Create a trivia question template system in YAML
+- Question types: ordering, multiple choice, true/false, matching
+- Difficulty scales with game progression
+- Correct answer = no penalty, wrong = time loss
+- Could replace gadgets entirely or be an alternative mode
+- Timer adds pressure - wrong answer on timeout
+
+**Data sources to add:**
+- Cities with population data (for ordering)
+- Countries and capitals
+- Famous landmarks by city
+- Regional groupings

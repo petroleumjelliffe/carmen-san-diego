@@ -292,8 +292,9 @@ export function useGameState(gameData) {
         setCurrentEncounter({ ...assassinationEncounter, type: 'assassination' });
         // Don't change gameState - render inline in InvestigateTab
         return; // Wait for assassination to be resolved before allowing apprehension
-      } else if (!isFinalCity && encounters.henchman_encounters) {
-        // NON-FINAL CITY: Trigger henchman encounter ("you're on the right track!")
+      } else if (!isFinalCity && currentCityIndex > 0 && encounters.henchman_encounters) {
+        // MIDDLE CITIES ONLY (not first, not last): Trigger henchman encounter
+        // "You're on the right track!" - signals player is in correct city
         const henchmanEncounter = pickRandom(encounters.henchman_encounters);
         setCurrentEncounter({ ...henchmanEncounter, type: 'henchman' });
         // Don't change gameState - render inline in InvestigateTab

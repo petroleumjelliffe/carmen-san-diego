@@ -65,7 +65,7 @@ export function Game({ gameData }) {
     setSelectedWarrant,
   } = useGameState(gameData);
 
-  const { ranks, suspects, settings, rogueActions } = gameData;
+  const { ranks, suspects, settings, rogueActions, encounterTimers } = gameData;
 
   // Menu screen
   if (gameState === 'menu') {
@@ -206,6 +206,7 @@ export function Game({ gameData }) {
             isApprehended={gameState === 'apprehended'}
             selectedWarrant={selectedWarrant}
             onProceedToTrial={proceedToTrial}
+            encounterTimers={encounterTimers}
           />
         )}
 
