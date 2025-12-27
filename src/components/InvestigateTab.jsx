@@ -6,12 +6,12 @@ function ClueButton({ spot, onInvestigate, disabled, investigated, index }) {
     <button
       onClick={() => onInvestigate(index)}
       disabled={disabled || investigated}
-      className={`w-full p-4 text-left rounded-lg transition-all ${
+      className={`w-full p-4 min-h-[52px] text-left rounded-lg transition-all ${
         investigated
           ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
           : disabled
           ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-          : 'bg-red-900 hover:bg-red-800 text-yellow-100 cursor-pointer'
+          : 'bg-red-900 hover:bg-red-800 active:bg-red-700 text-yellow-100 cursor-pointer'
       }`}
     >
       <div className="flex justify-between items-center">
@@ -32,12 +32,12 @@ function RogueActionButton({ rogueAction, onRogueAction, disabled, used }) {
     <button
       onClick={() => onRogueAction(rogueAction)}
       disabled={disabled || used}
-      className={`w-full p-4 text-left rounded-lg transition-all border-2 ${
+      className={`w-full p-4 min-h-[52px] text-left rounded-lg transition-all border-2 ${
         used
           ? 'bg-gray-700 text-gray-400 cursor-not-allowed border-gray-600'
           : disabled
           ? 'bg-gray-800 text-gray-500 cursor-not-allowed border-gray-700'
-          : 'bg-orange-900 hover:bg-orange-800 text-yellow-100 cursor-pointer border-orange-500'
+          : 'bg-orange-900 hover:bg-orange-800 active:bg-orange-700 text-yellow-100 cursor-pointer border-orange-500'
       }`}
     >
       <div className="flex justify-between items-center">

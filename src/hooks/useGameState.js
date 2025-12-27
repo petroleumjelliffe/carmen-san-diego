@@ -165,10 +165,9 @@ export function useGameState(gameData) {
     setCurrentHour(newHour);
     setTimeRemaining(prev => prev - totalHours);
 
-    // Check if time ran out
+    // Check if time ran out - go to debrief (no splash screen)
     if (timeRemaining - totalHours <= 0) {
-      setGameState('lost');
-      setMessage("Time's up! The suspect got away!");
+      setGameState('debrief');
       return true; // Indicate game over
     }
 

@@ -142,10 +142,11 @@ Consolidated henchman, good deed, and assassination into a unified encounter sys
 - [ ] Confidence rating based on remaining suspects
 
 ### 4. Mobile Optimization
-- [ ] Static tab bar (fixed position, doesn't scroll with content)
-- [ ] Rearrange header elements for better mobile layout
+- [x] Static tab bar (fixed at bottom on mobile, inline on desktop)
+- [x] Rearrange header elements for better mobile layout (compact 2-row design)
+- [x] Better touch targets (52px minimum height on buttons)
+- [x] Bottom padding on content area to clear fixed tab bar
 - [ ] Swipe gestures for tab navigation
-- [ ] Better touch targets (44px minimum)
 - [ ] Responsive layouts for different breakpoints
 - [ ] Bottom sheet modals on mobile
 
