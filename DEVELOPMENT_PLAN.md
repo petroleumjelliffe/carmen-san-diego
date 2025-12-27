@@ -260,3 +260,21 @@ Replace gadget puzzles with geography/trivia questions. Examples:
 - Countries and capitals
 - Famous landmarks by city
 - Regional groupings
+
+### Hold-to-Investigate Mechanic
+Replace click-to-investigate with tap-and-hold, where hold duration is proportional to the clue's time cost. This makes time cost feel tangible rather than abstract.
+
+**Implementation ideas:**
+- Hold duration = `time_cost * multiplier` (e.g., 3h clue = 1.5s hold)
+- Visual progress ring fills as you hold
+- Releasing early cancels the investigation
+- Mobile: long-press gesture with haptic feedback
+- Desktop: click-and-hold with mouse
+- Could show "investigating..." animation during hold
+- Adds physicality to the time investment decision
+
+**Benefits:**
+- Time cost becomes a felt experience, not just a number
+- Creates natural moments of tension/commitment
+- Prevents accidental clicks
+- Mobile-friendly interaction pattern
