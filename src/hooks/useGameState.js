@@ -602,6 +602,62 @@ export function useGameState(gameData) {
     setCurrentEncounter(null);
   }, [currentEncounter, advanceTime]);
 
+  // Unified encounter resolution handler (used by EncounterCard)
+  // This is the new single handler that replaces the three separate handlers above
+  const handleEncounterResolve = useCallback((result) => {
+    if (!result) return;
+
+    const { type, outcome, timeLost, gadgetId, karmaGain, isTrap, injuryChance, npcName } = result;
+
+    // Apply time penalty
+    if (timeLost > 0) {
+      advanceTime(timeLost);
+    }
+
+    // Mark gadget as used (for gadget-based encounters)
+    if (gadgetId) {
+      setUsedGadgets(prev => [...prev, gadgetId]);
+    }
+
+    // Handle good deed specific effects
+    if (type === 'good_deed') {
+      if (outcome === 'helped' && karmaGain) {
+        setKarma(prev => prev + karmaGain);
+        // Add to saved NPCs list
+        if (npcName) {
+          setSavedNPCs(prev => [...prev, {
+            id: currentGoodDeed?.id,
+            name: npcName,
+            title: currentGoodDeed?.npc_title,
+            hasRescued: false,
+          }]);
+        }
+      } else if (outcome === 'trap' && isTrap) {
+        // Handle trap injury
+        if (injuryChance && Math.random() < injuryChance) {
+          const injuryTypes = [
+            { type: 'limp', effect: '+2h investigations', icon: '🦵' },
+            { type: 'broken_hand', effect: 'Gadgets 2x slower', icon: '✋' },
+            { type: 'scarred_lungs', effect: '+1h all costs', icon: '🫁' },
+            { type: 'head_trauma', effect: '33% miss clues', icon: '🤕' },
+            { type: 'eye_patch', effect: 'Miss visual clues', icon: '👁️' },
+            { type: 'nerve_damage', effect: '25% gadget failure', icon: '🤚' },
+          ];
+          const injury = pickRandom(injuryTypes);
+          setPermanentInjuries(prev => [...prev, injury]);
+        }
+      }
+      // Clear good deed
+      setCurrentGoodDeed(null);
+    } else {
+      // Clear henchman/assassination encounter
+      setCurrentEncounter(null);
+    }
+
+    // Note: We don't set lastEncounterResult/lastGoodDeedResult anymore
+    // because the EncounterCard shows results in-place before calling onResolve
+  }, [advanceTime, currentGoodDeed]);
+
   // Return to menu
   const returnToMenu = useCallback(() => {
     setGameState('menu');
@@ -662,6 +718,7 @@ export function useGameState(gameData) {
     handleGoodDeed,
     handleHenchmanGadget,
     handleAssassinationGadget,
+    handleEncounterResolve,
     setActiveTab,
     setSelectedWarrant,
     setMessage,

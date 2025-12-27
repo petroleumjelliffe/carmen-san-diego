@@ -11,8 +11,6 @@ import { DossierTab } from './DossierTab';
 import { Briefing } from './Briefing';
 import { Trial } from './Trial';
 import { Debrief } from './Debrief';
-import { HenchmanEncounter } from './HenchmanEncounter';
-import { AssassinationAttempt } from './AssassinationAttempt';
 
 export function Game({ gameData }) {
   const {
@@ -34,9 +32,7 @@ export function Game({ gameData }) {
     wrongCityData,
     cityClues,
     lastFoundClue,
-    lastGoodDeedResult,
     lastSleepResult,
-    lastEncounterResult,
     rogueUsedInCity,
     isFinalCity,
     destinations,
@@ -61,6 +57,7 @@ export function Game({ gameData }) {
     handleGoodDeed,
     handleHenchmanGadget,
     handleAssassinationGadget,
+    handleEncounterResolve,
     setActiveTab,
     setSelectedWarrant,
   } = useGameState(gameData);
@@ -187,22 +184,18 @@ export function Game({ gameData }) {
             timeRemaining={timeRemaining}
             collectedClues={collectedClues}
             lastFoundClue={lastFoundClue}
-            lastGoodDeedResult={lastGoodDeedResult}
-            lastSleepResult={lastSleepResult}
-            lastEncounterResult={lastEncounterResult}
             lastRogueAction={lastRogueAction}
+            lastSleepResult={lastSleepResult}
             rogueUsedInCity={rogueUsedInCity}
             currentGoodDeed={currentGoodDeed}
             karma={karma}
             onInvestigate={investigate}
             rogueActions={rogueActions}
             onRogueAction={rogueInvestigate}
-            onGoodDeedChoice={handleGoodDeed}
             notoriety={notoriety}
             currentEncounter={currentEncounter}
             availableGadgets={availableGadgets}
-            onHenchmanGadget={handleHenchmanGadget}
-            onAssassinationGadget={handleAssassinationGadget}
+            onEncounterResolve={handleEncounterResolve}
             isApprehended={gameState === 'apprehended'}
             selectedWarrant={selectedWarrant}
             onProceedToTrial={proceedToTrial}

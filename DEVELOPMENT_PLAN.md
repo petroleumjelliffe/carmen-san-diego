@@ -112,37 +112,19 @@ Add to `index.css`:
 - [x] Handle case where player investigates at final city without warrant issued
 - [x] Clear lastEncounterResult appropriately (clears on travel)
 
-### 1.5 Encounter System Refactor (Next)
-Consolidate henchman, good deed, and assassination into a unified encounter system:
+### 1.5 Encounter System Refactor ✅
+Consolidated henchman, good deed, and assassination into a unified encounter system:
 
-**Current Issues:**
-- Three separate inline components with duplicated timer logic
-- Results appear in separate "Latest Activity" box (jarring transition)
-- Inconsistent visual treatment
-
-**Proposed Solution:**
-- [ ] Create shared `EncounterCard` component with:
-  - Timer bar (configurable duration)
-  - Content slot (description, options)
-  - Result state (success/failure shown in-place)
-- [ ] Encounter flow: Active → Resolved (result shows in same card) → Dismissed
-- [ ] Move encounters to dedicated area ABOVE investigation options
-- [ ] Remove encounter results from "Latest Activity" (keep only clue results there)
-- [ ] Shared `useEncounterTimer` hook to DRY up timer logic
-
-**Layout:**
-```
-┌─────────────────────────────┐
-│ [ENCOUNTER CARD]            │  ← Active or showing result
-│ Timer bar + content         │
-└─────────────────────────────┘
-┌─────────────────────────────┐
-│ Latest Activity (clues only)│
-└─────────────────────────────┘
-┌─────────────────────────────┐
-│ Investigation Options       │
-└─────────────────────────────┘
-```
+**Completed:**
+- [x] Created shared `useEncounterTimer` hook (`src/hooks/useEncounterTimer.js`)
+- [x] Created unified `EncounterCard` component (`src/components/EncounterCard.jsx`):
+  - Timer bar with urgency levels (normal/warning/critical)
+  - Type-specific styling (henchman=orange, assassination=red, good deed=blue)
+  - In-place result display with Continue button
+- [x] Encounter flow: Active → Resolved (result shows in same card) → Dismissed
+- [x] Moved encounters to dedicated area ABOVE investigation options
+- [x] Removed encounter results from "Latest Activity" (only clues/sleep/rogue shown there)
+- [x] Unified `handleEncounterResolve` handler in useGameState.js
 
 ### 2. Visual Enhancements (Next Priority)
 - [ ] Background images for locations/cities
@@ -160,6 +142,8 @@ Consolidate henchman, good deed, and assassination into a unified encounter syst
 - [ ] Confidence rating based on remaining suspects
 
 ### 4. Mobile Optimization
+- [ ] Static tab bar (fixed position, doesn't scroll with content)
+- [ ] Rearrange header elements for better mobile layout
 - [ ] Swipe gestures for tab navigation
 - [ ] Better touch targets (44px minimum)
 - [ ] Responsive layouts for different breakpoints
