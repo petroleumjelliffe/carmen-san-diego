@@ -12,7 +12,7 @@ import { Briefing } from './Briefing';
 import { Sleep } from './Sleep';
 import { Trial } from './Trial';
 import { Debrief } from './Debrief';
-import { GoodDeedModal } from './GoodDeedModal';
+import { GoodDeedEncounter } from './GoodDeedEncounter';
 
 export function Game({ gameData }) {
   const {
@@ -34,6 +34,7 @@ export function Game({ gameData }) {
     wrongCityData,
     cityClues,
     lastFoundClue,
+    lastGoodDeedResult,
     rogueUsedInCity,
     isFinalCity,
     destinations,
@@ -41,7 +42,6 @@ export function Game({ gameData }) {
     notoriety,
     savedNPCs,
     permanentInjuries,
-    showGoodDeedModal,
     currentGoodDeed,
     lastRogueAction,
     startNewCase,
@@ -92,6 +92,18 @@ export function Game({ gameData }) {
         currentCity={currentCity}
         timeRemaining={timeRemaining}
         onSleep={sleep}
+      />
+    );
+  }
+
+  // Good Deed Encounter
+  if (gameState === 'good_deed') {
+    return (
+      <GoodDeedEncounter
+        goodDeed={currentGoodDeed}
+        karma={karma}
+        timeRemaining={timeRemaining}
+        onChoice={handleGoodDeed}
       />
     );
   }
@@ -192,6 +204,7 @@ export function Game({ gameData }) {
             timeRemaining={timeRemaining}
             collectedClues={collectedClues}
             lastFoundClue={lastFoundClue}
+            lastGoodDeedResult={lastGoodDeedResult}
             lastRogueAction={lastRogueAction}
             rogueUsedInCity={rogueUsedInCity}
             onInvestigate={investigate}
@@ -221,15 +234,6 @@ export function Game({ gameData }) {
           />
         )}
       </div>
-
-      {/* Good Deed Modal */}
-      {showGoodDeedModal && (
-        <GoodDeedModal
-          goodDeed={currentGoodDeed}
-          karma={karma}
-          onChoice={handleGoodDeed}
-        />
-      )}
     </div>
   );
 }

@@ -69,6 +69,7 @@ export function InvestigateTab({
   collectedClues,
   lastFoundClue,
   lastRogueAction,
+  lastGoodDeedResult,
   rogueUsedInCity,
   onInvestigate,
   rogueActions,
@@ -81,6 +82,9 @@ export function InvestigateTab({
 
   // Pick any rogue action (just use first one for now)
   const availableRogueAction = rogueActions && rogueActions.length > 0 ? rogueActions[0] : null;
+
+  // Check if we have any results to display
+  const hasResults = lastFoundClue?.city || lastGoodDeedResult;
 
   return (
     <div className="space-y-4">
@@ -104,6 +108,76 @@ export function InvestigateTab({
           <p className="text-yellow-200/70">
             The trail seems cold here... but you can still ask around.
           </p>
+        </div>
+      )}
+
+      {/* Results Area - Shows investigation results, good deed outcomes, etc. */}
+      {hasResults && (
+        <div className="bg-red-950/50 p-4 rounded-lg border border-yellow-400/30 mb-6">
+          <h3 className="text-yellow-400 font-bold mb-3">Latest Activity:</h3>
+
+          {/* Good Deed Result */}
+          {lastGoodDeedResult && (
+            <div className={`border p-3 rounded mb-3 ${
+              lastGoodDeedResult.isTrap
+                ? 'bg-red-900/50 border-red-400'
+                : 'bg-blue-900/50 border-blue-400'
+            }`}>
+              <div className="flex items-center gap-2 mb-2">
+                {lastGoodDeedResult.isTrap ? (
+                  <AlertTriangle size={16} className="text-red-400" />
+                ) : (
+                  '❤️'
+                )}
+                <p className={`font-bold ${
+                  lastGoodDeedResult.isTrap ? 'text-red-300' : 'text-blue-300'
+                }`}>
+                  {lastGoodDeedResult.title}
+                </p>
+              </div>
+              <p className={`text-sm ${
+                lastGoodDeedResult.isTrap ? 'text-red-200' : 'text-blue-200'
+              }`}>
+                {lastGoodDeedResult.message}
+              </p>
+            </div>
+          )}
+
+          {/* Rogue Action Result */}
+          {lastRogueAction && !lastGoodDeedResult && (
+            <div className="bg-orange-900/50 border border-orange-500 p-3 rounded mb-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Zap size={16} className="text-orange-400" />
+                <p className="text-orange-300 font-bold">{lastRogueAction.name}</p>
+              </div>
+              <p className="text-orange-200 text-sm italic">
+                {lastRogueAction.success_text}
+              </p>
+              <p className="text-red-300 text-xs mt-2">
+                <AlertTriangle size={12} className="inline mr-1" />
+                Notoriety increased by {lastRogueAction.notoriety_gain}
+              </p>
+            </div>
+          )}
+
+          {/* Investigation Results */}
+          {lastFoundClue?.city && (
+            <>
+              <p className="text-yellow-100 mb-3">
+                {String.fromCodePoint(0x1F4CD)} {lastFoundClue.city}
+              </p>
+              {lastFoundClue.suspect && (
+                <div className="bg-green-900/50 border border-green-500 p-3 rounded">
+                  <p className="text-green-400 font-bold">
+                    {String.fromCodePoint(0x1F50D)} SUSPECT DESCRIPTION FOUND!
+                  </p>
+                  <p className="text-green-300 mt-1">
+                    {lastFoundClue.suspect}
+                  </p>
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
 
@@ -131,42 +205,6 @@ export function InvestigateTab({
           disabled={timeRemaining < ROGUE_TIME_COST}
           used={rogueUsedInCity}
         />
-      )}
-
-      {lastFoundClue.city && (
-        <div className="mt-6 bg-red-950/50 p-4 rounded-lg border border-yellow-400/30">
-          <h3 className="text-yellow-400 font-bold mb-3">Latest Intel:</h3>
-
-          {lastRogueAction && (
-            <div className="bg-orange-900/50 border border-orange-500 p-3 rounded mb-3">
-              <div className="flex items-center gap-2 mb-2">
-                <Zap size={16} className="text-orange-400" />
-                <p className="text-orange-300 font-bold">{lastRogueAction.name}</p>
-              </div>
-              <p className="text-orange-200 text-sm italic">
-                {lastRogueAction.success_text}
-              </p>
-              <p className="text-red-300 text-xs mt-2">
-                <AlertTriangle size={12} className="inline mr-1" />
-                Notoriety increased by {lastRogueAction.notoriety_gain}
-              </p>
-            </div>
-          )}
-
-          <p className="text-yellow-100 mb-3">
-            {String.fromCodePoint(0x1F4CD)} {lastFoundClue.city}
-          </p>
-          {lastFoundClue.suspect && (
-            <div className="bg-green-900/50 border border-green-500 p-3 rounded mt-2">
-              <p className="text-green-400 font-bold">
-                {String.fromCodePoint(0x1F50D)} SUSPECT DESCRIPTION FOUND!
-              </p>
-              <p className="text-green-300 mt-1">
-                {lastFoundClue.suspect}
-              </p>
-            </div>
-          )}
-        </div>
       )}
     </div>
   );

@@ -25,6 +25,7 @@ export function useGameState(gameData) {
   const [wrongCityData, setWrongCityData] = useState(null);
   const [cityClues, setCityClues] = useState(null);
   const [lastFoundClue, setLastFoundClue] = useState({ city: null, suspect: null });
+  const [lastGoodDeedResult, setLastGoodDeedResult] = useState(null); // Track last good deed outcome
   const [rogueUsedInCity, setRogueUsedInCity] = useState(false); // Track if rogue was used in current city
 
   // Phase 3: Karma & Notoriety System (persists across cases)
@@ -32,8 +33,7 @@ export function useGameState(gameData) {
   const [notoriety, setNotoriety] = useState(0); // Rogue actions taken
   const [savedNPCs, setSavedNPCs] = useState([]); // NPCs saved (for rescue chances)
   const [permanentInjuries, setPermanentInjuries] = useState([]); // Injuries from traps
-  const [showGoodDeedModal, setShowGoodDeedModal] = useState(false);
-  const [currentGoodDeed, setCurrentGoodDeed] = useState(null);
+  const [currentGoodDeed, setCurrentGoodDeed] = useState(null); // Current good deed encounter
   const [showRogueActionModal, setShowRogueActionModal] = useState(false);
   const [currentRogueAction, setCurrentRogueAction] = useState(null);
   const [lastRogueAction, setLastRogueAction] = useState(null); // Track last rogue action used
@@ -260,7 +260,8 @@ export function useGameState(gameData) {
         setCurrentGoodDeed({ ...deed, isFake: false });
       }
 
-      setShowGoodDeedModal(true);
+      // Change game state to show good deed encounter (not a modal)
+      setGameState('good_deed');
     }
   }, [timeRemaining, cityClues, investigatedLocations, advanceTime, wrongCity, karma, goodDeeds, fakeGoodDeeds, getInjuryTimePenalty, shouldMissClue]);
 
@@ -330,6 +331,7 @@ export function useGameState(gameData) {
     // Clear city-specific state
     setInvestigatedLocations([]);
     setLastFoundClue({ city: null, suspect: null });
+    setLastGoodDeedResult(null); // Clear good deed result
     setRogueUsedInCity(false); // Reset rogue action for new city
 
     if (destination.isCorrect) {
@@ -404,9 +406,19 @@ export function useGameState(gameData) {
           ];
           const injury = pickRandom(injuryTypes);
           setPermanentInjuries(prev => [...prev, injury]);
-          setMessage(`TRAP! You've been injured: ${injury.effect}`);
+
+          // Set result to display in investigation tab
+          setLastGoodDeedResult({
+            isTrap: true,
+            title: 'TRAP!',
+            message: `${currentGoodDeed.trap_reveal || 'It was a trap!'} You've been injured: ${injury.effect}`,
+          });
         } else {
-          setMessage("That was close! You barely escaped the trap!");
+          setLastGoodDeedResult({
+            isTrap: true,
+            title: 'Narrow Escape',
+            message: "That was close! You barely escaped the trap!",
+          });
         }
       } else {
         // Real good deed
@@ -418,11 +430,21 @@ export function useGameState(gameData) {
           title: currentGoodDeed.npc_title,
           hasRescued: false,
         }]);
-        setMessage(`${currentGoodDeed.gratitude}`);
+
+        // Set result to display in investigation tab
+        setLastGoodDeedResult({
+          isTrap: false,
+          title: 'Good Deed Complete',
+          message: currentGoodDeed.gratitude || 'They thank you warmly. +1 Karma',
+        });
       }
+    } else {
+      // Player chose to ignore
+      setLastGoodDeedResult(null); // No result to show
     }
 
-    setShowGoodDeedModal(false);
+    // Return to playing state
+    setGameState('playing');
     setCurrentGoodDeed(null);
   }, [currentGoodDeed, advanceTime]);
 
@@ -451,6 +473,7 @@ export function useGameState(gameData) {
     wrongCityData,
     cityClues,
     lastFoundClue,
+    lastGoodDeedResult,
     rogueUsedInCity,
     isFinalCity,
     destinations,
@@ -460,7 +483,6 @@ export function useGameState(gameData) {
     notoriety,
     savedNPCs,
     permanentInjuries,
-    showGoodDeedModal,
     currentGoodDeed,
     showRogueActionModal,
     currentRogueAction,
