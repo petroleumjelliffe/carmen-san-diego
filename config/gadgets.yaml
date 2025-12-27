@@ -1,0 +1,54 @@
+gadgets:
+  - id: smoke_bomb
+    name: Smoke Bomb
+    icon: 💨
+    description: A miniature smoke grenade for quick escapes
+    works_on:
+      - street_tailing
+      - alley_ambush
+    flavor: Deploy a thick cloud of smoke to vanish from sight
+
+  - id: xray_glasses
+    name: X-Ray Glasses
+    icon: 👓
+    description: See through walls and detect hidden threats
+    works_on:
+      - booby_trap
+      - suspicious_package
+    flavor: Peer through surfaces to reveal what's hidden
+
+  - id: shoe_phone
+    name: Shoe Phone
+    icon: 📱
+    description: Call for backup in tight situations
+    works_on:
+      - surrounded_by_goons
+      - police_interrogation
+    flavor: A concealed communication device in your footwear
+
+  - id: laser_watch
+    name: Laser Watch
+    icon: ⚡
+    description: A precision cutting tool disguised as a timepiece
+    works_on:
+      - locked_room
+      - tied_up_scenario
+    flavor: Cut through metal and restraints with ease
+
+  - id: grappling_hook
+    name: Grappling Hook Ring
+    icon: 🎯
+    description: Scale buildings or swing to safety
+    works_on:
+      - rooftop_sniper
+      - building_escape
+    flavor: Reach new heights or escape danger from above
+
+  - id: antidote_pills
+    name: Antidote Pills
+    icon: 💊
+    description: Universal antitoxin for various poisons
+    works_on:
+      - poisoned_drink
+      - nerve_gas
+    flavor: Counteract any toxin before it takes effect

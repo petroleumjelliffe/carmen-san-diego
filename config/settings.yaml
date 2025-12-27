@@ -3,13 +3,26 @@ settings:
   cities_per_case: 4
   travel_time: 4
 
+# Encounter timer settings (in seconds)
+# Henchman: auto-resolves with no_gadget penalty when timer expires
+# Good deed: auto-skips (no help) when timer expires
+encounter_timers:
+  henchman_duration: 10
+  good_deed_duration: 8
+
 difficulty:
   easy:
     total_time: 96
     cities_per_case: 3
+    henchman_duration: 15
+    good_deed_duration: 12
   normal:
     total_time: 72
     cities_per_case: 4
+    henchman_duration: 10
+    good_deed_duration: 8
   hard:
     total_time: 48
     cities_per_case: 5
+    henchman_duration: 7
+    good_deed_duration: 5

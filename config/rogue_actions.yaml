@@ -1,0 +1,172 @@
+# Rogue Actions - Destructive fast options that save time but burn bridges
+# Opposite of good deeds - immediate results with long-term consequences
+# Tracked as "Notoriety" across cases
+
+rogue_actions:
+  - id: threaten_informant
+    name: Threaten Informant
+    type: investigation
+    replaces_spot: informant  # Which investigation spot this replaces
+    time_saved: 2
+    notoriety_gain: 1
+    description: You slam the informant against the wall. They need to understand you're serious.
+    choice_text: "Tell me what I want to know or I'll make sure you regret it."
+    success_text: They talk immediately, terror in their eyes. You get the information you need.
+    consequence: This informant will never cooperate again. Word spreads about your methods.
+    future_penalty: Informant spot unavailable in future cases (this city)
+
+  - id: break_in_police
+    name: Break Into Police Station
+    type: investigation
+    replaces_spot: police
+    time_saved: 4
+    notoriety_gain: 2
+    description: Why wait for bureaucracy? Break in after hours and access the files yourself.
+    choice_text: "I don't have time for red tape. I'm going in."
+    success_text: You crack the lock and access their database. No one sees you... this time.
+    consequence: Police cooperation ends. They know someone breached their system.
+    future_penalty: Police spot unavailable in all future cases + harder trial
+
+  - id: steal_vehicle
+    name: Steal Vehicle
+    type: travel
+    replaces_spot: airport
+    time_saved: 4
+    notoriety_gain: 2
+    description: Carjack a vehicle and drive instead of flying. No airport security, no waiting.
+    choice_text: "I'm commandeering this vehicle. Official police business!"
+    success_text: You reach your destination immediately. The car is abandoned at the scene.
+    consequence: Grand theft auto. International incident. Interpol alerted.
+    future_penalty: Wanted status - police pursue you on arrival
+
+  - id: rough_up_witness
+    name: Rough Up Witness
+    type: investigation
+    replaces_spot: vendor
+    time_saved: 6
+    notoriety_gain: 2
+    description: This witness is holding back. A little physical persuasion will loosen their tongue.
+    choice_text: "You WILL talk. One way or another."
+    success_text: After some... encouragement, they tell you everything. They're shaking.
+    consequence: Witness too traumatized to testify. Trial will be harder.
+    future_penalty: Trial requires more evidence + witness tampering charges risk
+
+  - id: plant_evidence
+    name: Plant Evidence
+    type: final_city
+    replaces_spot: warrant
+    time_saved: 0
+    notoriety_gain: 3
+    description: You're not 100% sure? Make sure. Plant evidence to guarantee conviction.
+    choice_text: "I know they're guilty. A little insurance won't hurt."
+    success_text: Evidence planted. The trial will be a slam dunk now. No one will know...
+    consequence: Wrongful conviction possible. Career ending if discovered. Haunted by injustice.
+    future_penalty: Risk of discovery (25% per case) → instant termination + bad ending
+
+  - id: bribe_security
+    name: Bribe Airport Security
+    type: sleep
+    replaces_spot: sleep
+    time_saved: 7
+    notoriety_gain: 1
+    description: Pay off airport security to let you work through the night. No sleep needed.
+    choice_text: "Here's $500. I was never here, understand?"
+    success_text: Security looks the other way. You keep working while others sleep.
+    consequence: Corruption. Security can blackmail you. Money problems mount.
+    future_penalty: Random gadget unavailable (sold to pay debts) + blackmail risk
+
+  - id: destroy_property
+    name: Destroy Property
+    type: investigation
+    replaces_spot: any
+    time_saved: 3
+    notoriety_gain: 2
+    description: Set fire to a building to force suspects to flee. Interrogate them in the chaos.
+    choice_text: "Sometimes you need to smoke them out. Literally."
+    success_text: The building burns. Suspects flee in panic. You grab one and get answers.
+    consequence: Arson. Property damage. Civilians endangered. Media firestorm.
+    future_penalty: Suspension risk (skips next case if notoriety too high) + lawsuit
+
+  - id: fake_credentials
+    name: Fake Credentials
+    type: investigation
+    replaces_spot: police
+    time_saved: 4
+    notoriety_gain: 1
+    description: Forge diplomatic credentials to access restricted areas immediately.
+    choice_text: "I'm with the State Department. Give me access. Now."
+    success_text: They buy it. You're escorted to the secure files without question.
+    consequence: Identity fraud. International incident if caught. Diplomatic crisis.
+    future_penalty: Random countries refuse entry (destinations unavailable)
+
+  - id: intimidate_suspect
+    name: Intimidate Suspect
+    type: final_city
+    replaces_spot: catch
+    time_saved: 0
+    notoriety_gain: 2
+    description: Beat a confession out of the suspect. Skip the warrant, go straight to arrest.
+    choice_text: "Confess now or this gets much worse for you."
+    success_text: They confess under duress. You have your confession, but at what cost?
+    consequence: Confession inadmissible. Police brutality charges. Cover-up required.
+    future_penalty: Trial auto-fails if no other evidence + brutality investigation
+
+# Notoriety System Configuration
+notoriety_settings:
+  # Notoriety levels
+  low_threshold: 1        # 1-2 rogue actions
+  medium_threshold: 3     # 3-5 rogue actions
+  high_threshold: 6       # 6+ rogue actions
+
+  # Consequences by level
+  low_consequences:
+    investigation_penalty: 1  # 1 investigation option unavailable
+    trial_difficulty: 0       # No change
+    promotion_penalty: false
+    ending_penalty: false
+    warning_text: "The Chief has noticed your... aggressive tactics. Keep it clean, Detective."
+
+  medium_consequences:
+    investigation_penalty: 2  # 2 investigation options unavailable
+    trial_difficulty: 1       # Need 1 extra piece of evidence
+    promotion_penalty: true   # Promotion denied
+    ending_penalty: false
+    npc_rescue_blocked: true  # NPCs won't help (they fear you)
+    warning_text: "Internal Affairs is watching you. One more misstep and you're done."
+
+  high_consequences:
+    investigation_penalty: 3  # 3 investigation options unavailable
+    trial_difficulty: 2       # Need perfect evidence
+    promotion_penalty: true
+    ending_penalty: true      # Bad ending even if you win
+    npc_rescue_blocked: true
+    police_pursuit: true      # Dodging police in cities
+    suspension_risk: 0.33     # 33% chance of suspension per case
+    warning_text: "You're suspended pending investigation. You're on your own, rogue."
+
+  # Decay (notoriety decreases over time)
+  decay_per_clean_case: 1   # Lose 1 notoriety per case without rogue actions
+  decay_with_good_deed: 2   # Lose 2 notoriety if you do a good deed
+
+# Cross-pollination: Karma vs Notoriety
+karma_notoriety_interaction:
+  # Can't have both high karma AND high notoriety
+  # One cancels the other out
+
+  high_karma_blocks_notoriety: true
+    # If karma ≥ 3, notoriety gain reduced by 50%
+    # "Your good reputation protects you from some scrutiny"
+
+  high_notoriety_blocks_karma: true
+    # If notoriety ≥ 3, NPCs refuse good deed opportunities
+    # "Nobody trusts you anymore. They avoid you."
+
+  # Redemption path
+  redemption_threshold: 5
+    # If you have notoriety ≥ 3, doing 5 good deeds reduces it to 0
+    # "You've redeemed yourself through consistent good actions"
+
+  # Corruption path
+  corruption_threshold: 5
+    # If you have karma ≥ 3, doing 5 rogue actions reduces it to 0
+    # "Your good reputation is shattered. You've crossed the line."

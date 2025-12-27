@@ -8,6 +8,11 @@ import { TabBar } from './TabBar';
 import { InvestigateTab } from './InvestigateTab';
 import { AirportTab } from './AirportTab';
 import { DossierTab } from './DossierTab';
+import { Briefing } from './Briefing';
+import { Trial } from './Trial';
+import { Debrief } from './Debrief';
+import { HenchmanEncounter } from './HenchmanEncounter';
+import { AssassinationAttempt } from './AssassinationAttempt';
 
 export function Game({ gameData }) {
   const {
@@ -16,6 +21,7 @@ export function Game({ gameData }) {
     currentCity,
     currentCityIndex,
     timeRemaining,
+    currentHour,
     collectedClues,
     investigatedLocations,
     selectedWarrant,
@@ -28,19 +34,38 @@ export function Game({ gameData }) {
     wrongCityData,
     cityClues,
     lastFoundClue,
+    lastGoodDeedResult,
+    lastSleepResult,
+    lastEncounterResult,
+    rogueUsedInCity,
     isFinalCity,
     destinations,
+    karma,
+    notoriety,
+    savedNPCs,
+    permanentInjuries,
+    currentGoodDeed,
+    lastRogueAction,
+    currentEncounter,
+    availableGadgets,
     startNewCase,
+    acceptBriefing,
     investigate,
+    rogueInvestigate,
     travel,
     issueWarrant,
+    completeTrial,
+    proceedToTrial,
     dismissCutscene,
     returnToMenu,
+    handleGoodDeed,
+    handleHenchmanGadget,
+    handleAssassinationGadget,
     setActiveTab,
     setSelectedWarrant,
   } = useGameState(gameData);
 
-  const { ranks, suspects, settings } = gameData;
+  const { ranks, suspects, settings, rogueActions, encounterTimers } = gameData;
 
   // Menu screen
   if (gameState === 'menu') {
@@ -53,7 +78,52 @@ export function Game({ gameData }) {
     );
   }
 
-  // Game over screen
+  // Briefing screen
+  if (gameState === 'briefing') {
+    const startingCity = currentCase ? gameData.citiesById[currentCase.cities[0]] : null;
+    return (
+      <Briefing
+        currentCase={currentCase}
+        startingCity={startingCity}
+        settings={settings}
+        onAccept={acceptBriefing}
+      />
+    );
+  }
+
+  // Trial screen
+  if (gameState === 'trial') {
+    return (
+      <Trial
+        currentCase={currentCase}
+        selectedWarrant={selectedWarrant}
+        timeRemaining={timeRemaining}
+        onContinue={completeTrial}
+      />
+    );
+  }
+
+  // Debrief screen
+  if (gameState === 'debrief') {
+    const isWon = selectedWarrant?.id === currentCase?.suspect.id;
+    return (
+      <Debrief
+        isWon={isWon}
+        currentCase={currentCase}
+        timeRemaining={timeRemaining}
+        solvedCases={solvedCases}
+        ranks={ranks}
+        karma={karma}
+        notoriety={notoriety}
+        savedNPCs={savedNPCs}
+        permanentInjuries={permanentInjuries}
+        onNewCase={startNewCase}
+        onReturnToMenu={returnToMenu}
+      />
+    );
+  }
+
+  // Game over screen (legacy - can be replaced by debrief)
   if (gameState === 'won' || gameState === 'lost') {
     return (
       <GameOver
@@ -83,6 +153,7 @@ export function Game({ gameData }) {
       <Header
         currentCase={currentCase}
         timeRemaining={timeRemaining}
+        currentHour={currentHour}
         solvedCases={solvedCases}
         ranks={ranks}
       />
@@ -116,7 +187,26 @@ export function Game({ gameData }) {
             timeRemaining={timeRemaining}
             collectedClues={collectedClues}
             lastFoundClue={lastFoundClue}
+            lastGoodDeedResult={lastGoodDeedResult}
+            lastSleepResult={lastSleepResult}
+            lastEncounterResult={lastEncounterResult}
+            lastRogueAction={lastRogueAction}
+            rogueUsedInCity={rogueUsedInCity}
+            currentGoodDeed={currentGoodDeed}
+            karma={karma}
             onInvestigate={investigate}
+            rogueActions={rogueActions}
+            onRogueAction={rogueInvestigate}
+            onGoodDeedChoice={handleGoodDeed}
+            notoriety={notoriety}
+            currentEncounter={currentEncounter}
+            availableGadgets={availableGadgets}
+            onHenchmanGadget={handleHenchmanGadget}
+            onAssassinationGadget={handleAssassinationGadget}
+            isApprehended={gameState === 'apprehended'}
+            selectedWarrant={selectedWarrant}
+            onProceedToTrial={proceedToTrial}
+            encounterTimers={encounterTimers}
           />
         )}
 
