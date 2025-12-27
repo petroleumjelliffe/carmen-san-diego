@@ -304,9 +304,8 @@ export function useGameState(gameData) {
     // If we're at final city after the assassination attempt
     if (isFinalCity && hadEncounterInCity && !currentEncounter) {
       if (selectedWarrant) {
-        // Apprehend the suspect! Show message then go to trial
-        setMessage(`SUSPECT APPREHENDED! ${selectedWarrant.name} is now in custody. Proceeding to trial...`);
-        setTimeout(() => setGameState('trial'), 1500);
+        // Apprehend the suspect! Show apprehended screen with Continue button
+        setGameState('apprehended');
         return;
       } else {
         // No warrant issued yet - guide the player
@@ -436,6 +435,11 @@ export function useGameState(gameData) {
     }
     setGameState('debrief');
   }, [selectedWarrant, currentCase]);
+
+  // Proceed from apprehended screen to trial
+  const proceedToTrial = useCallback(() => {
+    setGameState('trial');
+  }, []);
 
   // Dismiss cutscene
   const dismissCutscene = useCallback(() => {
@@ -650,6 +654,7 @@ export function useGameState(gameData) {
     travel,
     issueWarrant,
     completeTrial,
+    proceedToTrial,
     dismissCutscene,
     returnToMenu,
     handleGoodDeed,

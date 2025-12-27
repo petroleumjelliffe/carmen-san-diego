@@ -227,3 +227,14 @@ FINAL CITY (city 4):
 3. **Two-investigation final city** - First = assassination, Second = apprehension
 4. **First-investigation-only triggers** - Encounters don't repeat on subsequent investigations in same city
 5. **Gadgets are one-use per case** - Track `usedGadgets` array, reset on new case
+
+---
+
+## Future Ideas
+
+### Henchman + Rescue Variation
+Try a variation where henchman encounters put a bystander at risk. After the gadget puzzle, player can choose to:
+- **Save them** - Costs extra time but earns karma (like good deeds)
+- **Ignore them** - No time cost, no karma
+
+This would merge the henchman encounter and good deed mechanics into a single cohesive moment, making encounters feel more dynamic and morally weighted.
