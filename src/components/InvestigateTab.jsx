@@ -237,6 +237,7 @@ export function InvestigateTab({
   lastRogueAction,
   lastGoodDeedResult,
   lastSleepResult,
+  lastEncounterResult,
   rogueUsedInCity,
   currentGoodDeed,
   karma,
@@ -258,7 +259,7 @@ export function InvestigateTab({
   const availableRogueAction = rogueActions && rogueActions.length > 0 ? rogueActions[0] : null;
 
   // Check if we have any results to display
-  const hasResults = lastFoundClue?.city || lastGoodDeedResult || lastSleepResult;
+  const hasResults = lastFoundClue?.city || lastGoodDeedResult || lastSleepResult || lastEncounterResult;
 
   return (
     <div className="space-y-4">
@@ -401,6 +402,57 @@ export function InvestigateTab({
                 <p className="text-blue-300 font-bold">Rest Period</p>
               </div>
               <p className="text-blue-200 text-sm">{lastSleepResult.message}</p>
+            </div>
+          )}
+
+          {/* Encounter Result (Henchman or Assassination) */}
+          {lastEncounterResult && (
+            <div className={`border p-3 rounded mb-3 ${
+              lastEncounterResult.outcome === 'success'
+                ? 'bg-green-900/50 border-green-400'
+                : lastEncounterResult.outcome === 'wrong_gadget'
+                ? 'bg-orange-900/50 border-orange-500'
+                : 'bg-red-900/50 border-red-400'
+            }`}>
+              <div className="flex items-center gap-2 mb-2">
+                {lastEncounterResult.type === 'assassination' ? (
+                  <Skull size={16} className={
+                    lastEncounterResult.outcome === 'success' ? 'text-green-400' : 'text-red-400'
+                  } />
+                ) : (
+                  <Zap size={16} className={
+                    lastEncounterResult.outcome === 'success'
+                      ? 'text-green-400'
+                      : lastEncounterResult.outcome === 'wrong_gadget'
+                      ? 'text-orange-400'
+                      : 'text-red-400'
+                  } />
+                )}
+                <p className={`font-bold ${
+                  lastEncounterResult.outcome === 'success'
+                    ? 'text-green-300'
+                    : lastEncounterResult.outcome === 'wrong_gadget'
+                    ? 'text-orange-300'
+                    : 'text-red-300'
+                }`}>
+                  {lastEncounterResult.type === 'assassination' ? 'Assassination Attempt' : 'Henchman Encounter'}: {lastEncounterResult.name}
+                </p>
+              </div>
+              <p className={`text-sm ${
+                lastEncounterResult.outcome === 'success'
+                  ? 'text-green-200'
+                  : lastEncounterResult.outcome === 'wrong_gadget'
+                  ? 'text-orange-200'
+                  : 'text-red-200'
+              }`}>
+                {lastEncounterResult.message}
+              </p>
+              {lastEncounterResult.timeLost > 0 && (
+                <p className="text-red-300 text-xs mt-2 flex items-center gap-1">
+                  <Clock size={12} />
+                  Lost {lastEncounterResult.timeLost} hours
+                </p>
+              )}
             </div>
           )}
 

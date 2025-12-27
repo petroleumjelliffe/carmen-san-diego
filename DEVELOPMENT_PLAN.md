@@ -107,10 +107,10 @@ Add to `index.css`:
 ---
 
 ### 1. Core Gameplay Fixes (Immediate Priority)
-- [ ] Show encounter results in the results area after gadget choice
-- [ ] Add "Apprehend Suspect" messaging before trial transition
-- [ ] Handle case where player investigates at final city without warrant issued
-- [ ] Clear lastEncounterResult appropriately so it doesn't persist
+- [x] Show encounter results in the results area after gadget choice
+- [x] Add "Apprehend Suspect" messaging before trial transition
+- [x] Handle case where player investigates at final city without warrant issued
+- [x] Clear lastEncounterResult appropriately (clears on travel)
 
 ### 2. Visual Enhancements (Next Priority)
 - [ ] Background images for locations/cities

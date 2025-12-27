@@ -121,6 +121,17 @@ export function useGameState(gameData) {
     setWrongCityData(null);
     setCityClues(initialClues);
     setLastFoundClue({ city: null, suspect: null });
+
+    // Reset encounter state for new case
+    setLastGoodDeedResult(null);
+    setLastSleepResult(null);
+    setLastEncounterResult(null);
+    setLastRogueAction(null);
+    setCurrentGoodDeed(null);
+    setCurrentEncounter(null);
+    setUsedGadgets([]); // Reset gadgets for new case
+    setRogueUsedInCity(false);
+    setHadEncounterInCity(false);
   }, [gameData, settings.total_time]);
 
   // Accept briefing and start playing
@@ -223,6 +234,7 @@ export function useGameState(gameData) {
     // Mark as investigated
     setInvestigatedLocations(prev => [...prev, spot.id]);
     setLastRogueAction(null); // Clear rogue action flag
+    setLastEncounterResult(null); // Clear previous encounter result
 
     // Check for injury-based clue missing
     const missedClue = shouldMissClue();
@@ -274,26 +286,33 @@ export function useGameState(gameData) {
     if (!wrongCity && !hadEncounterInCity && encounters) {
       setHadEncounterInCity(true); // Mark that encounter happened
 
-      if (isFinalCity && encounters.assassination_attempts) {
-        // FINAL CITY: Trigger assassination attempt (high stakes!)
+      if (isFinalCity && !wrongCity && encounters.assassination_attempts) {
+        // CORRECT FINAL CITY ONLY: Trigger assassination attempt (high stakes!)
         const assassinationEncounter = pickRandom(encounters.assassination_attempts);
-        setCurrentEncounter(assassinationEncounter);
+        setCurrentEncounter({ ...assassinationEncounter, type: 'assassination' });
         // Don't change gameState - render inline in InvestigateTab
         return; // Wait for assassination to be resolved before allowing apprehension
       } else if (!isFinalCity && encounters.henchman_encounters) {
         // NON-FINAL CITY: Trigger henchman encounter ("you're on the right track!")
         const henchmanEncounter = pickRandom(encounters.henchman_encounters);
-        setCurrentEncounter(henchmanEncounter);
+        setCurrentEncounter({ ...henchmanEncounter, type: 'henchman' });
         // Don't change gameState - render inline in InvestigateTab
       }
     }
 
     // APPREHENSION: Second investigation at final city (after assassination resolved)
-    // If warrant is issued and we're at final city after the assassination attempt
-    if (isFinalCity && hadEncounterInCity && !currentEncounter && selectedWarrant) {
-      // Apprehend the suspect! Go to trial
-      setGameState('trial');
-      return;
+    // If we're at final city after the assassination attempt
+    if (isFinalCity && hadEncounterInCity && !currentEncounter) {
+      if (selectedWarrant) {
+        // Apprehend the suspect! Show message then go to trial
+        setMessage(`SUSPECT APPREHENDED! ${selectedWarrant.name} is now in custody. Proceeding to trial...`);
+        setTimeout(() => setGameState('trial'), 1500);
+        return;
+      } else {
+        // No warrant issued yet - guide the player
+        setMessage("You've cornered the suspect! Issue a warrant in the Dossier tab to make an arrest.");
+        return;
+      }
     }
   }, [timeRemaining, cityClues, investigatedLocations, advanceTime, wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, getInjuryTimePenalty, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant]);
 
@@ -312,6 +331,9 @@ export function useGameState(gameData) {
     // Find one location clue and one suspect clue from available spots
     const locationClue = cityClues.find(c => c.destinationClue)?.destinationClue;
     const suspectClue = cityClues.find(c => c.suspectClue)?.suspectClue;
+
+    // Clear previous results
+    setLastEncounterResult(null);
 
     // Rogue actions always get BOTH clues (if available)
     setLastFoundClue({ city: locationClue, suspect: suspectClue });
