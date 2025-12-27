@@ -26,6 +26,7 @@ export function useGameState(gameData) {
   const [cityClues, setCityClues] = useState(null);
   const [lastFoundClue, setLastFoundClue] = useState({ city: null, suspect: null });
   const [lastGoodDeedResult, setLastGoodDeedResult] = useState(null); // Track last good deed outcome
+  const [lastSleepResult, setLastSleepResult] = useState(null); // Track automatic sleep
   const [rogueUsedInCity, setRogueUsedInCity] = useState(false); // Track if rogue was used in current city
 
   // Phase 3: Karma & Notoriety System (persists across cases)
@@ -121,11 +122,10 @@ export function useGameState(gameData) {
     setGameState('playing');
   }, []);
 
-  // Helper function to advance time and check for sleep
+  // Helper function to advance time and check for auto-sleep
   const advanceTime = useCallback((hours) => {
-    const newHour = (currentHour + hours) % 24;
-    setCurrentHour(newHour);
-    setTimeRemaining(prev => prev - hours);
+    let totalHours = hours;
+    let newHour = (currentHour + hours) % 24;
 
     // Check if we crossed 11pm (23:00) during this time advancement
     const crossedSleepTime = newHour < currentHour
@@ -133,11 +133,23 @@ export function useGameState(gameData) {
       : (currentHour < 23 && newHour >= 23);  // Normal case - crossed 23:00
 
     if (crossedSleepTime) {
-      setGameState('sleeping');
+      // AUTO-SLEEP: Automatically rest for 7 hours (11pm → 6am)
+      const sleepHours = 7;
+      totalHours += sleepHours;
+      newHour = 6; // Wake up at 6am
+
+      // Set sleep result to display in results area
+      setLastSleepResult({
+        message: `You rested for ${sleepHours} hours. (11pm → 6am)`,
+        hoursLost: sleepHours,
+      });
     }
 
+    setCurrentHour(newHour);
+    setTimeRemaining(prev => prev - totalHours);
+
     // Check if time ran out
-    if (timeRemaining - hours <= 0) {
+    if (timeRemaining - totalHours <= 0) {
       setGameState('lost');
       setMessage("Time's up! The suspect got away!");
       return true; // Indicate game over
@@ -145,20 +157,6 @@ export function useGameState(gameData) {
 
     return false; // Game continues
   }, [currentHour, timeRemaining]);
-
-  // Sleep through the night
-  const sleep = useCallback(() => {
-    const sleepHours = 7; // Sleep 7 hours (11pm to 6am)
-    setCurrentHour(6); // Wake up at 6am
-    setTimeRemaining(prev => prev - sleepHours);
-
-    if (timeRemaining - sleepHours <= 0) {
-      setGameState('lost');
-      setMessage("Time's up! The suspect got away!");
-    } else {
-      setGameState('playing');
-    }
-  }, [timeRemaining]);
 
   // Calculate total time penalty from injuries
   const getInjuryTimePenalty = useCallback(() => {
@@ -332,6 +330,7 @@ export function useGameState(gameData) {
     setInvestigatedLocations([]);
     setLastFoundClue({ city: null, suspect: null });
     setLastGoodDeedResult(null); // Clear good deed result
+    setLastSleepResult(null); // Clear sleep result
     setRogueUsedInCity(false); // Reset rogue action for new city
 
     if (destination.isCorrect) {
@@ -474,6 +473,7 @@ export function useGameState(gameData) {
     cityClues,
     lastFoundClue,
     lastGoodDeedResult,
+    lastSleepResult,
     rogueUsedInCity,
     isFinalCity,
     destinations,
@@ -491,7 +491,6 @@ export function useGameState(gameData) {
     // Actions
     startNewCase,
     acceptBriefing,
-    sleep,
     investigate,
     rogueInvestigate,
     travel,

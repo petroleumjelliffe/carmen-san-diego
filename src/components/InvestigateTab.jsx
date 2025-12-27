@@ -70,6 +70,7 @@ export function InvestigateTab({
   lastFoundClue,
   lastRogueAction,
   lastGoodDeedResult,
+  lastSleepResult,
   rogueUsedInCity,
   onInvestigate,
   rogueActions,
@@ -84,7 +85,7 @@ export function InvestigateTab({
   const availableRogueAction = rogueActions && rogueActions.length > 0 ? rogueActions[0] : null;
 
   // Check if we have any results to display
-  const hasResults = lastFoundClue?.city || lastGoodDeedResult;
+  const hasResults = lastFoundClue?.city || lastGoodDeedResult || lastSleepResult;
 
   return (
     <div className="space-y-4">
@@ -140,6 +141,17 @@ export function InvestigateTab({
               }`}>
                 {lastGoodDeedResult.message}
               </p>
+            </div>
+          )}
+
+          {/* Sleep Result */}
+          {lastSleepResult && (
+            <div className="bg-blue-900/50 border border-blue-400 p-3 rounded mb-3">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xl">💤</span>
+                <p className="text-blue-300 font-bold">Rest Period</p>
+              </div>
+              <p className="text-blue-200 text-sm">{lastSleepResult.message}</p>
             </div>
           )}
 

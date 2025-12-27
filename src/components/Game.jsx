@@ -9,7 +9,6 @@ import { InvestigateTab } from './InvestigateTab';
 import { AirportTab } from './AirportTab';
 import { DossierTab } from './DossierTab';
 import { Briefing } from './Briefing';
-import { Sleep } from './Sleep';
 import { Trial } from './Trial';
 import { Debrief } from './Debrief';
 import { GoodDeedEncounter } from './GoodDeedEncounter';
@@ -35,6 +34,7 @@ export function Game({ gameData }) {
     cityClues,
     lastFoundClue,
     lastGoodDeedResult,
+    lastSleepResult,
     rogueUsedInCity,
     isFinalCity,
     destinations,
@@ -46,7 +46,6 @@ export function Game({ gameData }) {
     lastRogueAction,
     startNewCase,
     acceptBriefing,
-    sleep,
     investigate,
     rogueInvestigate,
     travel,
@@ -81,17 +80,6 @@ export function Game({ gameData }) {
         startingCity={startingCity}
         settings={settings}
         onAccept={acceptBriefing}
-      />
-    );
-  }
-
-  // Sleep screen
-  if (gameState === 'sleeping') {
-    return (
-      <Sleep
-        currentCity={currentCity}
-        timeRemaining={timeRemaining}
-        onSleep={sleep}
       />
     );
   }
@@ -205,6 +193,7 @@ export function Game({ gameData }) {
             collectedClues={collectedClues}
             lastFoundClue={lastFoundClue}
             lastGoodDeedResult={lastGoodDeedResult}
+            lastSleepResult={lastSleepResult}
             lastRogueAction={lastRogueAction}
             rogueUsedInCity={rogueUsedInCity}
             onInvestigate={investigate}
