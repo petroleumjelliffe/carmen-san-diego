@@ -1,4 +1,4 @@
-import { Clock } from 'lucide-react';
+import { Clock, Zap, AlertTriangle } from 'lucide-react';
 
 function ClueButton({ spot, onInvestigate, disabled, investigated, index }) {
   return (
@@ -24,6 +24,43 @@ function ClueButton({ spot, onInvestigate, disabled, investigated, index }) {
   );
 }
 
+function RogueActionButton({ rogueAction, spot, onRogueAction, disabled, investigated, index, notoriety }) {
+  const timeSaved = spot.time_cost - rogueAction.time_saved;
+  const effectiveTime = Math.max(1, timeSaved);
+
+  return (
+    <button
+      onClick={() => onRogueAction(index, rogueAction)}
+      disabled={disabled || investigated}
+      className={`w-full p-4 text-left rounded-lg transition-all border-2 ${
+        investigated
+          ? 'bg-gray-700 text-gray-400 cursor-not-allowed border-gray-600'
+          : disabled
+          ? 'bg-gray-800 text-gray-500 cursor-not-allowed border-gray-700'
+          : 'bg-orange-900 hover:bg-orange-800 text-yellow-100 cursor-pointer border-orange-500'
+      }`}
+    >
+      <div className="flex justify-between items-start">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-1">
+            <Zap size={16} className="text-orange-400" />
+            <span className="font-bold">{rogueAction.name}</span>
+          </div>
+          <p className="text-xs text-yellow-200/70 mb-2">{rogueAction.choice_text}</p>
+          <div className="flex items-center gap-2 text-xs">
+            <AlertTriangle size={12} className="text-red-400" />
+            <span className="text-red-300">+{rogueAction.notoriety_gain} Notoriety</span>
+          </div>
+        </div>
+        <span className="flex items-center gap-1 text-sm ml-3">
+          <Clock size={14} />
+          {effectiveTime}h
+        </span>
+      </div>
+    </button>
+  );
+}
+
 export function InvestigateTab({
   isFinalCity,
   wrongCity,
@@ -32,9 +69,21 @@ export function InvestigateTab({
   timeRemaining,
   collectedClues,
   lastFoundClue,
+  lastRogueAction,
   onInvestigate,
+  rogueActions,
+  onRogueAction,
+  notoriety,
 }) {
   if (!cityClues) return null;
+
+  // Helper to find matching rogue action for a spot
+  const findRogueAction = (spot) => {
+    if (!rogueActions) return null;
+    return rogueActions.find(action =>
+      action.replaces_spot === spot.type || action.replaces_spot === 'any'
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -61,20 +110,54 @@ export function InvestigateTab({
         </div>
       )}
 
-      {cityClues.map((clue, i) => (
-        <ClueButton
-          key={clue.spot.id}
-          spot={clue.spot}
-          index={i}
-          onInvestigate={onInvestigate}
-          disabled={timeRemaining < clue.spot.time_cost}
-          investigated={investigatedLocations.includes(clue.spot.id)}
-        />
-      ))}
+      {cityClues.map((clue, i) => {
+        const rogueAction = findRogueAction(clue.spot);
+        const investigated = investigatedLocations.includes(clue.spot.id);
+
+        return (
+          <div key={clue.spot.id} className="space-y-2">
+            <ClueButton
+              spot={clue.spot}
+              index={i}
+              onInvestigate={onInvestigate}
+              disabled={timeRemaining < clue.spot.time_cost}
+              investigated={investigated}
+            />
+            {rogueAction && onRogueAction && (
+              <RogueActionButton
+                rogueAction={rogueAction}
+                spot={clue.spot}
+                index={i}
+                onRogueAction={onRogueAction}
+                disabled={timeRemaining < Math.max(1, clue.spot.time_cost - rogueAction.time_saved)}
+                investigated={investigated}
+                notoriety={notoriety}
+              />
+            )}
+          </div>
+        );
+      })}
 
       {lastFoundClue.city && (
         <div className="mt-6 bg-red-950/50 p-4 rounded-lg border border-yellow-400/30">
           <h3 className="text-yellow-400 font-bold mb-3">Latest Intel:</h3>
+
+          {lastRogueAction && (
+            <div className="bg-orange-900/50 border border-orange-500 p-3 rounded mb-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Zap size={16} className="text-orange-400" />
+                <p className="text-orange-300 font-bold">{lastRogueAction.name}</p>
+              </div>
+              <p className="text-orange-200 text-sm italic">
+                {lastRogueAction.success_text}
+              </p>
+              <p className="text-red-300 text-xs mt-2">
+                <AlertTriangle size={12} className="inline mr-1" />
+                Notoriety increased by {lastRogueAction.notoriety_gain}
+              </p>
+            </div>
+          )}
+
           <p className="text-yellow-100 mb-3">
             {String.fromCodePoint(0x1F4CD)} {lastFoundClue.city}
           </p>

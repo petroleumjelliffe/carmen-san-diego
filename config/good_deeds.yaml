@@ -71,7 +71,7 @@ good_deeds:
     description: A businessman is desperately lost, trying to reach an important meeting. His phone is dead and no one speaks his language.
     plea: "Please, I'm late for the biggest deal of my life!"
     help_text: You guide him personally to his destination. He makes his meeting with minutes to spare.
-    gratitude: "You saved my career! Please, take this as thanks." (gives expensive pen)
+    gratitude: "You saved my career! Please, take this as thanks. (gives expensive pen)"
     rescue_text: "You helped me in my darkest hour. Now it's my turn!"
 
   - id: injured_animal
@@ -129,7 +129,7 @@ fake_good_deeds:
     plea: "Please! My daughter is inside! And our cats! All seventeen of them!"
     setup_reveal: As you help the "child" (actually a small adult syndicate member), the situation escalates. Every time you think you're done, there's another cat. The building is structurally unsound.
     injury_result: A beam collapses on your leg. Permanent limp. -2 hours per investigation going forward.
-    gratitude_fake: "Thank you so much! All the cats are safe!" (They were syndicate operatives)
+    gratitude_fake: "Thank you so much! All the cats are safe! (They were syndicate operatives)"
 
   - id: elderly_trap
     name: Elderly Person (Elaborate Setup)
@@ -141,7 +141,7 @@ fake_good_deeds:
     plea: "Help! I've fallen! My medication is at home, we need to go there first!"
     setup_reveal: The "elderly person" keeps adding complications. First medication at home, then the pharmacy, then visiting a friend, then groceries. When you finally realize it's a trap, the syndicate ambushes you.
     injury_result: Attacked during the ambush. Broken hand. Gadgets take 2x as long to deploy going forward.
-    gratitude_fake: "You're so kind, dearie!" (Then: "The syndicate sends their regards.")
+    gratitude_fake: "You're so kind, dearie! (Then: 'The syndicate sends their regards.')"
 
   - id: drowning_child_trap
     name: Drowning Child (Gas Trap)
@@ -153,7 +153,7 @@ fake_good_deeds:
     plea: "Help! I can't swim! HELP!"
     setup_reveal: The "child" is actually a robotic decoy. When you jump in, the water is laced with a chemical agent that affects your respiratory system.
     injury_result: Chemical exposure. Scarred lungs. Reduced stamina - all time costs increase by 1 hour.
-    gratitude_fake: (The "child" shorts out and sinks. You've been had.)
+    gratitude_fake: "(The 'child' shorts out and sinks. You've been had.)"
 
   - id: lost_child_trap
     name: Lost Child (Kidnapping Setup)
@@ -165,7 +165,7 @@ fake_good_deeds:
     plea: "I can't find my mommy! Can you help me find her? She said to meet at... I don't remember!"
     setup_reveal: The "child" leads you on a wild goose chase through increasingly dangerous areas. Finally leads you into an ambush. The "child" is the mastermind's actual child, trained in manipulation.
     injury_result: Brutal beating by waiting syndicate members. Head trauma. Migraines reduce investigation effectiveness - may miss clues (33% chance).
-    gratitude_fake: "Thanks for playing, detective!" (The child laughs and runs away)
+    gratitude_fake: "Thanks for playing, detective! (The child laughs and runs away)"
 
   - id: injured_worker_trap
     name: Injured Construction Worker (Scaffolding Collapse)
@@ -177,7 +177,7 @@ fake_good_deeds:
     plea: "Help! I'm pinned! I can't feel my legs!"
     setup_reveal: The worker is real but the syndicate rigged the rest of the scaffolding. As you help free them, the entire structure collapses on both of you.
     injury_result: Crushed by debris. Multiple injuries. Eye patch required - visual clues harder to spot (some clues may be missed).
-    gratitude_fake: (The worker disappears. Setup confirmed.)
+    gratitude_fake: "(The worker disappears. Setup confirmed.)"
 
   - id: poisoned_vendor_trap
     name: Poisoned Street Vendor (Contamination)
@@ -186,10 +186,10 @@ fake_good_deeds:
     time_cost: 8
     injury_chance: 0.75
     description: A street vendor collapses, foaming at the mouth! They've been poisoned!
-    plea: (Vendor can't speak, just points desperately at their throat)
+    plea: "(Vendor can't speak, just points desperately at their throat)"
     setup_reveal: When you try to help, you're exposed to the same poison on their skin. The vendor was a syndicate plant, immunized against the toxin. You aren't.
     injury_result: Nerve damage from poison exposure. Trembling hands - gadget deployment failure chance (25%).
-    gratitude_fake: (The vendor "recovers" quickly and vanishes)
+    gratitude_fake: "(The vendor 'recovers' quickly and vanishes)"
 
 # Fake Good Deed System Configuration
 fake_deed_settings:

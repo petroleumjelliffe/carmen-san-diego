@@ -9,6 +9,10 @@ export function Debrief({
   timeRemaining,
   solvedCases,
   ranks,
+  karma,
+  notoriety,
+  savedNPCs,
+  permanentInjuries,
   onNewCase,
   onReturnToMenu,
 }) {
@@ -62,14 +66,22 @@ export function Debrief({
 
             <div>Cities visited:</div>
             <div className="text-right font-bold">{currentCase?.cities.length || 0}</div>
-
-            <div>Good deeds:</div>
-            <div className="text-right font-bold">0 ❤️</div>
-
-            <div>Rogue actions:</div>
-            <div className="text-right font-bold">0 🔥</div>
           </div>
         </div>
+
+        {/* Injuries */}
+        {permanentInjuries && permanentInjuries.length > 0 && (
+          <div className="p-4 bg-red-900 bg-opacity-30 rounded border border-red-400 mb-6">
+            <h3 className="text-lg font-bold text-red-300 mb-2">⚠️ PERMANENT INJURIES:</h3>
+            <div className="space-y-1">
+              {permanentInjuries.map((injury, i) => (
+                <div key={i} className="text-sm text-red-200">
+                  {injury.icon} {injury.effect}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Promotion */}
         {isWon && (
@@ -92,16 +104,31 @@ export function Debrief({
             <div className="text-right font-bold">{currentRank.name}</div>
 
             <div>NPCs helped (total):</div>
-            <div className="text-right font-bold">0</div>
+            <div className="text-right font-bold">{savedNPCs?.length || 0}</div>
 
             <div>Karma:</div>
-            <div className="text-right font-bold">☆☆☆ (Clean Record)</div>
+            <div className="text-right font-bold">
+              {'⭐'.repeat(Math.min(karma || 0, 5))}{'☆'.repeat(Math.max(0, 5 - (karma || 0)))}
+              {karma >= 5 && <span className="text-red-300 ml-1">⚠️ Exploitable!</span>}
+              {karma === 0 && <span className="text-gray-400 ml-1">(Clean)</span>}
+            </div>
 
             <div>Notoriety:</div>
-            <div className="text-right font-bold">☆☆☆ (Clean Record)</div>
+            <div className="text-right font-bold">
+              {'⭐'.repeat(Math.min(notoriety || 0, 5))}{'☆'.repeat(Math.max(0, 5 - (notoriety || 0)))}
+              {notoriety >= 6 && <span className="text-red-300 ml-1">⚠️ Dangerous!</span>}
+              {notoriety === 0 && <span className="text-gray-400 ml-1">(Clean)</span>}
+            </div>
 
             <div>Permanent injuries:</div>
-            <div className="text-right font-bold">None</div>
+            <div className="text-right font-bold">
+              {permanentInjuries?.length || 0}
+              {permanentInjuries && permanentInjuries.length > 0 && (
+                <span className="ml-2">
+                  {permanentInjuries.map(inj => inj.icon).join(' ')}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>

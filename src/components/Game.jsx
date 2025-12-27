@@ -12,6 +12,7 @@ import { Briefing } from './Briefing';
 import { Sleep } from './Sleep';
 import { Trial } from './Trial';
 import { Debrief } from './Debrief';
+import { GoodDeedModal } from './GoodDeedModal';
 
 export function Game({ gameData }) {
   const {
@@ -35,20 +36,29 @@ export function Game({ gameData }) {
     lastFoundClue,
     isFinalCity,
     destinations,
+    karma,
+    notoriety,
+    savedNPCs,
+    permanentInjuries,
+    showGoodDeedModal,
+    currentGoodDeed,
+    lastRogueAction,
     startNewCase,
     acceptBriefing,
     sleep,
     investigate,
+    rogueInvestigate,
     travel,
     issueWarrant,
     completeTrial,
     dismissCutscene,
     returnToMenu,
+    handleGoodDeed,
     setActiveTab,
     setSelectedWarrant,
   } = useGameState(gameData);
 
-  const { ranks, suspects, settings } = gameData;
+  const { ranks, suspects, settings, rogueActions } = gameData;
 
   // Menu screen
   if (gameState === 'menu') {
@@ -107,6 +117,10 @@ export function Game({ gameData }) {
         timeRemaining={timeRemaining}
         solvedCases={solvedCases}
         ranks={ranks}
+        karma={karma}
+        notoriety={notoriety}
+        savedNPCs={savedNPCs}
+        permanentInjuries={permanentInjuries}
         onNewCase={startNewCase}
         onReturnToMenu={returnToMenu}
       />
@@ -177,7 +191,11 @@ export function Game({ gameData }) {
             timeRemaining={timeRemaining}
             collectedClues={collectedClues}
             lastFoundClue={lastFoundClue}
+            lastRogueAction={lastRogueAction}
             onInvestigate={investigate}
+            rogueActions={rogueActions}
+            onRogueAction={rogueInvestigate}
+            notoriety={notoriety}
           />
         )}
 
@@ -201,6 +219,15 @@ export function Game({ gameData }) {
           />
         )}
       </div>
+
+      {/* Good Deed Modal */}
+      {showGoodDeedModal && (
+        <GoodDeedModal
+          goodDeed={currentGoodDeed}
+          karma={karma}
+          onChoice={handleGoodDeed}
+        />
+      )}
     </div>
   );
 }

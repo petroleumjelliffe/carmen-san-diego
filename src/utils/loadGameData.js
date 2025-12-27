@@ -9,6 +9,8 @@ import assassinationAttempts from '../../config/assassination_attempts.yaml';
 import ranks from '../../config/ranks.yaml';
 import deadEnds from '../../config/dead_ends.yaml';
 import finalCityClues from '../../config/final_city_clues.yaml';
+import goodDeeds from '../../config/good_deeds.yaml';
+import rogueActions from '../../config/rogue_actions.yaml';
 
 import { indexById, groupBy } from './helpers';
 import { validateGameData } from './validation';
@@ -27,6 +29,9 @@ export function loadGameData() {
   const deadEndsList = deadEnds.dead_ends;
   const destClues = destinationClues.destination_clues;
   const suspClues = suspectClues.suspect_clues;
+  const goodDeedsList = goodDeeds.good_deeds;
+  const fakeGoodDeedsList = goodDeeds.fake_good_deeds;
+  const rogueActionsList = rogueActions.rogue_actions;
   const gameSettings = settings.settings;
   const difficultySettings = settings.difficulty;
 
@@ -43,6 +48,9 @@ export function loadGameData() {
     assassinationAttempts: assassinationList,
     finalCityClues: finalCluesList,
     deadEnds: deadEndsList,
+    goodDeeds: goodDeedsList,
+    fakeGoodDeeds: fakeGoodDeedsList,
+    rogueActions: rogueActionsList,
 
     // Clue maps
     destinationClues: destClues,
