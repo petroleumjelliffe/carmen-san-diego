@@ -130,8 +130,11 @@ Consolidated henchman, good deed, and assassination into a unified encounter sys
 - [x] Moved encounters to dedicated area ABOVE investigation options
 - [x] Removed encounter results from "Latest Activity" (only clues/sleep/rogue shown there)
 - [x] Unified `handleEncounterResolve` handler in useGameState.js
+- [x] Removed legacy handlers (handleGoodDeed, handleHenchmanGadget, handleAssassinationGadget)
 
 ### 2. Visual Enhancements (Next Priority)
+- [x] AirportTab departure board aesthetic with boarding pass-style flight cards
+- [x] Briefing screen as manila folder case file (CLASSIFIED stamp, paper clip, lined paper)
 - [ ] Background images for locations/cities
 - [ ] Travel animation (plane flying on map)
 - [ ] Time advancement animation (clock ticking)
