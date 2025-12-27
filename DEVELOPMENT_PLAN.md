@@ -48,6 +48,11 @@
 - Warrants issuable anytime (just saves selection)
 - Trial triggers on SECOND investigation at final city (after assassination + warrant issued)
 
+### Phase 2.6: Legacy Component Cleanup
+- Deleted splash screen components: GameOver, Cutscene, HenchmanEncounter, AssassinationAttempt, GoodDeedEncounter, GoodDeedModal, Sleep
+- Case timeout now goes to Debrief (not GameOver splash)
+- All encounters use unified EncounterCard component
+
 ---
 
 ## 🚧 REMAINING: Phase 3 - UI Cleanup & Polish
@@ -136,10 +141,13 @@ Consolidated henchman, good deed, and assassination into a unified encounter sys
 - [ ] Incremental "NOOOO..." speech bubble during timer
 
 ### 3. Evidence Board Enhancements
-- [ ] Cork board aesthetic with polaroid-style photos
+- [x] Cork board aesthetic with wood grain background
+- [x] Polaroid-style suspect photos with slight rotations
+- [x] Pushpin decorations on notes and photos
+- [x] Colored note cards (yellow, blue, pink) for different info types
+- [x] Suspect count display
 - [ ] Red string connecting clues (optional)
 - [ ] Auto-elimination animation when clues gathered
-- [ ] Confidence rating based on remaining suspects
 
 ### 4. Mobile Optimization
 - [x] Static tab bar (fixed at bottom on mobile, inline on desktop)
@@ -177,8 +185,7 @@ carmen-san-diego/
 │   │   ├── DossierTab.jsx        # Evidence board + warrants
 │   │   ├── Trial.jsx             # Court verdict
 │   │   ├── Debrief.jsx           # Post-case stats
-│   │   ├── HenchmanEncounter.jsx # Full-screen (legacy)
-│   │   ├── AssassinationAttempt.jsx # Full-screen (legacy)
+│   │   ├── EncounterCard.jsx     # Unified inline encounters
 │   │   └── GameLayout.jsx        # Layout wrapper
 │   ├── hooks/
 │   │   └── useGameState.js       # All game state & actions
