@@ -112,6 +112,38 @@ Add to `index.css`:
 - [x] Handle case where player investigates at final city without warrant issued
 - [x] Clear lastEncounterResult appropriately (clears on travel)
 
+### 1.5 Encounter System Refactor (Next)
+Consolidate henchman, good deed, and assassination into a unified encounter system:
+
+**Current Issues:**
+- Three separate inline components with duplicated timer logic
+- Results appear in separate "Latest Activity" box (jarring transition)
+- Inconsistent visual treatment
+
+**Proposed Solution:**
+- [ ] Create shared `EncounterCard` component with:
+  - Timer bar (configurable duration)
+  - Content slot (description, options)
+  - Result state (success/failure shown in-place)
+- [ ] Encounter flow: Active → Resolved (result shows in same card) → Dismissed
+- [ ] Move encounters to dedicated area ABOVE investigation options
+- [ ] Remove encounter results from "Latest Activity" (keep only clue results there)
+- [ ] Shared `useEncounterTimer` hook to DRY up timer logic
+
+**Layout:**
+```
+┌─────────────────────────────┐
+│ [ENCOUNTER CARD]            │  ← Active or showing result
+│ Timer bar + content         │
+└─────────────────────────────┘
+┌─────────────────────────────┐
+│ Latest Activity (clues only)│
+└─────────────────────────────┘
+┌─────────────────────────────┐
+│ Investigation Options       │
+└─────────────────────────────┘
+```
+
 ### 2. Visual Enhancements (Next Priority)
 - [ ] Background images for locations/cities
 - [ ] Travel animation (plane flying on map)
