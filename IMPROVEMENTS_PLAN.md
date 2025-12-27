@@ -20,6 +20,134 @@
 
 ---
 
+## Main Content Area Architecture
+
+### Content State System (No Modals)
+
+The game uses a **state-based content system** where the main content area displays different full-screen components based on the current game state. No modal overlays are used - instead, the entire main content area transitions between states.
+
+#### Current Implementation
+```
+Game States → Main Content Display:
+- menu       → Menu component
+- briefing   → Briefing component
+- playing    → Game component (with tabs: Investigate, Airport, Dossier)
+- sleeping   → Sleep component (NEEDS REFACTOR: currently splash screen)
+- trial      → Trial component
+- debrief    → Debrief component
+```
+
+#### Proposed State Expansion
+```
+Additional States → Main Content Display:
+- good_deed       → GoodDeedEncounter component (help NPC choice)
+- fake_deed       → FakeGoodDeedTrap component (trap reveal)
+- henchman        → HenchmanEncounter component (gadget puzzle)
+- assassination   → AssassinationAttempt component (timed gadget puzzle)
+- npc_rescue      → NPCRescue component (saved NPC appears)
+- traveling       → TravelAnimation component (plane animation)
+- rogue_result    → RogueActionResult component (consequence reveal)
+```
+
+#### Content Display Patterns
+
+**Investigation Results** (already working):
+- Displayed within InvestigateTab component
+- "Latest Intel" section shows clues found
+- Rogue action results shown inline with orange highlight
+- No state change - stays in 'playing' state
+
+**Travel** (needs enhancement):
+- Currently: Airport tab with instant city change
+- Proposed: Transition to 'traveling' state
+  - Show plane animation across world map
+  - Display city names (from → to)
+  - Auto-advance to new city after animation
+  - Return to 'playing' state with Investigate tab active
+
+**Sleep** (needs refactor):
+- Currently: Full splash screen component (disruptive)
+- Proposed: Main content area component
+  - Show hotel room background
+  - Display "You rest for 7 hours" message
+  - Show time change (11pm → 6am)
+  - Button to continue to next day
+  - OR: Auto-sleep with toast notification only
+
+**Good Deeds** (to be implemented):
+- Trigger: After investigation, 25% chance
+- State: Change to 'good_deed' or 'fake_deed'
+- Display in main content area:
+  - NPC in distress scene
+  - Situation description
+  - Time cost indicator
+  - Two buttons: "Help (costs Xh, +1 karma)" vs "Ignore (no cost)"
+- After choice: Return to 'playing' state
+
+**Henchmen Encounters** (to be implemented):
+- Trigger: Random when traveling/investigating
+- State: Change to 'henchman'
+- Display in main content area:
+  - Encounter description with visual hints
+  - Available gadgets as button options
+  - "No gadget" option
+  - Time cost warnings
+- After choice: Show result, then return to 'playing' state
+
+**Assassination Attempts** (to be implemented):
+- Trigger: In final city after warrant issued
+- State: Change to 'assassination'
+- Display in main content area:
+  - Dramatic scene description
+  - 5-8 second countdown timer with progress bar
+  - Gadget options (large, obvious buttons)
+  - Slow-motion visual effects
+  - "NOOO!" speech bubble if time expires
+- After resolution: Show result (success/NPC rescue/injury), then continue
+
+**NPC Rescue** (to be implemented):
+- Trigger: During assassination if karma high enough
+- State: Change to 'npc_rescue'
+- Display in main content area:
+  - Saved NPC appears dramatically
+  - "Remember me?" dialogue
+  - Shows which good deed they're from
+  - Auto-advance after reveal
+- After: Return to normal assassination resolution
+
+### State Flow Diagram
+```
+Menu → Briefing → Playing ⇄ [Encounters] → Trial → Debrief → Menu
+                     ↓
+    ┌────────────────┼────────────────┐
+    ↓                ↓                ↓
+GoodDeed      Henchman         Traveling
+    ↓                ↓                ↓
+ [karma+]       [gadget use]    [city change]
+    ↓                ↓                ↓
+  Playing ←────────┴─────────────────┘
+
+Final City:
+Playing → Assassination → [NPC Rescue?] → Trial
+```
+
+### Benefits of This Approach
+1. **No modal z-index issues** - everything is full-screen content
+2. **Clear state management** - one state, one component
+3. **Better mobile UX** - no overlays to dismiss
+4. **Consistent patterns** - all encounters use same flow
+5. **Easy to animate** - full control over transitions
+6. **Maintains context** - can show game background/header
+
+### Implementation Notes
+- Use `gameState` string in useGameState hook
+- Each state has corresponding component
+- Transitions handled by Game.jsx switching components
+- All encounter data stored in state during encounter
+- After encounter resolves, update game state and return to 'playing'
+
+---
+
 ## Proposed UI Improvements
 
 ### 1. Visual Polish & Feedback
