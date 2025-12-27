@@ -1,10 +1,31 @@
+import { useState, useEffect } from 'react';
 import { GameLayout } from './GameLayout';
 import { TopPanel } from './TopPanel';
 
 /**
- * Trial - Shows verdict after warrant is issued
+ * Trial - Shows verdict after warrant is issued with dramatic reveal
  */
 export function Trial({ currentCase, selectedWarrant, timeRemaining, onContinue }) {
+  const [verdictRevealed, setVerdictRevealed] = useState(false);
+  const [countdown, setCountdown] = useState(5);
+
+  useEffect(() => {
+    if (verdictRevealed) return;
+
+    const timer = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setVerdictRevealed(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [verdictRevealed]);
+
   if (!currentCase || !selectedWarrant) return null;
 
   const isCorrect = selectedWarrant.id === currentCase.suspect.id;
@@ -13,16 +34,22 @@ export function Trial({ currentCase, selectedWarrant, timeRemaining, onContinue 
     <GameLayout
       topPanel={<TopPanel location="Courthouse" timeRemaining={timeRemaining} />}
       bottomPanel={
-        <button
-          onClick={onContinue}
-          className={`w-full font-bold py-3 px-6 rounded text-lg transition-colors ${
-            isCorrect
-              ? 'bg-green-600 hover:bg-green-700 text-white'
-              : 'bg-red-600 hover:bg-red-700 text-white'
-          }`}
-        >
-          CONTINUE
-        </button>
+        verdictRevealed ? (
+          <button
+            onClick={onContinue}
+            className={`w-full font-bold py-3 px-6 rounded text-lg transition-colors ${
+              isCorrect
+                ? 'bg-green-600 hover:bg-green-700 text-white'
+                : 'bg-red-600 hover:bg-red-700 text-white'
+            }`}
+          >
+            CONTINUE
+          </button>
+        ) : (
+          <div className="text-center text-yellow-200/70 py-3">
+            Awaiting verdict...
+          </div>
+        )
       }
     >
       <div className="bg-black bg-opacity-70 rounded-lg p-8 text-white max-w-2xl mx-auto">
@@ -37,7 +64,18 @@ export function Trial({ currentCase, selectedWarrant, timeRemaining, onContinue 
           <p className="text-2xl font-bold">{selectedWarrant.name}</p>
         </div>
 
-        {isCorrect ? (
+        {!verdictRevealed ? (
+          /* Suspenseful countdown */
+          <div className="text-center py-8">
+            <p className="text-2xl text-yellow-100 mb-4 animate-pulse">
+              "We find the defendant..."
+            </p>
+            <div className="text-6xl font-bold text-yellow-400 mb-4">
+              {countdown}
+            </div>
+            <p className="text-gray-400">The jury is deliberating...</p>
+          </div>
+        ) : isCorrect ? (
           /* Correct Verdict */
           <div className="space-y-4">
             <div className="p-4 bg-green-900 bg-opacity-50 rounded border border-green-400">
@@ -50,7 +88,7 @@ export function Trial({ currentCase, selectedWarrant, timeRemaining, onContinue 
             </div>
 
             <div className="text-center p-6 bg-green-600 bg-opacity-30 rounded-lg border-2 border-green-400">
-              <p className="text-3xl font-bold text-green-300 mb-2">GUILTY</p>
+              <p className="text-3xl font-bold text-green-300 mb-2">GUILTY!</p>
               <p className="text-green-200">The suspect has been convicted!</p>
             </div>
           </div>
@@ -67,7 +105,7 @@ export function Trial({ currentCase, selectedWarrant, timeRemaining, onContinue 
             </div>
 
             <div className="text-center p-6 bg-red-600 bg-opacity-30 rounded-lg border-2 border-red-400">
-              <p className="text-3xl font-bold text-red-300 mb-2">NOT GUILTY</p>
+              <p className="text-3xl font-bold text-red-300 mb-2">NOT GUILTY!</p>
               <p className="text-red-200 mb-4">The defendant is acquitted.</p>
               <p className="text-yellow-200">
                 The real culprit was: <span className="font-bold">{currentCase.suspect.name}</span>
