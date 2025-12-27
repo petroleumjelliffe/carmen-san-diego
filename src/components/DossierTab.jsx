@@ -168,15 +168,21 @@ export function DossierTab({
 
         <button
           onClick={onIssueWarrant}
-          disabled={!selectedWarrant || !isFinalCity}
+          disabled={!selectedWarrant}
           className="w-full bg-yellow-400 hover:bg-yellow-300 disabled:bg-gray-600 disabled:text-gray-400 text-red-900 font-bold py-3 rounded-lg transition-all"
         >
-          {!isFinalCity
-            ? "Must reach final destination first"
-            : selectedWarrant
+          {selectedWarrant
             ? `Issue Warrant for ${selectedWarrant.name}`
             : "Select a Suspect"}
         </button>
+
+        {selectedWarrant && (
+          <p className="text-center text-sm text-yellow-200/70 mt-2">
+            {isFinalCity
+              ? "Warrant issued! Investigate to apprehend the suspect."
+              : "Warrant ready. Continue tracking to the final destination."}
+          </p>
+        )}
       </div>
 
       {/* Investigation Log */}

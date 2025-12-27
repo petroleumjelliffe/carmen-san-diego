@@ -279,6 +279,7 @@ export function useGameState(gameData) {
         const assassinationEncounter = pickRandom(encounters.assassination_attempts);
         setCurrentEncounter(assassinationEncounter);
         // Don't change gameState - render inline in InvestigateTab
+        return; // Wait for assassination to be resolved before allowing apprehension
       } else if (!isFinalCity && encounters.henchman_encounters) {
         // NON-FINAL CITY: Trigger henchman encounter ("you're on the right track!")
         const henchmanEncounter = pickRandom(encounters.henchman_encounters);
@@ -286,7 +287,15 @@ export function useGameState(gameData) {
         // Don't change gameState - render inline in InvestigateTab
       }
     }
-  }, [timeRemaining, cityClues, investigatedLocations, advanceTime, wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, getInjuryTimePenalty, shouldMissClue, hadEncounterInCity, isFinalCity]);
+
+    // APPREHENSION: Second investigation at final city (after assassination resolved)
+    // If warrant is issued and we're at final city after the assassination attempt
+    if (isFinalCity && hadEncounterInCity && !currentEncounter && selectedWarrant) {
+      // Apprehend the suspect! Go to trial
+      setGameState('trial');
+      return;
+    }
+  }, [timeRemaining, cityClues, investigatedLocations, advanceTime, wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, getInjuryTimePenalty, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant]);
 
   // Rogue investigate - Fast but increases notoriety, gets BOTH clues
   const rogueInvestigate = useCallback((rogueAction) => {
@@ -385,20 +394,16 @@ export function useGameState(gameData) {
     advanceTime(travelTime);
   }, [timeRemaining, settings.travel_time, advanceTime, getInjuryTimePenalty]);
 
-  // Issue a warrant (moves directly to trial - assassination happens on first investigation at final city)
+  // Issue a warrant - just confirms the suspect selection (can be done anytime)
+  // The actual apprehension happens on second investigation at final city
   const issueWarrant = useCallback(() => {
     if (!selectedWarrant) {
       setMessage("Select a suspect first!");
       return;
     }
 
-    if (!isFinalCity) {
-      setMessage("You need to reach the final destination first!");
-      return;
-    }
-
-    // Go directly to trial (assassination already happened on first investigation)
-    setGameState('trial');
+    // Just confirm the warrant was issued
+    setMessage(`Warrant issued for ${selectedWarrant.name}! ${isFinalCity ? "Investigate to apprehend the suspect." : "Continue tracking the suspect."}`);
   }, [selectedWarrant, isFinalCity]);
 
   // Complete trial (moves to debrief)
