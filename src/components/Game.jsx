@@ -143,6 +143,7 @@ export function Game({ gameData }) {
       <Header
         currentCase={currentCase}
         timeRemaining={timeRemaining}
+        currentHour={currentHour}
         solvedCases={solvedCases}
         ranks={ranks}
       />

@@ -82,8 +82,12 @@ export function useGameState(gameData) {
     setCurrentHour(newHour);
     setTimeRemaining(prev => prev - hours);
 
-    // Check if we hit 11pm (23:00) - trigger sleep
-    if (currentHour < 23 && newHour >= 23) {
+    // Check if we crossed 11pm (23:00) during this time advancement
+    const crossedSleepTime = newHour < currentHour
+      ? currentHour < 23  // Wrapped around midnight - trigger if started before 11pm
+      : (currentHour < 23 && newHour >= 23);  // Normal case - crossed 23:00
+
+    if (crossedSleepTime) {
       setGameState('sleeping');
     }
 
@@ -127,7 +131,7 @@ export function useGameState(gameData) {
       return;
     }
 
-    setTimeRemaining(prev => prev - spot.time_cost);
+    // Mark as investigated and collect clues
     setInvestigatedLocations(prev => [...prev, spot.id]);
     setLastFoundClue({ city: clue.destinationClue, suspect: clue.suspectClue });
 
@@ -145,11 +149,9 @@ export function useGameState(gameData) {
       }));
     }
 
-    if (timeRemaining - spot.time_cost <= 0) {
-      setGameState('lost');
-      setMessage("Time's up! The suspect got away!");
-    }
-  }, [timeRemaining, cityClues, investigatedLocations]);
+    // Advance time (checks for sleep and game over)
+    advanceTime(spot.time_cost);
+  }, [timeRemaining, cityClues, investigatedLocations, advanceTime]);
 
   // Get available destinations
   const destinations = useMemo(() => {
@@ -166,7 +168,7 @@ export function useGameState(gameData) {
       return;
     }
 
-    setTimeRemaining(prev => prev - travelTime);
+    // Clear city-specific state
     setInvestigatedLocations([]);
     setLastFoundClue({ city: null, suspect: null });
 
@@ -185,11 +187,9 @@ export function useGameState(gameData) {
       setMessage(`You've arrived in ${destination.name}, but something feels off...`);
     }
 
-    if (timeRemaining - travelTime <= 0) {
-      setGameState('lost');
-      setMessage("Time's up! The suspect got away!");
-    }
-  }, [timeRemaining, settings.travel_time, assassinationAttempts]);
+    // Advance time (checks for sleep and game over)
+    advanceTime(travelTime);
+  }, [timeRemaining, settings.travel_time, assassinationAttempts, advanceTime]);
 
   // Issue a warrant (moves to trial)
   const issueWarrant = useCallback(() => {
