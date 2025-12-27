@@ -36,6 +36,7 @@ export function Game({ gameData }) {
     lastFoundClue,
     lastGoodDeedResult,
     lastSleepResult,
+    lastEncounterResult,
     rogueUsedInCity,
     isFinalCity,
     destinations,
@@ -211,6 +212,7 @@ export function Game({ gameData }) {
             lastFoundClue={lastFoundClue}
             lastGoodDeedResult={lastGoodDeedResult}
             lastSleepResult={lastSleepResult}
+            lastEncounterResult={lastEncounterResult}
             lastRogueAction={lastRogueAction}
             rogueUsedInCity={rogueUsedInCity}
             currentGoodDeed={currentGoodDeed}

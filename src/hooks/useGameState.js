@@ -27,6 +27,7 @@ export function useGameState(gameData) {
   const [lastFoundClue, setLastFoundClue] = useState({ city: null, suspect: null });
   const [lastGoodDeedResult, setLastGoodDeedResult] = useState(null); // Track last good deed outcome
   const [lastSleepResult, setLastSleepResult] = useState(null); // Track automatic sleep
+  const [lastEncounterResult, setLastEncounterResult] = useState(null); // Track henchman/assassination results
   const [rogueUsedInCity, setRogueUsedInCity] = useState(false); // Track if rogue was used in current city
 
   // Phase 3: Karma & Notoriety System (persists across cases)
@@ -352,6 +353,7 @@ export function useGameState(gameData) {
     setLastFoundClue({ city: null, suspect: null });
     setLastGoodDeedResult(null); // Clear good deed result
     setLastSleepResult(null); // Clear sleep result
+    setLastEncounterResult(null); // Clear encounter result
     setRogueUsedInCity(false); // Reset rogue action for new city
 
     if (destination.isCorrect) {
@@ -490,14 +492,26 @@ export function useGameState(gameData) {
     // Advance time based on choice
     advanceTime(timePenalty);
 
-    // Set message based on outcome
+    // Set result to display in unified results area
+    let resultText, resultType;
     if (isCorrect) {
-      setMessage(currentEncounter.success_text);
+      resultText = currentEncounter.success_text;
+      resultType = 'success';
     } else if (gadgetId === null) {
-      setMessage(currentEncounter.no_gadget_text);
+      resultText = currentEncounter.no_gadget_text;
+      resultType = 'no_gadget';
     } else {
-      setMessage(currentEncounter.failure_text);
+      resultText = currentEncounter.failure_text;
+      resultType = 'wrong_gadget';
     }
+
+    setLastEncounterResult({
+      type: 'henchman',
+      name: currentEncounter.name,
+      message: resultText,
+      outcome: resultType,
+      timeLost: timePenalty
+    });
 
     // Clear encounter and return to playing
     setCurrentEncounter(null);
@@ -523,14 +537,26 @@ export function useGameState(gameData) {
     // Advance time based on choice
     advanceTime(timePenalty);
 
-    // Set message based on outcome
+    // Set result to display in unified results area
+    let resultText, resultType;
     if (isCorrect) {
-      setMessage(currentEncounter.success_text);
+      resultText = currentEncounter.success_text;
+      resultType = 'success';
     } else if (gadgetId === null) {
-      setMessage(currentEncounter.timeout_text || currentEncounter.no_gadget_text);
+      resultText = currentEncounter.timeout_text || currentEncounter.no_gadget_text;
+      resultType = 'timeout';
     } else {
-      setMessage(currentEncounter.failure_text);
+      resultText = currentEncounter.failure_text;
+      resultType = 'wrong_gadget';
     }
+
+    setLastEncounterResult({
+      type: 'assassination',
+      name: currentEncounter.name,
+      message: resultText,
+      outcome: resultType,
+      timeLost: timePenalty
+    });
 
     // TODO: Check for NPC rescue if failed and karma is high
 
@@ -566,6 +592,7 @@ export function useGameState(gameData) {
     lastFoundClue,
     lastGoodDeedResult,
     lastSleepResult,
+    lastEncounterResult,
     rogueUsedInCity,
     isFinalCity,
     destinations,
