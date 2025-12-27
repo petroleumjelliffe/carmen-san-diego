@@ -90,30 +90,6 @@ export function Game({ gameData }) {
     );
   }
 
-  // Henchman Encounter
-  if (gameState === 'henchman') {
-    return (
-      <HenchmanEncounter
-        encounter={currentEncounter}
-        availableGadgets={availableGadgets}
-        timeRemaining={timeRemaining}
-        onGadgetChoice={handleHenchmanGadget}
-      />
-    );
-  }
-
-  // Assassination Attempt (FINAL CITY ONLY)
-  if (gameState === 'assassination') {
-    return (
-      <AssassinationAttempt
-        encounter={currentEncounter}
-        availableGadgets={availableGadgets}
-        timeRemaining={timeRemaining}
-        onGadgetChoice={handleAssassinationGadget}
-      />
-    );
-  }
-
   // Trial screen
   if (gameState === 'trial') {
     return (
@@ -222,6 +198,10 @@ export function Game({ gameData }) {
             onRogueAction={rogueInvestigate}
             onGoodDeedChoice={handleGoodDeed}
             notoriety={notoriety}
+            currentEncounter={currentEncounter}
+            availableGadgets={availableGadgets}
+            onHenchmanGadget={handleHenchmanGadget}
+            onAssassinationGadget={handleAssassinationGadget}
           />
         )}
 

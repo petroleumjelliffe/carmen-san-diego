@@ -29,6 +29,7 @@ export function useGameState(gameData) {
   const [lastSleepResult, setLastSleepResult] = useState(null); // Track automatic sleep
   const [lastEncounterResult, setLastEncounterResult] = useState(null); // Track henchman/assassination results
   const [rogueUsedInCity, setRogueUsedInCity] = useState(false); // Track if rogue was used in current city
+  const [hadEncounterInCity, setHadEncounterInCity] = useState(false); // Track if encounter already happened in current city
 
   // Phase 3: Karma & Notoriety System (persists across cases)
   const [karma, setKarma] = useState(0); // Good deeds completed
@@ -252,9 +253,9 @@ export function useGameState(gameData) {
 
     if (gameOver) return; // Don't trigger encounters if game is over
 
-    // Check for good deed encounter (25% chance in correct cities only)
+    // Check for good deed encounter (25% chance in correct cities only, not if encounter already happened)
     // Good deeds appear inline in the investigation tab, not as a separate state
-    if (!wrongCity && goodDeeds && !currentGoodDeed && Math.random() < 0.25) {
+    if (!wrongCity && !hadEncounterInCity && goodDeeds && !currentGoodDeed && Math.random() < 0.25) {
       // Check if high karma triggers fake good deed trap
       const isFakeTrap = karma >= 5 && fakeGoodDeeds && Math.random() < 0.25;
 
@@ -265,16 +266,27 @@ export function useGameState(gameData) {
         const deed = pickRandom(goodDeeds);
         setCurrentGoodDeed({ ...deed, isFake: false });
       }
-      return; // Don't trigger henchman if good deed is shown
+      return; // Don't trigger encounter if good deed is shown
     }
 
-    // Check for henchman encounter (100% in correct cities - signals "you're on the right track!")
-    if (!wrongCity && encounters?.henchman_encounters) {
-      const henchmanEncounter = pickRandom(encounters.henchman_encounters);
-      setCurrentEncounter(henchmanEncounter);
-      setGameState('henchman');
+    // ENCOUNTER TRIGGER: Only on FIRST investigation in correct cities
+    // Henchman in non-final cities, Assassination in final city
+    if (!wrongCity && !hadEncounterInCity && encounters) {
+      setHadEncounterInCity(true); // Mark that encounter happened
+
+      if (isFinalCity && encounters.assassination_attempts) {
+        // FINAL CITY: Trigger assassination attempt (high stakes!)
+        const assassinationEncounter = pickRandom(encounters.assassination_attempts);
+        setCurrentEncounter(assassinationEncounter);
+        // Don't change gameState - render inline in InvestigateTab
+      } else if (!isFinalCity && encounters.henchman_encounters) {
+        // NON-FINAL CITY: Trigger henchman encounter ("you're on the right track!")
+        const henchmanEncounter = pickRandom(encounters.henchman_encounters);
+        setCurrentEncounter(henchmanEncounter);
+        // Don't change gameState - render inline in InvestigateTab
+      }
     }
-  }, [timeRemaining, cityClues, investigatedLocations, advanceTime, wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, getInjuryTimePenalty, shouldMissClue]);
+  }, [timeRemaining, cityClues, investigatedLocations, advanceTime, wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, getInjuryTimePenalty, shouldMissClue, hadEncounterInCity, isFinalCity]);
 
   // Rogue investigate - Fast but increases notoriety, gets BOTH clues
   const rogueInvestigate = useCallback((rogueAction) => {
@@ -355,6 +367,7 @@ export function useGameState(gameData) {
     setLastSleepResult(null); // Clear sleep result
     setLastEncounterResult(null); // Clear encounter result
     setRogueUsedInCity(false); // Reset rogue action for new city
+    setHadEncounterInCity(false); // Reset encounter flag for new city
 
     if (destination.isCorrect) {
       // Advance to next city (no cutscene - assassination only happens when issuing warrant in final city)
@@ -372,7 +385,7 @@ export function useGameState(gameData) {
     advanceTime(travelTime);
   }, [timeRemaining, settings.travel_time, advanceTime, getInjuryTimePenalty]);
 
-  // Issue a warrant (moves to trial or assassination in final city)
+  // Issue a warrant (moves directly to trial - assassination happens on first investigation at final city)
   const issueWarrant = useCallback(() => {
     if (!selectedWarrant) {
       setMessage("Select a suspect first!");
@@ -384,16 +397,9 @@ export function useGameState(gameData) {
       return;
     }
 
-    // FINAL CITY ONLY: Trigger assassination attempt (100% guaranteed)
-    if (encounters?.assassination_attempts) {
-      const assassinationEncounter = pickRandom(encounters.assassination_attempts);
-      setCurrentEncounter(assassinationEncounter);
-      setGameState('assassination');
-    } else {
-      // No assassination data available - move directly to trial
-      setGameState('trial');
-    }
-  }, [selectedWarrant, isFinalCity, encounters]);
+    // Go directly to trial (assassination already happened on first investigation)
+    setGameState('trial');
+  }, [selectedWarrant, isFinalCity]);
 
   // Complete trial (moves to debrief)
   const completeTrial = useCallback(() => {
@@ -513,9 +519,8 @@ export function useGameState(gameData) {
       timeLost: timePenalty
     });
 
-    // Clear encounter and return to playing
+    // Clear encounter (stay in playing state - encounters are inline)
     setCurrentEncounter(null);
-    setGameState('playing');
   }, [currentEncounter, advanceTime]);
 
   // Handle assassination gadget choice
@@ -560,9 +565,8 @@ export function useGameState(gameData) {
 
     // TODO: Check for NPC rescue if failed and karma is high
 
-    // Clear encounter and move to trial
+    // Clear encounter (stay in playing state - user can now issue warrant)
     setCurrentEncounter(null);
-    setGameState('trial');
   }, [currentEncounter, advanceTime]);
 
   // Return to menu
