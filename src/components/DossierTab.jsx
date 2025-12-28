@@ -192,13 +192,8 @@ export function DossierTab({
   const hasAnyTraits = selectedTraits.gender || selectedTraits.hair || selectedTraits.hobby;
 
   return (
-    <div className="flex flex-col min-h-full">
-      {/* Flexible space above pushes content to bottom */}
-      <div className="flex-1" />
-
-      {/* Cork board - bottom anchored */}
-      <div
-        className="space-y-4 p-4 rounded-lg"
+    <div
+      className="space-y-4 p-4 rounded-lg"
         style={{
           background: 'linear-gradient(135deg, #b8956c 0%, #a0845c 50%, #c4a574 100%)',
           backgroundImage: `
@@ -342,7 +337,6 @@ export function DossierTab({
           </NoteCard>
         </div>
       )}
-      </div>
     </div>
   );
 }

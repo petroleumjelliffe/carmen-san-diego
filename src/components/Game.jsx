@@ -136,7 +136,7 @@ export function Game({ gameData }) {
   // Main game UI with city background
   return (
     <div
-      className="min-h-screen bg-gray-900"
+      className="h-screen flex flex-col overflow-hidden bg-gray-900"
       style={{
         backgroundImage: `
           linear-gradient(to bottom, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.85)),
@@ -144,7 +144,6 @@ export function Game({ gameData }) {
         `,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
       }}
     >
       <Header
@@ -163,65 +162,73 @@ export function Game({ gameData }) {
         setActiveTab={setActiveTab}
       />
 
-      <div className="max-w-4xl mx-auto p-4 pb-24 sm:pb-4">
-        {message && (
-          <div className="bg-yellow-400/20 border border-yellow-400 text-yellow-100 px-4 py-2 rounded mb-4">
-            {message}
+      {/* Main content area - flex-1 to fill remaining space, grid for bottom alignment */}
+      <div className="flex-1 overflow-y-auto">
+        <div
+          className="max-w-4xl mx-auto p-4 pb-24 sm:pb-4 min-h-full grid"
+          style={{ alignItems: 'end' }}
+        >
+          <div>
+            {message && (
+              <div className="bg-yellow-400/20 border border-yellow-400 text-yellow-100 px-4 py-2 rounded mb-4">
+                {message}
+              </div>
+            )}
+
+            {activeTab === 'investigate' && (
+              <InvestigateTab
+                isFinalCity={isFinalCity}
+                wrongCity={wrongCity}
+                cityClues={cityClues}
+                investigatedLocations={investigatedLocations}
+                timeRemaining={timeRemaining}
+                nextInvestigationCost={nextInvestigationCost}
+                collectedClues={collectedClues}
+                lastFoundClue={lastFoundClue}
+                lastRogueAction={lastRogueAction}
+                rogueUsedInCity={rogueUsedInCity}
+                currentGoodDeed={currentGoodDeed}
+                karma={karma}
+                onInvestigate={investigate}
+                rogueActions={rogueActions}
+                onRogueAction={rogueInvestigate}
+                notoriety={notoriety}
+                currentEncounter={currentEncounter}
+                availableGadgets={availableGadgets}
+                onEncounterResolve={handleEncounterResolve}
+                isApprehended={gameState === 'apprehended'}
+                selectedWarrant={selectedWarrant}
+                onProceedToTrial={proceedToTrial}
+                encounterTimers={encounterTimers}
+                isInvestigating={isInvestigating}
+                cityFact={currentCity?.fact}
+              />
+            )}
+
+            {activeTab === 'airport' && (
+              <AirportTab
+                destinations={destinations}
+                timeRemaining={timeRemaining}
+                travelTime={settings.travel_time}
+                onTravel={travel}
+              />
+            )}
+
+            {activeTab === 'dossier' && (
+              <DossierTab
+                collectedClues={collectedClues}
+                suspects={suspects}
+                selectedWarrant={selectedWarrant}
+                isFinalCity={isFinalCity}
+                onSelectWarrant={setSelectedWarrant}
+                onIssueWarrant={issueWarrant}
+                selectedTraits={selectedTraits}
+                onCycleTrait={cycleSelectedTrait}
+                onResetTraits={resetSelectedTraits}
+              />
+            )}
           </div>
-        )}
-
-        {activeTab === 'investigate' && (
-          <InvestigateTab
-            isFinalCity={isFinalCity}
-            wrongCity={wrongCity}
-            cityClues={cityClues}
-            investigatedLocations={investigatedLocations}
-            timeRemaining={timeRemaining}
-            nextInvestigationCost={nextInvestigationCost}
-            collectedClues={collectedClues}
-            lastFoundClue={lastFoundClue}
-            lastRogueAction={lastRogueAction}
-            rogueUsedInCity={rogueUsedInCity}
-            currentGoodDeed={currentGoodDeed}
-            karma={karma}
-            onInvestigate={investigate}
-            rogueActions={rogueActions}
-            onRogueAction={rogueInvestigate}
-            notoriety={notoriety}
-            currentEncounter={currentEncounter}
-            availableGadgets={availableGadgets}
-            onEncounterResolve={handleEncounterResolve}
-            isApprehended={gameState === 'apprehended'}
-            selectedWarrant={selectedWarrant}
-            onProceedToTrial={proceedToTrial}
-            encounterTimers={encounterTimers}
-            isInvestigating={isInvestigating}
-            cityFact={currentCity?.fact}
-          />
-        )}
-
-        {activeTab === 'airport' && (
-          <AirportTab
-            destinations={destinations}
-            timeRemaining={timeRemaining}
-            travelTime={settings.travel_time}
-            onTravel={travel}
-          />
-        )}
-
-        {activeTab === 'dossier' && (
-          <DossierTab
-            collectedClues={collectedClues}
-            suspects={suspects}
-            selectedWarrant={selectedWarrant}
-            isFinalCity={isFinalCity}
-            onSelectWarrant={setSelectedWarrant}
-            onIssueWarrant={issueWarrant}
-            selectedTraits={selectedTraits}
-            onCycleTrait={cycleSelectedTrait}
-            onResetTraits={resetSelectedTraits}
-          />
-        )}
+        </div>
       </div>
     </div>
   );

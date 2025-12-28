@@ -14,8 +14,8 @@ export function GameLayout({ children, topPanel, bottomPanel, className = '' }) 
         </div>
       )}
 
-      {/* Main Content Area - Scrollable */}
-      <div className={`flex-1 overflow-y-auto p-4 ${className}`}>
+      {/* Main Content Area - Scrollable grid for bottom-aligned children */}
+      <div className={`flex-1 overflow-y-auto p-4 grid ${className}`} style={{ gridTemplateRows: '1fr', alignItems: 'end' }}>
         {children}
       </div>
 

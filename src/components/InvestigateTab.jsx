@@ -95,12 +95,7 @@ export function InvestigateTab({
 
 
   return (
-    <div className="flex flex-col min-h-full">
-      {/* Flexible space above pushes content to bottom */}
-      <div className="flex-1" />
-
-      {/* Bottom-anchored content */}
-      <div className="space-y-3">
+    <div className="space-y-3">
         {/* Apprehended - Shows inline with Continue button */}
         <FadeIn show={isApprehended}>
           <div className="bg-green-900/50 border-2 border-green-400 p-6 rounded-lg text-center">
@@ -219,7 +214,6 @@ export function InvestigateTab({
             />
           )}
         </div>
-      </div>
     </div>
   );
 }
