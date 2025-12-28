@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Zap, Skull, Heart, AlertTriangle, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Zap, Skull, Heart, AlertTriangle, Clock } from 'lucide-react';
 import { useEncounterTimer } from '../hooks/useEncounterTimer';
 
 /**
@@ -146,32 +146,29 @@ export function EncounterCard({
   if (phase === 'active') {
     return (
       <div className={`rounded-lg overflow-hidden mb-4 ${urgencyLevel === 'critical' ? 'animate-pulse' : ''}`}>
-        {/* Integrated timer bar at top */}
-        <div className="relative h-2 bg-gray-800">
-          <div
-            className={`h-full transition-all duration-100 ${styles.timerColor}`}
-            style={{ width: `${timerPercent}%` }}
-          />
-        </div>
-
         {/* Main content area */}
         <div className={styles.container}>
-          {/* Header - simplified */}
-          <div className="flex items-center gap-3 mb-4">
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-2">
             {styles.icon}
-            <div className="flex-1">
-              <h3 className={`text-lg font-bold ${styles.titleColor}`}>{styles.title}</h3>
-              {type !== 'good_deed' && encounter?.name && (
-                <p className="text-yellow-400 text-sm">{encounter.name}</p>
-              )}
-            </div>
-            <span className="text-white font-mono text-lg">
-              {hasTimedOut ? '0.0' : timeLeft.toFixed(1)}s
-            </span>
+            <h3 className={`text-lg font-bold ${styles.titleColor}`}>{styles.title}</h3>
           </div>
 
-          {/* Description - no wrapper box */}
-          <p className="text-yellow-100 mb-4">{encounter?.description}</p>
+          {/* Fuse timer - burns left to right */}
+          <div className="relative h-1.5 bg-gray-700 rounded-full mb-4 overflow-hidden">
+            <div
+              className={`absolute right-0 h-full transition-all duration-100 ${styles.timerColor}`}
+              style={{ width: `${timerPercent}%` }}
+            />
+            {/* Burning ember effect */}
+            <div
+              className="absolute h-full w-2 bg-yellow-300 blur-sm transition-all duration-100"
+              style={{ left: `${100 - timerPercent}%` }}
+            />
+          </div>
+
+          {/* Description - larger text */}
+          <p className="text-yellow-100 text-lg mb-4">{encounter?.description}</p>
 
           {/* Plea quote for good deeds */}
           {type === 'good_deed' && encounter?.plea && (
@@ -208,7 +205,6 @@ export function EncounterCard({
               gadgets={availableGadgets}
               timeRemaining={timeRemaining}
               wrongPenalty={wrongPenalty}
-              noPenalty={noPenalty}
               hasTimedOut={hasTimedOut}
               onChoice={handleGadgetChoice}
             />
@@ -255,39 +251,32 @@ export function EncounterCard({
     );
   }
 
-  // Gadget encounters (henchman/assassination) keep their existing result style
+  // Gadget encounters (henchman/assassination) - same header, result in quote style
+  const resultBorderColor = isSuccess ? 'border-green-500' : 'border-red-500';
+
   return (
     <div className="bg-gray-900/80 rounded-lg overflow-hidden mb-4">
-      {/* Accent bar */}
-      <div className={`h-1 ${isSuccess ? 'bg-green-500' : result?.outcome === 'trap' ? 'bg-red-500' : 'bg-orange-500'}`} />
-
       <div className="p-4">
-        {/* Result header */}
-        <div className="flex items-center gap-3 mb-3">
-          {getResultIcon(result)}
-          <h3 className={`text-lg font-bold ${getResultColor(result)}`}>
-            {getResultTitle(result)}
-          </h3>
+        {/* Same header as active phase */}
+        <div className="flex items-center gap-3 mb-4">
+          {styles.icon}
+          <h3 className={`text-lg font-bold ${styles.titleColor}`}>{styles.title}</h3>
         </div>
 
-        {/* Result message */}
-        <p className="text-yellow-100 mb-3">{result?.message}</p>
-
-        {/* Stats row */}
-        <div className="flex gap-4 text-sm mb-4">
+        {/* Result in quote style */}
+        <div className={`p-4 border-l-4 ${resultBorderColor} bg-black/20 rounded-r mb-4`}>
+          <p className="text-yellow-100 text-lg italic">"{result?.message}"</p>
           {result?.timeLost > 0 && (
-            <span className="text-red-400 flex items-center gap-1">
+            <p className="text-red-400 text-sm mt-2 flex items-center gap-1">
               <Clock size={12} /> -{result.timeLost}h
-            </span>
+            </p>
           )}
         </div>
 
         {/* Continue button */}
         <button
           onClick={handleContinue}
-          className={`w-full font-bold py-3 rounded transition-colors ${
-            isSuccess ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-700 hover:bg-gray-600'
-          } text-white`}
+          className="w-full font-bold py-3 rounded transition-colors bg-gray-700 hover:bg-gray-600 text-white"
         >
           CONTINUE
         </button>
@@ -297,36 +286,28 @@ export function EncounterCard({
 }
 
 // Gadget selection grid
-function GadgetButtons({ gadgets, timeRemaining, wrongPenalty, noPenalty, hasTimedOut, onChoice }) {
+function GadgetButtons({ gadgets, timeRemaining, wrongPenalty, hasTimedOut, onChoice }) {
   return (
-    <>
-      <div className="grid grid-cols-3 gap-2 mb-2">
-        {gadgets?.map((gadget) => (
-          <button
-            key={gadget.id}
-            onClick={() => onChoice(gadget.id)}
-            disabled={gadget.used || timeRemaining < wrongPenalty || hasTimedOut}
-            className={`p-2 rounded-lg flex flex-col items-center gap-1 transition-all ${
-              gadget.used
-                ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                : timeRemaining < wrongPenalty || hasTimedOut
-                ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-                : 'bg-blue-700 hover:bg-blue-600 text-white cursor-pointer'
-            }`}
-          >
-            <span className="text-xl">{gadget.icon}</span>
-            <span className="text-xs font-bold">{gadget.name}</span>
-            {gadget.used && <span className="text-xs">Used</span>}
-          </button>
-        ))}
-      </div>
-      <button
-        disabled={true}
-        className="w-full p-2 rounded-lg bg-gray-800 text-gray-500 cursor-not-allowed text-sm"
-      >
-        If timer runs out... (-{noPenalty}h)
-      </button>
-    </>
+    <div className="grid grid-cols-3 gap-2">
+      {gadgets?.map((gadget) => (
+        <button
+          key={gadget.id}
+          onClick={() => onChoice(gadget.id)}
+          disabled={gadget.used || timeRemaining < wrongPenalty || hasTimedOut}
+          className={`p-3 rounded-lg flex flex-col items-center gap-1 transition-all ${
+            gadget.used
+              ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+              : timeRemaining < wrongPenalty || hasTimedOut
+              ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+              : 'bg-blue-700 hover:bg-blue-600 text-white cursor-pointer'
+          }`}
+        >
+          <span className="text-2xl">{gadget.icon}</span>
+          <span className="text-xs font-bold">{gadget.name}</span>
+          {gadget.used && <span className="text-xs">Used</span>}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -387,36 +368,6 @@ function getEncounterStyles(type, isFake, urgencyLevel) {
     titleColor: 'text-yellow-400',
     timerColor: timerColors[urgencyLevel],
   };
-}
-
-function getResultIcon(result) {
-  if (result?.outcome === 'success' || result?.outcome === 'helped') {
-    return <CheckCircle size={24} className="text-green-400" />;
-  }
-  if (result?.outcome === 'trap') {
-    return <AlertTriangle size={24} className="text-red-400" />;
-  }
-  return <XCircle size={24} className="text-orange-400" />;
-}
-
-function getResultColor(result) {
-  if (result?.outcome === 'success' || result?.outcome === 'helped') {
-    return 'text-green-400';
-  }
-  if (result?.outcome === 'trap') {
-    return 'text-red-400';
-  }
-  return 'text-orange-400';
-}
-
-function getResultTitle(result) {
-  if (result?.outcome === 'success') return 'SUCCESS!';
-  if (result?.outcome === 'helped') return 'DEED DONE!';
-  if (result?.outcome === 'trap') return 'IT WAS A TRAP!';
-  if (result?.outcome === 'wrong_gadget') return 'WRONG GADGET!';
-  if (result?.outcome === 'timeout') return 'TOO SLOW!';
-  if (result?.outcome === 'skipped') return 'SKIPPED';
-  return 'RESULT';
 }
 
 export default EncounterCard;
