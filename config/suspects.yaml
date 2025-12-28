@@ -1,30 +1,30 @@
 suspects:
   - id: viktor
-    name: Viktor Blackwood
+    name: Albert E. Katt
     gender: male
     hair: dark
     hobby: intellectual
 
   - id: marcus
-    name: Marcus Stone
+    name: Ron Turn
     gender: male
     hair: dark
     hobby: physical
 
   - id: sebastian
-    name: Sebastian Frost
+    name: Benjamin Hanna
     gender: male
     hair: light
     hobby: intellectual
 
   - id: dimitri
-    name: Dimitri Volkov
+    name: Valentin E. Gurl
     gender: male
     hair: light
     hobby: physical
 
   - id: mei
-    name: Mei Lin
+    name: Amanda Hugginkiss
     gender: female
     hair: dark
     hobby: intellectual
@@ -36,13 +36,13 @@ suspects:
     hobby: physical
 
   - id: scarlett
-    name: Scarlett Viper
+    name: Rikki D. Khan-Struckshun
     gender: female
     hair: light
     hobby: intellectual
 
   - id: isabella
-    name: Isabella Frost
+    name: Cole Fyre-Doven
     gender: female
     hair: light
     hobby: physical

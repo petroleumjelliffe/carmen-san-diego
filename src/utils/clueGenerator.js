@@ -25,14 +25,34 @@ export function generateCluesForCity(gameData, currentCase, cityIndex, isWrongCi
     }));
   }
 
-  // Final city - assassination plot clues
+  // Final city - assassination plot clues + suspect clues
   if (isFinalCity) {
     const shuffledFinal = shuffle([...finalCityClues]);
-    return investigationSpots.map((spot, i) => ({
-      spot,
-      destinationClue: shuffledFinal[i % shuffledFinal.length].text,
-      suspectClue: null,
-    }));
+
+    // Final city still needs suspect clues for identification
+    // Use the last trait in the order (or a random one if none left)
+    const traitToReveal = currentCase.traitOrder[cityIndex] || currentCase.traitOrder[currentCase.traitOrder.length - 1];
+    const traitValue = currentCase.suspect[traitToReveal];
+    const traitClues = suspectClues[traitToReveal]?.[traitValue] || [];
+
+    return investigationSpots.map((spot, i) => {
+      let destClue = null;
+      let suspClue = null;
+
+      if (spot.gives.includes('destination')) {
+        destClue = shuffledFinal[i % shuffledFinal.length].text;
+      }
+
+      if (spot.gives.includes('suspect')) {
+        suspClue = pickRandom(traitClues);
+      }
+
+      return {
+        spot,
+        destinationClue: destClue,
+        suspectClue: suspClue,
+      };
+    });
   }
 
   // Normal city - spots give EITHER destination OR suspect (not both)
