@@ -7,7 +7,7 @@ function ClueButton({ spot, onInvestigate, disabled, investigated, index }) {
     <button
       onClick={() => onInvestigate(index)}
       disabled={disabled || investigated}
-      className={`w-full p-4 min-h-[52px] text-left rounded-lg transition-all ${
+      className={`w-full p-3 text-left rounded-lg transition-all text-sm ${
         investigated
           ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
           : disabled
@@ -25,7 +25,7 @@ function RogueActionButton({ rogueAction, onRogueAction, disabled, used }) {
     <button
       onClick={() => onRogueAction(rogueAction)}
       disabled={disabled || used}
-      className={`w-full p-4 min-h-[52px] text-left rounded-lg transition-all border-l-4 ${
+      className={`w-full p-3 text-left rounded-lg transition-all border-l-4 text-sm ${
         used
           ? 'bg-gray-700 text-gray-400 cursor-not-allowed border-gray-600'
           : disabled
@@ -34,7 +34,7 @@ function RogueActionButton({ rogueAction, onRogueAction, disabled, used }) {
       }`}
     >
       <div className="flex items-center gap-2">
-        <Zap size={16} className="text-orange-400" />
+        <Zap size={14} className="text-orange-400" />
         <span className="font-bold">{used ? '✓ ' : ''}{rogueAction.name}</span>
       </div>
     </button>
@@ -95,127 +95,131 @@ export function InvestigateTab({
 
 
   return (
-    <div className="space-y-4">
-      {/* Empty space to allow scrolling background into view */}
-      <div className="h-24" aria-hidden="true" />
+    <div className="flex flex-col min-h-full">
+      {/* Flexible space above pushes content to bottom */}
+      <div className="flex-1" />
 
-      {/* Apprehended - Shows inline with Continue button */}
-      <FadeIn show={isApprehended}>
-        <div className="bg-green-900/50 border-2 border-green-400 p-6 rounded-lg text-center">
-          <div className="text-5xl mb-3">🚔</div>
-          <h3 className="text-2xl font-bold text-green-400 mb-2">SUSPECT APPREHENDED!</h3>
-          <p className="text-yellow-100 text-lg mb-2">
-            {selectedWarrant?.name} is now in custody.
-          </p>
-          <p className="text-yellow-200/70 mb-4">
-            Time to face the court and see if you got the right person...
-          </p>
-          <button
-            onClick={onProceedToTrial}
-            className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 px-6 rounded-lg text-lg transition-all"
-          >
-            Continue to Trial
-          </button>
-        </div>
-      </FadeIn>
-
-
-      {/* Unified Encounter Card - handles henchman, assassination, and good deed */}
-      <FadeIn show={!!(activeEncounter && encounterType)}>
-        <EncounterCard
-          type={encounterType}
-          encounter={activeEncounter}
-          timerDuration={getTimerDuration()}
-          availableGadgets={availableGadgets}
-          karma={karma}
-          timeRemaining={timeRemaining}
-          onResolve={onEncounterResolve}
-        />
-      </FadeIn>
-
-      {wrongCity && (
-        <div className="bg-red-800/50 p-4 rounded-lg text-center mb-4">
-          <p className="text-yellow-200/70">
-            The trail seems cold here... but you can still ask around.
-          </p>
-        </div>
-      )}
-
-      {/* City Fact - shows when first arriving (no investigations yet) */}
-      {cityFact && investigatedLocations.length === 0 && !activeEncounter && !isApprehended && !isInvestigating && (
-        <div className="bg-gray-900/80 rounded-lg overflow-hidden mb-4">
-          <div className="p-4 border-l-4 border-blue-400">
-            <p className="text-yellow-100 italic">"{cityFact}"</p>
+      {/* Bottom-anchored content */}
+      <div className="space-y-3">
+        {/* Apprehended - Shows inline with Continue button */}
+        <FadeIn show={isApprehended}>
+          <div className="bg-green-900/50 border-2 border-green-400 p-6 rounded-lg text-center">
+            <div className="text-5xl mb-3">🚔</div>
+            <h3 className="text-2xl font-bold text-green-400 mb-2">SUSPECT APPREHENDED!</h3>
+            <p className="text-yellow-100 text-lg mb-2">
+              {selectedWarrant?.name} is now in custody.
+            </p>
+            <p className="text-yellow-200/70 mb-4">
+              Time to face the court and see if you got the right person...
+            </p>
+            <button
+              onClick={onProceedToTrial}
+              className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 px-6 rounded-lg text-lg transition-all"
+            >
+              Continue to Trial
+            </button>
           </div>
-        </div>
-      )}
+        </FadeIn>
 
-      {/* Investigation Results - single container, content swaps between investigating and results */}
-      {(isInvestigating || lastFoundClue?.city || lastFoundClue?.suspect || lastRogueAction) && (
-        <div className="bg-gray-900/80 rounded-lg overflow-hidden mb-6">
-          {isInvestigating ? (
-            <div className="p-4 border-l-4 border-yellow-400">
-              <p className="text-yellow-100 italic animate-pulse">Investigating...</p>
+        {/* Unified Encounter Card - handles henchman, assassination, and good deed */}
+        <FadeIn show={!!(activeEncounter && encounterType)}>
+          <EncounterCard
+            type={encounterType}
+            encounter={activeEncounter}
+            timerDuration={getTimerDuration()}
+            availableGadgets={availableGadgets}
+            karma={karma}
+            timeRemaining={timeRemaining}
+            onResolve={onEncounterResolve}
+          />
+        </FadeIn>
+
+        {wrongCity && (
+          <div className="bg-red-800/50 p-4 rounded-lg text-center">
+            <p className="text-yellow-200/70">
+              The trail seems cold here... but you can still ask around.
+            </p>
+          </div>
+        )}
+
+        {/* City Fact - shows when first arriving (no investigations yet) */}
+        {cityFact && investigatedLocations.length === 0 && !activeEncounter && !isApprehended && !isInvestigating && (
+          <div className="bg-gray-900/80 rounded-lg overflow-hidden">
+            <div className="p-4 border-l-4 border-blue-400">
+              <p className="text-yellow-100 italic">"{cityFact}"</p>
             </div>
-          ) : (
-            <>
-              {/* Rogue Action Result */}
-              {lastRogueAction && (
-                <div className="p-4 border-l-4 border-orange-500">
-                  <p className="text-yellow-100 italic">"{lastRogueAction.success_text}"</p>
-                  <p className="text-red-400 text-xs mt-2">
-                    <AlertTriangle size={10} className="inline mr-1" />
-                    +{lastRogueAction.notoriety_gain} notoriety
-                  </p>
-                </div>
-              )}
+          </div>
+        )}
 
-              {/* Investigation Result - City clue */}
-              {lastFoundClue?.city && (
-                <div className="p-4 border-l-4 border-yellow-500">
-                  <p className="text-yellow-100 italic">"{lastFoundClue.city}"</p>
-                </div>
-              )}
+        {/* Investigation Results - single container, content swaps between investigating and results */}
+        {(isInvestigating || lastFoundClue?.city || lastFoundClue?.suspect || lastRogueAction) && (
+          <div className="bg-gray-900/80 rounded-lg overflow-hidden">
+            {isInvestigating ? (
+              <div className="p-4 border-l-4 border-yellow-400">
+                <p className="text-yellow-100 italic animate-pulse">Investigating...</p>
+              </div>
+            ) : (
+              <>
+                {/* Rogue Action Result */}
+                {lastRogueAction && (
+                  <div className="p-4 border-l-4 border-orange-500">
+                    <p className="text-yellow-100 italic">"{lastRogueAction.success_text}"</p>
+                    <p className="text-red-400 text-xs mt-2">
+                      <AlertTriangle size={10} className="inline mr-1" />
+                      +{lastRogueAction.notoriety_gain} notoriety
+                    </p>
+                  </div>
+                )}
 
-              {/* Investigation Result - Suspect clue */}
-              {lastFoundClue?.suspect && (
-                <div className="p-4 border-l-4 border-green-500">
-                  <p className="text-yellow-100 italic">"{lastFoundClue.suspect}"</p>
-                </div>
-              )}
-            </>
+                {/* Investigation Result - City clue */}
+                {lastFoundClue?.city && (
+                  <div className="p-4 border-l-4 border-yellow-500">
+                    <p className="text-yellow-100 italic">"{lastFoundClue.city}"</p>
+                  </div>
+                )}
+
+                {/* Investigation Result - Suspect clue */}
+                {lastFoundClue?.suspect && (
+                  <div className="p-4 border-l-4 border-green-500">
+                    <p className="text-yellow-100 italic">"{lastFoundClue.suspect}"</p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Section heading */}
+        <h2 className="text-lg font-bold text-yellow-400">Investigate</h2>
+
+        {/* Investigation Spots - 2x2 grid layout */}
+        <div className="grid grid-cols-2 gap-2">
+          {cityClues.map((clue, i) => {
+            const investigated = investigatedLocations.includes(clue.spot.id);
+
+            return (
+              <ClueButton
+                key={clue.spot.id}
+                spot={clue.spot}
+                index={i}
+                onInvestigate={onInvestigate}
+                disabled={timeRemaining < nextInvestigationCost || isInvestigating}
+                investigated={investigated}
+              />
+            );
+          })}
+
+          {/* Rogue Cop Tactic - 4th option in grid */}
+          {availableRogueAction && onRogueAction && (
+            <RogueActionButton
+              rogueAction={availableRogueAction}
+              onRogueAction={onRogueAction}
+              disabled={timeRemaining < ROGUE_TIME_COST || isInvestigating}
+              used={rogueUsedInCity}
+            />
           )}
         </div>
-      )}
-
-      {/* Section heading */}
-      <h2 className="text-xl font-bold text-yellow-400 mb-2">Investigate</h2>
-
-      {/* Investigation Spots - Normal 3 options */}
-      {cityClues.map((clue, i) => {
-        const investigated = investigatedLocations.includes(clue.spot.id);
-
-        return (
-          <ClueButton
-            key={clue.spot.id}
-            spot={clue.spot}
-            index={i}
-            onInvestigate={onInvestigate}
-            disabled={timeRemaining < nextInvestigationCost || isInvestigating}
-            investigated={investigated}
-          />
-        );
-      })}
-
-      {/* Rogue Cop Tactic - 4th option */}
-      {availableRogueAction && onRogueAction && (
-        <RogueActionButton
-          rogueAction={availableRogueAction}
-          onRogueAction={onRogueAction}
-          disabled={timeRemaining < ROGUE_TIME_COST || isInvestigating}
-          used={rogueUsedInCity}
-        />
-      )}
+      </div>
     </div>
   );
 }

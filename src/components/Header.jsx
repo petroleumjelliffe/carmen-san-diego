@@ -94,22 +94,22 @@ export function Header({
   return (
     <div className="sticky top-0 z-40 bg-gray-900/95 backdrop-blur border-b border-yellow-400/50">
       <div className="max-w-4xl mx-auto px-4 py-2 relative">
-        {/* Single row layout */}
-        <div className="flex justify-between items-center">
-          {/* Location */}
-          <div className="flex items-center gap-2">
-            <MapPin size={18} className="text-yellow-400" />
-            <span className="text-yellow-100 font-medium truncate max-w-[180px] sm:max-w-none">
+        {/* Single row layout - never wrap */}
+        <div className="flex justify-between items-center gap-2">
+          {/* Location - can truncate */}
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <MapPin size={18} className="text-yellow-400 flex-shrink-0" />
+            <span className="text-yellow-100 font-medium truncate">
               {locationName}
             </span>
             {wrongCity && (
-              <span className="text-red-400 text-xs font-bold ml-1">WRONG TRAIL</span>
+              <span className="text-red-400 text-xs font-bold flex-shrink-0">WRONG</span>
             )}
           </div>
 
-          {/* Time + Urgency */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-yellow-100 font-mono text-sm">
+          {/* Time + Urgency - never wrap or shrink */}
+          <div className="flex items-center gap-2 flex-shrink-0 whitespace-nowrap">
+            <div className="flex items-center gap-1 text-yellow-100 font-mono text-sm">
               <Clock size={14} className="text-yellow-400" />
               <AnimatedClock
                 targetHour={currentHour}
