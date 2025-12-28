@@ -278,6 +278,13 @@ FINAL CITY (city 4):
 4. **First-investigation-only triggers** - Encounters don't repeat on subsequent investigations in same city
 5. **Gadgets are one-use per case** - Track `usedGadgets` array, reset on new case
 6. **NO SPLASH PAGES** - ALWAYS use the main content area for messages, encounters, and transitions. Never create full-screen splash components. All interactive moments (apprehended, encounters, good deeds, results) render inline in InvestigateTab.
+7. **Hidden clue types** - Player should NOT know what type of clue (location vs suspect) they'll get at each investigation spot. Do NOT show clue type badges or indicators in the UI. Each spot secretly gives either a destination clue OR a suspect clue, but the player must discover this through exploration.
+8. **Hidden investigation duration** - Do NOT show time cost ahead of time. The duration is tied to investigation ORDER, not to the specific location:
+   - 1st investigation in a city: 2 hours
+   - 2nd investigation in a city: 4 hours
+   - 3rd investigation in a city: 8 hours
+   - Each subsequent investigation doubles in time cost
+9. **Rogue action exception** - The rogue cop action is special: it gives BOTH clue types (location + suspect) for a fixed 2-hour cost, but increases notoriety. This is the only way to get both clues from a single action.
 
 ---
 

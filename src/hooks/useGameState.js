@@ -174,6 +174,18 @@ export function useGameState(gameData) {
     return false; // Game continues
   }, [currentHour, timeRemaining]);
 
+  // Calculate progressive investigation cost (2h, 4h, 8h based on order)
+  const getInvestigationCost = useCallback((investigationCount) => {
+    // Each investigation doubles: 2h, 4h, 8h
+    const baseCost = 2;
+    return baseCost * Math.pow(2, investigationCount);
+  }, []);
+
+  // Get the cost for the NEXT investigation
+  const nextInvestigationCost = useMemo(() => {
+    return getInvestigationCost(investigatedLocations.length);
+  }, [investigatedLocations.length, getInvestigationCost]);
+
   // Calculate total time penalty from injuries
   const getInjuryTimePenalty = useCallback(() => {
     let penalty = 0;
@@ -217,9 +229,10 @@ export function useGameState(gameData) {
     const clue = cityClues[locationIndex];
     const spot = clue.spot;
 
-    // Apply injury time penalties
+    // Progressive cost based on investigation order (2h, 4h, 8h)
+    const baseCost = getInvestigationCost(investigatedLocations.length);
     const timePenalty = getInjuryTimePenalty();
-    const totalTimeCost = spot.time_cost + timePenalty;
+    const totalTimeCost = baseCost + timePenalty;
 
     if (timeRemaining < totalTimeCost) {
       setMessage("Not enough time for this investigation!");
@@ -330,7 +343,7 @@ export function useGameState(gameData) {
         return;
       }
     }
-  }, [timeRemaining, cityClues, investigatedLocations, advanceTime, wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, getInjuryTimePenalty, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant, currentCity, currentHour]);
+  }, [timeRemaining, cityClues, investigatedLocations, advanceTime, wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, getInjuryTimePenalty, getInvestigationCost, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant, currentCity, currentHour]);
 
   // Rogue investigate - Fast but increases notoriety, gets BOTH clues
   const rogueInvestigate = useCallback((rogueAction) => {
@@ -567,6 +580,7 @@ export function useGameState(gameData) {
     rogueUsedInCity,
     isFinalCity,
     destinations,
+    nextInvestigationCost,
 
     // Phase 3: Karma & Notoriety
     karma,

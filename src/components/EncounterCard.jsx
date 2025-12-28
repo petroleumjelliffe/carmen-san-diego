@@ -304,30 +304,18 @@ function GadgetButtons({ gadgets, timeRemaining, wrongPenalty, noPenalty, hasTim
 // Good deed help/skip buttons
 function GoodDeedButtons({ timeRemaining, timeCost, hasTimedOut, onChoice }) {
   return (
-    <div className="grid grid-cols-2 gap-3">
-      <button
-        onClick={() => onChoice(true)}
-        disabled={timeRemaining < timeCost || hasTimedOut}
-        className={`text-white font-bold py-3 px-4 rounded-lg transition-all flex flex-col items-center gap-1 ${
-          timeRemaining < timeCost || hasTimedOut
-            ? 'bg-gray-700 cursor-not-allowed'
-            : 'bg-green-700 hover:bg-green-600'
-        }`}
-      >
-        <Heart size={20} />
-        <span>HELP</span>
-        <span className="text-xs">Costs {timeCost}h, +1 karma</span>
-      </button>
-
-      <button
-        disabled={true}
-        className="bg-gray-700 text-gray-400 cursor-not-allowed font-bold py-3 px-4 rounded-lg transition-all flex flex-col items-center gap-1"
-      >
-        <Clock size={20} />
-        <span>SKIP</span>
-        <span className="text-xs">Timer = auto-skip</span>
-      </button>
-    </div>
+    <button
+      onClick={() => onChoice(true)}
+      disabled={timeRemaining < timeCost || hasTimedOut}
+      className={`w-full text-white font-bold py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-2 ${
+        timeRemaining < timeCost || hasTimedOut
+          ? 'bg-gray-700 cursor-not-allowed'
+          : 'bg-green-700 hover:bg-green-600'
+      }`}
+    >
+      <Heart size={20} />
+      <span>HELP ({timeCost}h)</span>
+    </button>
   );
 }
 

@@ -1,4 +1,4 @@
-import { Clock, Zap, AlertTriangle } from 'lucide-react';
+import { Zap, AlertTriangle } from 'lucide-react';
 import { EncounterCard } from './EncounterCard';
 import { FadeIn } from './FadeIn';
 
@@ -12,51 +12,30 @@ function ClueButton({ spot, onInvestigate, disabled, investigated, index }) {
           ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
           : disabled
           ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-          : 'bg-red-900 hover:bg-red-800 active:bg-red-700 text-yellow-100 cursor-pointer'
+          : 'bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-yellow-100 cursor-pointer'
       }`}
     >
-      <div className="flex justify-between items-center">
-        <span>{investigated ? `✓ ${spot.name}` : spot.name}</span>
-        <span className="flex items-center gap-1 text-sm">
-          <Clock size={14} />
-          {spot.time_cost}h
-        </span>
-      </div>
+      <span>{investigated ? '✓ ' : ''}{spot.name}</span>
     </button>
   );
 }
 
 function RogueActionButton({ rogueAction, onRogueAction, disabled, used }) {
-  const ROGUE_TIME_COST = 2; // Fixed 2h - fastest option
-
   return (
     <button
       onClick={() => onRogueAction(rogueAction)}
       disabled={disabled || used}
-      className={`w-full p-4 min-h-[52px] text-left rounded-lg transition-all border-2 ${
+      className={`w-full p-4 min-h-[52px] text-left rounded-lg transition-all border-l-4 ${
         used
           ? 'bg-gray-700 text-gray-400 cursor-not-allowed border-gray-600'
           : disabled
           ? 'bg-gray-800 text-gray-500 cursor-not-allowed border-gray-700'
-          : 'bg-orange-900 hover:bg-orange-800 active:bg-orange-700 text-yellow-100 cursor-pointer border-orange-500'
+          : 'bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-yellow-100 cursor-pointer border-orange-500'
       }`}
     >
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <Zap size={16} className="text-orange-400" />
-          <span className="font-bold">{used ? `✓ ${rogueAction.name}` : rogueAction.name}</span>
-          <span className="text-xs text-green-300">⚡ Get BOTH clues!</span>
-        </div>
-        <div className="flex items-center gap-3 text-sm">
-          <div className="flex items-center gap-1">
-            <Clock size={14} />
-            {ROGUE_TIME_COST}h
-          </div>
-          <div className="flex items-center gap-1 text-xs text-red-300">
-            <AlertTriangle size={12} />
-            +{rogueAction.notoriety_gain}
-          </div>
-        </div>
+      <div className="flex items-center gap-2">
+        <Zap size={16} className="text-orange-400" />
+        <span className="font-bold">{used ? '✓ ' : ''}{rogueAction.name}</span>
       </div>
     </button>
   );
@@ -68,6 +47,7 @@ export function InvestigateTab({
   cityClues,
   investigatedLocations,
   timeRemaining,
+  nextInvestigationCost,
   collectedClues,
   lastFoundClue,
   lastRogueAction,
@@ -145,12 +125,6 @@ export function InvestigateTab({
         </div>
       </FadeIn>
 
-      {!isApprehended && !isFinalCity && !wrongCity && (
-        <div className="text-sm text-yellow-200/70 mb-4">
-          Suspect clues collected: {collectedClues.suspect.length} / 3
-          {collectedClues.suspect.length < 3 && " (check the Local Informant for suspect info)"}
-        </div>
-      )}
 
       {/* Unified Encounter Card - handles henchman, assassination, and good deed */}
       <FadeIn show={!!(activeEncounter && encounterType)}>
@@ -173,51 +147,38 @@ export function InvestigateTab({
         </div>
       )}
 
-      {/* Results Area - Simplified flat card with accent strips */}
+      {/* Results Area - Quote bubble style */}
       <FadeIn show={hasResults}>
         <div className="bg-gray-900/80 rounded-lg overflow-hidden mb-6">
           {/* Sleep Result */}
           {lastSleepResult && (
-            <div className="flex border-l-4 border-blue-500">
-              <div className="p-4 flex-1">
-                <div className="flex items-center gap-2 text-blue-300">
-                  <span className="text-xl">💤</span>
-                  <span className="font-bold">Rest Period</span>
-                </div>
-                <p className="text-yellow-100/80 text-sm mt-1">{lastSleepResult.message}</p>
-              </div>
+            <div className="p-4 border-l-4 border-blue-500">
+              <p className="text-yellow-100 italic">"{lastSleepResult.message}"</p>
             </div>
           )}
 
           {/* Rogue Action Result */}
           {lastRogueAction && (
-            <div className="flex border-l-4 border-orange-500">
-              <div className="p-4 flex-1">
-                <div className="flex items-center gap-2 text-orange-300">
-                  <Zap size={16} />
-                  <span className="font-bold">{lastRogueAction.name}</span>
-                </div>
-                <p className="text-yellow-100/80 text-sm mt-1 italic">{lastRogueAction.success_text}</p>
-                <p className="text-red-400 text-xs mt-2">
-                  <AlertTriangle size={10} className="inline mr-1" />
-                  +{lastRogueAction.notoriety_gain} notoriety
-                </p>
-              </div>
+            <div className="p-4 border-l-4 border-orange-500">
+              <p className="text-yellow-100 italic">"{lastRogueAction.success_text}"</p>
+              <p className="text-red-400 text-xs mt-2">
+                <AlertTriangle size={10} className="inline mr-1" />
+                +{lastRogueAction.notoriety_gain} notoriety
+              </p>
             </div>
           )}
 
-          {/* Investigation Result */}
+          {/* Investigation Result - City clue */}
           {lastFoundClue?.city && (
-            <div className="flex border-l-4 border-green-500">
-              <div className="p-4 flex-1">
-                <p className="text-yellow-100/70 text-sm mb-2">📍 {lastFoundClue.city}</p>
-                {lastFoundClue.suspect && (
-                  <div>
-                    <p className="text-green-400 font-bold text-sm">🔍 Suspect intel:</p>
-                    <p className="text-green-300 mt-1">{lastFoundClue.suspect}</p>
-                  </div>
-                )}
-              </div>
+            <div className="p-4 border-l-4 border-yellow-500">
+              <p className="text-yellow-100 italic">"{lastFoundClue.city}"</p>
+            </div>
+          )}
+
+          {/* Investigation Result - Suspect clue */}
+          {lastFoundClue?.suspect && (
+            <div className="p-4 border-l-4 border-green-500">
+              <p className="text-yellow-100 italic">"{lastFoundClue.suspect}"</p>
             </div>
           )}
         </div>
@@ -233,7 +194,7 @@ export function InvestigateTab({
             spot={clue.spot}
             index={i}
             onInvestigate={onInvestigate}
-            disabled={timeRemaining < clue.spot.time_cost}
+            disabled={timeRemaining < nextInvestigationCost}
             investigated={investigated}
           />
         );

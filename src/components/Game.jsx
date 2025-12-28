@@ -45,6 +45,7 @@ export function Game({ gameData }) {
     rogueUsedInCity,
     isFinalCity,
     destinations,
+    nextInvestigationCost,
     karma,
     notoriety,
     savedNPCs,
@@ -132,10 +133,10 @@ export function Game({ gameData }) {
   // Main game UI with city background
   return (
     <div
-      className="min-h-screen bg-red-950"
+      className="min-h-screen bg-gray-900"
       style={{
         backgroundImage: `
-          linear-gradient(to bottom, rgba(69, 10, 10, 0.85), rgba(69, 10, 10, 0.95)),
+          linear-gradient(to bottom, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.85)),
           url('${backgroundUrl}')
         `,
         backgroundSize: 'cover',
@@ -176,6 +177,7 @@ export function Game({ gameData }) {
             cityClues={cityClues}
             investigatedLocations={investigatedLocations}
             timeRemaining={timeRemaining}
+            nextInvestigationCost={nextInvestigationCost}
             collectedClues={collectedClues}
             lastFoundClue={lastFoundClue}
             lastRogueAction={lastRogueAction}

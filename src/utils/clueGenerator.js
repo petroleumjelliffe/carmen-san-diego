@@ -35,7 +35,7 @@ export function generateCluesForCity(gameData, currentCase, cityIndex, isWrongCi
     }));
   }
 
-  // Normal city - destination + suspect clues
+  // Normal city - spots give EITHER destination OR suspect (not both)
   const nextCityId = currentCase.cities[cityIndex + 1];
   const cityClues = destinationClues[nextCityId] || [];
   const shuffledCityClues = shuffle([...cityClues]);
@@ -46,18 +46,22 @@ export function generateCluesForCity(gameData, currentCase, cityIndex, isWrongCi
   const traitClues = suspectClues[traitToReveal]?.[traitValue] || [];
 
   return investigationSpots.map((spot, i) => {
-    // Get destination clue
-    const destClue = shuffledCityClues[i % shuffledCityClues.length];
-
-    // Get suspect clue only if this spot gives it
+    // Each spot gives EITHER destination OR suspect (not both)
+    let destClue = null;
     let suspClue = null;
+
+    if (spot.gives.includes('destination')) {
+      const clue = shuffledCityClues[i % shuffledCityClues.length];
+      destClue = clue?.text || 'No information available.';
+    }
+
     if (spot.gives.includes('suspect')) {
       suspClue = pickRandom(traitClues);
     }
 
     return {
       spot,
-      destinationClue: destClue?.text || 'No information available.',
+      destinationClue: destClue,
       suspectClue: suspClue,
     };
   });
