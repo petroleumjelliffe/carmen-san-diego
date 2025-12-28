@@ -1,5 +1,5 @@
 import { User, X, MapPin, Clock } from 'lucide-react';
-import { useState, useMemo, useCallback } from 'react';
+import { useMemo } from 'react';
 
 // Pushpin decoration component
 function Pushpin() {
@@ -32,7 +32,7 @@ function formatTime(hour) {
 }
 
 // Trait cycling button - tap to cycle through values
-function TraitField({ label, value, options, onCycle }) {
+function TraitField({ label, value, onCycle }) {
   const displayValue = value || '—';
   const hasValue = value !== null;
 
@@ -157,30 +157,10 @@ export function DossierTab({
   isFinalCity,
   onSelectWarrant,
   onIssueWarrant,
+  selectedTraits,
+  onCycleTrait,
+  onResetTraits,
 }) {
-  // Player-selected traits (tap to cycle)
-  const [selectedTraits, setSelectedTraits] = useState({
-    gender: null,   // null | 'male' | 'female'
-    hair: null,     // null | 'dark' | 'light'
-    hobby: null,    // null | 'intellectual' | 'physical'
-  });
-
-  // Trait options for cycling
-  const traitOptions = {
-    gender: [null, 'male', 'female'],
-    hair: [null, 'dark', 'light'],
-    hobby: [null, 'intellectual', 'physical'],
-  };
-
-  // Cycle to next trait value
-  const cycleTrait = useCallback((trait) => {
-    setSelectedTraits(prev => {
-      const options = traitOptions[trait];
-      const currentIndex = options.indexOf(prev[trait]);
-      const nextIndex = (currentIndex + 1) % options.length;
-      return { ...prev, [trait]: options[nextIndex] };
-    });
-  }, []);
 
   // Stable rotations for each suspect based on their id
   const rotations = useMemo(() => {
@@ -212,11 +192,15 @@ export function DossierTab({
   const hasAnyTraits = selectedTraits.gender || selectedTraits.hair || selectedTraits.hobby;
 
   return (
-    <div
-      className="space-y-6 p-4 rounded-lg min-h-[500px]"
-      style={{
-        background: 'linear-gradient(135deg, #b8956c 0%, #a0845c 50%, #c4a574 100%)',
-        backgroundImage: `
+    <div>
+      {/* Empty space to allow scrolling background into view */}
+      <div className="h-24" aria-hidden="true" />
+
+      <div
+        className="space-y-6 p-4 rounded-lg min-h-[500px]"
+        style={{
+          background: 'linear-gradient(135deg, #b8956c 0%, #a0845c 50%, #c4a574 100%)',
+          backgroundImage: `
           linear-gradient(135deg, #b8956c 0%, #a0845c 50%, #c4a574 100%),
           url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")
         `,
@@ -257,20 +241,17 @@ export function DossierTab({
             <TraitField
               label="Gender"
               value={selectedTraits.gender}
-              options={traitOptions.gender}
-              onCycle={() => cycleTrait('gender')}
+              onCycle={() => onCycleTrait('gender')}
             />
             <TraitField
               label="Hair"
               value={selectedTraits.hair}
-              options={traitOptions.hair}
-              onCycle={() => cycleTrait('hair')}
+              onCycle={() => onCycleTrait('hair')}
             />
             <TraitField
               label="Hobby"
               value={selectedTraits.hobby}
-              options={traitOptions.hobby}
-              onCycle={() => cycleTrait('hobby')}
+              onCycle={() => onCycleTrait('hobby')}
             />
           </div>
 
@@ -289,7 +270,7 @@ export function DossierTab({
             </span>
             {hasAnyTraits && (
               <button
-                onClick={() => setSelectedTraits({ gender: null, hair: null, hobby: null })}
+                onClick={onResetTraits}
                 className="text-xs text-green-700 hover:text-green-900 underline"
               >
                 Reset
@@ -360,6 +341,7 @@ export function DossierTab({
           </NoteCard>
         </div>
       )}
+      </div>
     </div>
   );
 }

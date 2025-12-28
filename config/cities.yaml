@@ -3,38 +3,46 @@ cities:
     name: Paris
     country: France
     region: europe
+    fact: "The Eiffel Tower was originally intended to be a temporary structure, built for the 1889 World's Fair."
 
   - id: tokyo
     name: Tokyo
     country: Japan
     region: asia
+    fact: "Tokyo's Shibuya Crossing is the busiest pedestrian intersection in the world, with up to 3,000 people crossing at once."
 
   - id: cairo
     name: Cairo
     country: Egypt
     region: africa
+    fact: "The Great Pyramid of Giza was the tallest man-made structure in the world for over 3,800 years."
 
   - id: london
     name: London
     country: United Kingdom
     region: europe
+    fact: "Big Ben is actually the name of the bell inside the tower, not the tower itself."
 
   - id: rome
     name: Rome
     country: Italy
     region: europe
+    fact: "The Trevi Fountain collects roughly 3,000 euros in coins every day, which goes to charity."
 
   - id: berlin
     name: Berlin
     country: Germany
     region: europe
+    fact: "Berlin has more bridges than Venice — over 1,700 compared to Venice's 400."
 
   - id: sydney
     name: Sydney
     country: Australia
     region: oceania
+    fact: "The Sydney Opera House's roof is covered with over 1 million tiles that were made in Sweden."
 
   - id: moscow
     name: Moscow
     country: Russia
     region: europe
+    fact: "Moscow's metro system is so deep that some stations double as nuclear bunkers."

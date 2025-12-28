@@ -47,6 +47,9 @@ export function AirportTab({ destinations, timeRemaining, travelTime, onTravel }
 
   return (
     <div className="space-y-4">
+      {/* Empty space to allow scrolling background into view */}
+      <div className="h-24" aria-hidden="true" />
+
       {/* Departure Board Header */}
       <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
         <div className="flex items-center justify-between mb-3">

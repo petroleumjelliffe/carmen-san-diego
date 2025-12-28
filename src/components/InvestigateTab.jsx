@@ -66,6 +66,7 @@ export function InvestigateTab({
   onProceedToTrial,
   encounterTimers,
   isInvestigating,
+  cityFact,
 }) {
   if (!cityClues) return null;
 
@@ -95,13 +96,8 @@ export function InvestigateTab({
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold text-yellow-400 mb-2">
-        {isFinalCity && !wrongCity
-          ? "FINAL DESTINATION - Issue Warrant to Capture!"
-          : wrongCity
-          ? "Dead End - Wrong Location"
-          : "Gather Intel"}
-      </h2>
+      {/* Empty space to allow scrolling background into view */}
+      <div className="h-24" aria-hidden="true" />
 
       {/* Apprehended - Shows inline with Continue button */}
       <FadeIn show={isApprehended}>
@@ -145,6 +141,15 @@ export function InvestigateTab({
         </div>
       )}
 
+      {/* City Fact - shows when first arriving (no investigations yet) */}
+      {cityFact && investigatedLocations.length === 0 && !activeEncounter && !isApprehended && !isInvestigating && (
+        <div className="bg-gray-900/80 rounded-lg overflow-hidden mb-4">
+          <div className="p-4 border-l-4 border-blue-400">
+            <p className="text-yellow-100 italic">"{cityFact}"</p>
+          </div>
+        </div>
+      )}
+
       {/* Investigation Results - single container, content swaps between investigating and results */}
       {(isInvestigating || lastFoundClue?.city || lastFoundClue?.suspect || lastRogueAction) && (
         <div className="bg-gray-900/80 rounded-lg overflow-hidden mb-6">
@@ -182,6 +187,9 @@ export function InvestigateTab({
           )}
         </div>
       )}
+
+      {/* Section heading */}
+      <h2 className="text-xl font-bold text-yellow-400 mb-2">Investigate</h2>
 
       {/* Investigation Spots - Normal 3 options */}
       {cityClues.map((clue, i) => {

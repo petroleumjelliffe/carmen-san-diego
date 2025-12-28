@@ -218,10 +218,44 @@ export function EncounterCard({
     );
   }
 
-  // Render resolved phase - simplified
+  // Render resolved phase
   const isSuccess = result?.outcome === 'success' || result?.outcome === 'helped';
-  const accentColor = isSuccess ? 'border-green-500' : result?.outcome === 'trap' ? 'border-red-500' : 'border-orange-500';
 
+  // Good deeds use quote style with static header (like clues)
+  if (type === 'good_deed') {
+    const borderColor = result?.outcome === 'helped' ? 'border-green-500'
+      : result?.outcome === 'trap' ? 'border-red-500'
+      : 'border-yellow-500';
+
+    return (
+      <div className="bg-gray-900/80 rounded-lg overflow-hidden mb-4">
+        {/* Keep same header as active phase */}
+        <div className="p-4 pb-0">
+          <div className="flex items-center gap-3 mb-4">
+            {styles.icon}
+            <h3 className={`text-lg font-bold ${styles.titleColor}`}>{styles.title}</h3>
+          </div>
+        </div>
+
+        {/* Result in quote style */}
+        <div className={`p-4 border-l-4 ${borderColor} mx-4 mb-4`}>
+          <p className="text-yellow-100 italic">"{result?.message}"</p>
+        </div>
+
+        {/* Continue button */}
+        <div className="px-4 pb-4">
+          <button
+            onClick={handleContinue}
+            className="w-full font-bold py-3 rounded transition-colors bg-gray-700 hover:bg-gray-600 text-white"
+          >
+            CONTINUE
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Gadget encounters (henchman/assassination) keep their existing result style
   return (
     <div className="bg-gray-900/80 rounded-lg overflow-hidden mb-4">
       {/* Accent bar */}
@@ -244,11 +278,6 @@ export function EncounterCard({
           {result?.timeLost > 0 && (
             <span className="text-red-400 flex items-center gap-1">
               <Clock size={12} /> -{result.timeLost}h
-            </span>
-          )}
-          {result?.karmaGain > 0 && (
-            <span className="text-green-400 flex items-center gap-1">
-              <Heart size={12} /> +{result.karmaGain}
             </span>
           )}
         </div>
@@ -301,7 +330,7 @@ function GadgetButtons({ gadgets, timeRemaining, wrongPenalty, noPenalty, hasTim
   );
 }
 
-// Good deed help/skip buttons
+// Good deed help button - no time shown (deducted silently like clues)
 function GoodDeedButtons({ timeRemaining, timeCost, hasTimedOut, onChoice }) {
   return (
     <button
@@ -314,7 +343,7 @@ function GoodDeedButtons({ timeRemaining, timeCost, hasTimedOut, onChoice }) {
       }`}
     >
       <Heart size={20} />
-      <span>HELP ({timeCost}h)</span>
+      <span>HELP</span>
     </button>
   );
 }

@@ -44,6 +44,14 @@ export function useGameState(gameData) {
   // Phase 4: Gadget Encounters (henchman & assassination)
   const [currentEncounter, setCurrentEncounter] = useState(null); // Current henchman/assassination encounter
   const [usedGadgets, setUsedGadgets] = useState([]); // Gadgets used in current case
+  const [hadGoodDeedInCase, setHadGoodDeedInCase] = useState(false); // Only one good deed per case
+
+  // Dossier trait selections (persists across tab switches)
+  const [selectedTraits, setSelectedTraits] = useState({
+    gender: null,   // null | 'male' | 'female'
+    hair: null,     // null | 'dark' | 'light'
+    hobby: null,    // null | 'intellectual' | 'physical'
+  });
 
   // Investigation animation state
   const [isInvestigating, setIsInvestigating] = useState(false);
@@ -136,8 +144,10 @@ export function useGameState(gameData) {
     setCurrentGoodDeed(null);
     setCurrentEncounter(null);
     setUsedGadgets([]); // Reset gadgets for new case
+    setHadGoodDeedInCase(false); // Reset good deed flag for new case
     setRogueUsedInCity(false);
     setHadEncounterInCity(false);
+    setSelectedTraits({ gender: null, hair: null, hobby: null }); // Reset trait selections
   }, [gameData, settings.total_time]);
 
   // Accept briefing and start playing
@@ -255,6 +265,7 @@ export function useGameState(gameData) {
     setLastFoundClue({ city: null, suspect: null }); // Clear previous clue
     setLastRogueAction(null); // Clear rogue action flag
     setLastEncounterResult(null); // Clear previous encounter result
+    setLastSleepResult(null); // Clear sleep result so badge doesn't show during day investigations
 
     // Mark as investigated
     setInvestigatedLocations(prev => [...prev, spot.id]);
@@ -312,12 +323,32 @@ export function useGameState(gameData) {
         }
       }
 
-      // Check for good deed encounter (25% chance in correct cities only, not final city)
-      // Good deeds appear inline in the investigation tab, not as a separate state
-      // IMPORTANT: Don't trigger at final city - assassination is the main event there
-      if (!wrongCity && !isFinalCity && !hadEncounterInCity && goodDeeds && !currentGoodDeed && Math.random() < 0.25) {
+      // ENCOUNTER TRIGGER: Henchman/assassination ALWAYS happen on first investigation in correct cities
+      // These take priority over good deeds
+      if (!wrongCity && !hadEncounterInCity && encounters) {
+        setHadEncounterInCity(true); // Mark that encounter happened
+
+        if (isFinalCity && encounters.assassination_attempts) {
+          // CORRECT FINAL CITY: Trigger assassination attempt (high stakes!)
+          const assassinationEncounter = pickRandom(encounters.assassination_attempts);
+          setCurrentEncounter({ ...assassinationEncounter, type: 'assassination' });
+          return; // Wait for assassination to be resolved before allowing apprehension
+        } else if (!isFinalCity && currentCityIndex > 0 && encounters.henchman_encounters) {
+          // MIDDLE CITIES (not first, not last): Trigger henchman encounter
+          // "You're on the right track!" - signals player is on correct path
+          const henchmanEncounter = pickRandom(encounters.henchman_encounters);
+          setCurrentEncounter({ ...henchmanEncounter, type: 'henchman' });
+          return; // Show henchman encounter
+        }
+      }
+
+      // GOOD DEED: Can trigger on any investigation if no henchman/assassination, once per case
+      // Only triggers if: not in wrong city, no encounter just triggered, haven't had one this case
+      if (!wrongCity && !hadGoodDeedInCase && goodDeeds && !currentGoodDeed && Math.random() < 0.25) {
         // Check if high karma triggers fake good deed trap
         const isFakeTrap = karma >= 5 && fakeGoodDeeds && Math.random() < 0.25;
+
+        setHadGoodDeedInCase(true); // Mark that good deed happened this case
 
         if (isFakeTrap) {
           const fakeDeed = pickRandom(fakeGoodDeeds);
@@ -326,27 +357,7 @@ export function useGameState(gameData) {
           const deed = pickRandom(goodDeeds);
           setCurrentGoodDeed({ ...deed, isFake: false });
         }
-        return; // Don't trigger encounter if good deed is shown
-      }
-
-      // ENCOUNTER TRIGGER: Only on FIRST investigation in correct cities
-      // Henchman in non-final cities, Assassination in final city
-      if (!wrongCity && !hadEncounterInCity && encounters) {
-        setHadEncounterInCity(true); // Mark that encounter happened
-
-        if (isFinalCity && !wrongCity && encounters.assassination_attempts) {
-          // CORRECT FINAL CITY ONLY: Trigger assassination attempt (high stakes!)
-          const assassinationEncounter = pickRandom(encounters.assassination_attempts);
-          setCurrentEncounter({ ...assassinationEncounter, type: 'assassination' });
-          // Don't change gameState - render inline in InvestigateTab
-          return; // Wait for assassination to be resolved before allowing apprehension
-        } else if (!isFinalCity && currentCityIndex > 0 && encounters.henchman_encounters) {
-          // MIDDLE CITIES ONLY (not first, not last): Trigger henchman encounter
-          // "You're on the right track!" - signals player is in correct city
-          const henchmanEncounter = pickRandom(encounters.henchman_encounters);
-          setCurrentEncounter({ ...henchmanEncounter, type: 'henchman' });
-          // Don't change gameState - render inline in InvestigateTab
-        }
+        return; // Show good deed encounter
       }
 
       // APPREHENSION: Second investigation at final city (after assassination resolved)
@@ -364,7 +375,7 @@ export function useGameState(gameData) {
         }
       }
     }, animationDuration);
-  }, [timeRemaining, cityClues, investigatedLocations, advanceTime, wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, getInjuryTimePenalty, getInvestigationCost, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant, currentCity, currentHour, isInvestigating, timeTickSpeed]);
+  }, [timeRemaining, cityClues, investigatedLocations, advanceTime, wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, getInjuryTimePenalty, getInvestigationCost, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant, currentCity, currentHour, isInvestigating, timeTickSpeed, hadGoodDeedInCase]);
 
   // Rogue investigate - Fast but increases notoriety, gets BOTH clues
   const rogueInvestigate = useCallback((rogueAction) => {
@@ -386,6 +397,7 @@ export function useGameState(gameData) {
 
     // Clear previous results
     setLastEncounterResult(null);
+    setLastSleepResult(null); // Clear sleep result so badge doesn't show during day actions
 
     // Rogue actions always get BOTH clues (if available)
     setLastFoundClue({ city: locationClue, suspect: suspectClue });
@@ -510,6 +522,26 @@ export function useGameState(gameData) {
     setGameState('trial');
   }, []);
 
+  // Cycle through trait values in dossier (null → value1 → value2 → null)
+  const cycleSelectedTrait = useCallback((trait) => {
+    const traitOptions = {
+      gender: [null, 'male', 'female'],
+      hair: [null, 'dark', 'light'],
+      hobby: [null, 'intellectual', 'physical'],
+    };
+    setSelectedTraits(prev => {
+      const options = traitOptions[trait];
+      const currentIndex = options.indexOf(prev[trait]);
+      const nextIndex = (currentIndex + 1) % options.length;
+      return { ...prev, [trait]: options[nextIndex] };
+    });
+  }, []);
+
+  // Reset all selected traits
+  const resetSelectedTraits = useCallback(() => {
+    setSelectedTraits({ gender: null, hair: null, hobby: null });
+  }, []);
+
   // Dismiss cutscene
   const dismissCutscene = useCallback(() => {
     setShowCutscene(false);
@@ -617,6 +649,11 @@ export function useGameState(gameData) {
     // Phase 4: Gadget Encounters
     currentEncounter,
     availableGadgets,
+
+    // Dossier trait selections
+    selectedTraits,
+    cycleSelectedTrait,
+    resetSelectedTraits,
 
     // Investigation animation
     isInvestigating,

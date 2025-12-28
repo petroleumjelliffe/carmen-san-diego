@@ -53,6 +53,9 @@ export function Game({ gameData }) {
     lastRogueAction,
     currentEncounter,
     availableGadgets,
+    selectedTraits,
+    cycleSelectedTrait,
+    resetSelectedTraits,
     isInvestigating,
     startNewCase,
     acceptBriefing,
@@ -193,6 +196,7 @@ export function Game({ gameData }) {
             onProceedToTrial={proceedToTrial}
             encounterTimers={encounterTimers}
             isInvestigating={isInvestigating}
+            cityFact={currentCity?.fact}
           />
         )}
 
@@ -213,6 +217,9 @@ export function Game({ gameData }) {
             isFinalCity={isFinalCity}
             onSelectWarrant={setSelectedWarrant}
             onIssueWarrant={issueWarrant}
+            selectedTraits={selectedTraits}
+            onCycleTrait={cycleSelectedTrait}
+            onResetTraits={resetSelectedTraits}
           />
         )}
       </div>
