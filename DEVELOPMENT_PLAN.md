@@ -48,6 +48,11 @@
 - Warrants issuable anytime (just saves selection)
 - Trial triggers on SECOND investigation at final city (after assassination + warrant issued)
 
+### Phase 2.6: Legacy Component Cleanup
+- Deleted splash screen components: GameOver, Cutscene, HenchmanEncounter, AssassinationAttempt, GoodDeedEncounter, GoodDeedModal, Sleep
+- Case timeout now goes to Debrief (not GameOver splash)
+- All encounters use unified EncounterCard component
+
 ---
 
 ## 🚧 REMAINING: Phase 3 - UI Cleanup & Polish
@@ -112,39 +117,26 @@ Add to `index.css`:
 - [x] Handle case where player investigates at final city without warrant issued
 - [x] Clear lastEncounterResult appropriately (clears on travel)
 
-### 1.5 Encounter System Refactor (Next)
-Consolidate henchman, good deed, and assassination into a unified encounter system:
+### 1.5 Encounter System Refactor ✅
+Consolidated henchman, good deed, and assassination into a unified encounter system:
 
-**Current Issues:**
-- Three separate inline components with duplicated timer logic
-- Results appear in separate "Latest Activity" box (jarring transition)
-- Inconsistent visual treatment
-
-**Proposed Solution:**
-- [ ] Create shared `EncounterCard` component with:
-  - Timer bar (configurable duration)
-  - Content slot (description, options)
-  - Result state (success/failure shown in-place)
-- [ ] Encounter flow: Active → Resolved (result shows in same card) → Dismissed
-- [ ] Move encounters to dedicated area ABOVE investigation options
-- [ ] Remove encounter results from "Latest Activity" (keep only clue results there)
-- [ ] Shared `useEncounterTimer` hook to DRY up timer logic
-
-**Layout:**
-```
-┌─────────────────────────────┐
-│ [ENCOUNTER CARD]            │  ← Active or showing result
-│ Timer bar + content         │
-└─────────────────────────────┘
-┌─────────────────────────────┐
-│ Latest Activity (clues only)│
-└─────────────────────────────┘
-┌─────────────────────────────┐
-│ Investigation Options       │
-└─────────────────────────────┘
-```
+**Completed:**
+- [x] Created shared `useEncounterTimer` hook (`src/hooks/useEncounterTimer.js`)
+- [x] Created unified `EncounterCard` component (`src/components/EncounterCard.jsx`):
+  - Timer bar with urgency levels (normal/warning/critical)
+  - Type-specific styling (henchman=orange, assassination=red, good deed=blue)
+  - In-place result display with Continue button
+- [x] Encounter flow: Active → Resolved (result shows in same card) → Dismissed
+- [x] Moved encounters to dedicated area ABOVE investigation options
+- [x] Removed encounter results from "Latest Activity" (only clues/sleep/rogue shown there)
+- [x] Unified `handleEncounterResolve` handler in useGameState.js
+- [x] Removed legacy handlers (handleGoodDeed, handleHenchmanGadget, handleAssassinationGadget)
 
 ### 2. Visual Enhancements (Next Priority)
+- [x] AirportTab departure board aesthetic with boarding pass-style flight cards
+- [x] Briefing screen as manila folder case file (CLASSIFIED stamp, paper clip, lined paper, DocuSign)
+- [x] Trial screen courtroom aesthetic (wooden bench, verdict stamp, gavel animation)
+- [x] Debrief screen report cards (trophy, promotion banner, stat sections)
 - [ ] Background images for locations/cities
 - [ ] Travel animation (plane flying on map)
 - [ ] Time advancement animation (clock ticking)
@@ -154,14 +146,29 @@ Consolidate henchman, good deed, and assassination into a unified encounter syst
 - [ ] Incremental "NOOOO..." speech bubble during timer
 
 ### 3. Evidence Board Enhancements
-- [ ] Cork board aesthetic with polaroid-style photos
+- [x] Cork board aesthetic with wood grain background
+- [x] Polaroid-style suspect photos with slight rotations
+- [x] Pushpin decorations on notes and photos
+- [x] Colored note cards (yellow, blue, pink) for different info types
+- [x] Suspect count display
 - [ ] Red string connecting clues (optional)
 - [ ] Auto-elimination animation when clues gathered
-- [ ] Confidence rating based on remaining suspects
+
+### 3.5 UX Improvements (2025-12-27)
+- [x] Briefing split into two steps: Case Details → Equipment
+- [x] DocuSign-style signature required before proceeding to equipment
+- [x] Interactive trait selector in Dossier (tap to cycle: Gender, Hair, Hobby)
+- [x] Clues displayed as quotes with city/location/time attribution
+- [x] "N suspects match" counter on photo section
+- [x] Photos auto-dismiss when traits are selected
+- [x] Clue metadata includes timeCollected for attribution
 
 ### 4. Mobile Optimization
+- [x] Static tab bar (fixed at bottom on mobile, inline on desktop)
+- [x] Rearrange header elements for better mobile layout (compact 2-row design)
+- [x] Better touch targets (52px minimum height on buttons)
+- [x] Bottom padding on content area to clear fixed tab bar
 - [ ] Swipe gestures for tab navigation
-- [ ] Better touch targets (44px minimum)
 - [ ] Responsive layouts for different breakpoints
 - [ ] Bottom sheet modals on mobile
 
@@ -192,8 +199,7 @@ carmen-san-diego/
 │   │   ├── DossierTab.jsx        # Evidence board + warrants
 │   │   ├── Trial.jsx             # Court verdict
 │   │   ├── Debrief.jsx           # Post-case stats
-│   │   ├── HenchmanEncounter.jsx # Full-screen (legacy)
-│   │   ├── AssassinationAttempt.jsx # Full-screen (legacy)
+│   │   ├── EncounterCard.jsx     # Unified inline encounters
 │   │   └── GameLayout.jsx        # Layout wrapper
 │   ├── hooks/
 │   │   └── useGameState.js       # All game state & actions
@@ -221,9 +227,10 @@ carmen-san-diego/
 
 | File | Purpose |
 |------|---------|
-| `src/hooks/useGameState.js` | Core game logic, encounter triggers, state management |
+| `src/hooks/useGameState.js` | Core game logic, encounter triggers, clue metadata |
 | `src/components/InvestigateTab.jsx` | Inline encounter rendering, investigation UI |
-| `src/components/DossierTab.jsx` | Evidence board, warrant issuance |
+| `src/components/DossierTab.jsx` | Evidence board, interactive trait selector, warrant |
+| `src/components/Briefing.jsx` | Two-step briefing: case details → equipment |
 | `src/components/Game.jsx` | Component orchestration, state routing |
 | `config/encounters.yaml` | Henchman and assassination encounter definitions |
 | `config/gadgets.yaml` | Gadget definitions with correct_gadget mappings |

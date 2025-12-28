@@ -1,4 +1,44 @@
 import { GameLayout } from './GameLayout';
+import { Trophy, TrendingUp, Clock, MapPin, Heart, AlertTriangle, Star, Award } from 'lucide-react';
+
+// Stat row component
+function StatRow({ label, value, icon: Icon, highlight }) {
+  return (
+    <div className={`flex items-center justify-between py-2 border-b border-gray-700/50 last:border-0 ${highlight ? 'bg-yellow-500/10 -mx-2 px-2 rounded' : ''}`}>
+      <div className="flex items-center gap-2 text-gray-300">
+        {Icon && <Icon size={14} className="text-gray-500" />}
+        <span>{label}</span>
+      </div>
+      <div className="font-bold text-white">{value}</div>
+    </div>
+  );
+}
+
+// Section card
+function ReportSection({ title, icon: Icon, children, color = 'gray' }) {
+  const colors = {
+    gray: 'border-gray-600 bg-gray-800/50',
+    green: 'border-green-600 bg-green-900/30',
+    red: 'border-red-600 bg-red-900/30',
+    yellow: 'border-yellow-600 bg-yellow-900/20',
+  };
+  const titleColors = {
+    gray: 'text-gray-300',
+    green: 'text-green-300',
+    red: 'text-red-300',
+    yellow: 'text-yellow-300',
+  };
+
+  return (
+    <div className={`rounded-lg border p-4 ${colors[color]}`}>
+      <div className={`flex items-center gap-2 mb-3 ${titleColors[color]}`}>
+        {Icon && <Icon size={18} />}
+        <h3 className="font-bold text-sm tracking-wide">{title}</h3>
+      </div>
+      {children}
+    </div>
+  );
+}
 
 /**
  * Debrief - Shows case stats and promotion after trial
@@ -23,114 +63,156 @@ export function Debrief({
       : true)
   ) || ranks[0];
 
+  // Get previous rank for promotion display
+  const rankIndex = ranks.indexOf(currentRank);
+  const previousRank = rankIndex > 0 ? ranks[rankIndex - 1] : null;
+
   return (
     <GameLayout
       bottomPanel={
         <div className="flex gap-3">
           <button
             onClick={onNewCase}
-            className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-3 px-6 rounded text-lg transition-colors"
+            className="flex-1 bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-4 px-6 rounded-lg text-lg transition-all shadow-lg hover:shadow-xl active:scale-[0.98]"
           >
             NEW CASE
           </button>
           <button
             onClick={onReturnToMenu}
-            className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded text-lg transition-colors"
+            className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 px-6 rounded-lg text-lg transition-all shadow-lg hover:shadow-xl active:scale-[0.98]"
           >
             MAIN MENU
           </button>
         </div>
       }
     >
-      <div className="bg-black bg-opacity-70 rounded-lg p-8 text-white max-w-2xl mx-auto">
-        <div className="text-6xl mb-6 text-center">
-          {isWon ? '✅' : '❌'}
+      <div className="max-w-2xl mx-auto space-y-4">
+        {/* Header Banner */}
+        <div
+          className={`rounded-lg p-6 text-center ${
+            isWon
+              ? 'bg-gradient-to-br from-green-800 to-green-900'
+              : 'bg-gradient-to-br from-red-800 to-red-900'
+          }`}
+          style={{ boxShadow: 'inset 0 -2px 4px rgba(0,0,0,0.3)' }}
+        >
+          <div className="text-5xl mb-3">
+            {isWon ? <Trophy className="inline text-yellow-400" size={56} /> : '❌'}
+          </div>
+          <h1 className={`text-3xl font-bold mb-2 ${isWon ? 'text-green-200' : 'text-red-200'}`}>
+            {isWon ? 'CASE CLOSED' : 'CASE FAILED'}
+          </h1>
+          <p className={`text-lg ${isWon ? 'text-green-300' : 'text-red-300'}`}>
+            {isWon ? 'Outstanding detective work!' : 'The suspect escaped justice.'}
+          </p>
         </div>
 
-        <h1 className={`text-3xl font-bold mb-6 text-center ${isWon ? 'text-green-400' : 'text-red-400'}`}>
-          {isWon ? 'CASE CLOSED' : 'CASE FAILED'}
-        </h1>
-
-        {isWon ? (
-          <p className="text-xl text-center mb-6">Excellent work, Detective!</p>
-        ) : (
-          <p className="text-xl text-center mb-6">The suspect escaped justice.</p>
+        {/* Promotion Banner */}
+        {isWon && (
+          <div className="bg-gradient-to-r from-yellow-600 via-yellow-500 to-yellow-600 rounded-lg p-4 text-center shadow-lg">
+            <div className="flex items-center justify-center gap-3">
+              <Award className="text-yellow-900" size={28} />
+              <div>
+                <p className="text-yellow-900 font-bold text-lg">PROMOTION</p>
+                <p className="text-yellow-800">
+                  {previousRank?.name || 'Rookie'} → <span className="font-bold">{currentRank.name}</span>
+                </p>
+              </div>
+              <Award className="text-yellow-900" size={28} />
+            </div>
+          </div>
         )}
 
-        {/* Case Stats */}
-        <div className="space-y-3 mb-6 p-4 bg-gray-900 bg-opacity-50 rounded">
-          <h2 className="text-xl font-bold text-yellow-400 mb-3">CASE STATS:</h2>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div>Time remaining:</div>
-            <div className="text-right font-bold">{timeRemaining} hours</div>
-
-            <div>Cities visited:</div>
-            <div className="text-right font-bold">{currentCase?.cities.length || 0}</div>
-          </div>
-        </div>
-
-        {/* Injuries */}
+        {/* Injuries Warning */}
         {permanentInjuries && permanentInjuries.length > 0 && (
-          <div className="p-4 bg-red-900 bg-opacity-30 rounded border border-red-400 mb-6">
-            <h3 className="text-lg font-bold text-red-300 mb-2">⚠️ PERMANENT INJURIES:</h3>
-            <div className="space-y-1">
+          <ReportSection title="MEDICAL REPORT" icon={AlertTriangle} color="red">
+            <div className="space-y-2">
               {permanentInjuries.map((injury, i) => (
-                <div key={i} className="text-sm text-red-200">
-                  {injury.icon} {injury.effect}
+                <div key={i} className="flex items-center gap-2 text-red-200 text-sm">
+                  <span className="text-lg">{injury.icon}</span>
+                  <span>{injury.effect}</span>
                 </div>
               ))}
             </div>
-          </div>
+          </ReportSection>
         )}
 
-        {/* Promotion */}
-        {isWon && (
-          <div className="p-4 bg-green-900 bg-opacity-30 rounded border border-green-400 mb-6">
-            <p className="text-2xl font-bold text-green-300 text-center">PROMOTION!</p>
-            <p className="text-xl text-center mt-2">
-              {currentRank.previous_title || 'Rookie'} → {currentRank.name}
-            </p>
+        {/* Case Stats */}
+        <ReportSection title="CASE SUMMARY" icon={MapPin} color="gray">
+          <div className="space-y-1">
+            <StatRow
+              label="Time Remaining"
+              value={`${timeRemaining}h`}
+              icon={Clock}
+              highlight={timeRemaining > 24}
+            />
+            <StatRow
+              label="Cities Investigated"
+              value={currentCase?.cities.length || 0}
+              icon={MapPin}
+            />
           </div>
-        )}
+        </ReportSection>
 
         {/* Career Stats */}
-        <div className="space-y-2 p-4 bg-gray-900 bg-opacity-50 rounded">
-          <h2 className="text-xl font-bold text-yellow-400 mb-3">CAREER STATS:</h2>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div>Cases solved:</div>
-            <div className="text-right font-bold">{solvedCases}</div>
-
-            <div>Rank:</div>
-            <div className="text-right font-bold">{currentRank.name}</div>
-
-            <div>NPCs helped (total):</div>
-            <div className="text-right font-bold">{savedNPCs?.length || 0}</div>
-
-            <div>Karma:</div>
-            <div className="text-right font-bold">
-              {'⭐'.repeat(Math.min(karma || 0, 5))}{'☆'.repeat(Math.max(0, 5 - (karma || 0)))}
-              {karma >= 5 && <span className="text-red-300 ml-1">⚠️ Exploitable!</span>}
-              {karma === 0 && <span className="text-gray-400 ml-1">(Clean)</span>}
+        <ReportSection title="CAREER RECORD" icon={TrendingUp} color="yellow">
+          <div className="space-y-1">
+            <StatRow
+              label="Cases Solved"
+              value={solvedCases}
+              highlight={true}
+            />
+            <StatRow
+              label="Current Rank"
+              value={currentRank.name}
+            />
+            <StatRow
+              label="NPCs Helped"
+              value={savedNPCs?.length || 0}
+              icon={Heart}
+            />
+            <div className="flex items-center justify-between py-2 border-b border-gray-700/50">
+              <div className="flex items-center gap-2 text-gray-300">
+                <Star size={14} className="text-gray-500" />
+                <span>Karma</span>
+              </div>
+              <div className="font-bold text-white flex items-center gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    size={14}
+                    className={i < (karma || 0) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}
+                  />
+                ))}
+                {karma >= 5 && <span className="text-red-400 text-xs ml-1">Exploitable</span>}
+              </div>
             </div>
-
-            <div>Notoriety:</div>
-            <div className="text-right font-bold">
-              {'⭐'.repeat(Math.min(notoriety || 0, 5))}{'☆'.repeat(Math.max(0, 5 - (notoriety || 0)))}
-              {notoriety >= 6 && <span className="text-red-300 ml-1">⚠️ Dangerous!</span>}
-              {notoriety === 0 && <span className="text-gray-400 ml-1">(Clean)</span>}
+            <div className="flex items-center justify-between py-2 border-b border-gray-700/50">
+              <div className="flex items-center gap-2 text-gray-300">
+                <AlertTriangle size={14} className="text-gray-500" />
+                <span>Notoriety</span>
+              </div>
+              <div className="font-bold text-white flex items-center gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <div
+                    key={i}
+                    className={`w-3 h-3 rounded-sm ${i < (notoriety || 0) ? 'bg-red-500' : 'bg-gray-600'}`}
+                  />
+                ))}
+                {notoriety >= 5 && <span className="text-red-400 text-xs ml-1">Dangerous</span>}
+              </div>
             </div>
-
-            <div>Permanent injuries:</div>
-            <div className="text-right font-bold">
-              {permanentInjuries?.length || 0}
-              {permanentInjuries && permanentInjuries.length > 0 && (
-                <span className="ml-2">
-                  {permanentInjuries.map(inj => inj.icon).join(' ')}
-                </span>
-              )}
-            </div>
+            <StatRow
+              label="Permanent Injuries"
+              value={
+                permanentInjuries?.length
+                  ? `${permanentInjuries.length} (${permanentInjuries.map(i => i.icon).join(' ')})`
+                  : 'None'
+              }
+              icon={AlertTriangle}
+            />
           </div>
-        </div>
+        </ReportSection>
       </div>
     </GameLayout>
   );

@@ -165,10 +165,9 @@ export function useGameState(gameData) {
     setCurrentHour(newHour);
     setTimeRemaining(prev => prev - totalHours);
 
-    // Check if time ran out
+    // Check if time ran out - go to debrief (no splash screen)
     if (timeRemaining - totalHours <= 0) {
-      setGameState('lost');
-      setMessage("Time's up! The suspect got away!");
+      setGameState('debrief');
       return true; // Indicate game over
     }
 
@@ -245,17 +244,32 @@ export function useGameState(gameData) {
     } else {
       setLastFoundClue({ city: clue.destinationClue, suspect: clue.suspectClue });
 
+      // Store clues with metadata (city name, location name, time collected)
+      const cityName = currentCity?.name || 'Unknown';
+      const locationName = spot.name;
+      const timeCollected = currentHour;
+
       if (clue.destinationClue) {
         setCollectedClues(prev => ({
           ...prev,
-          city: [...prev.city, clue.destinationClue],
+          city: [...prev.city, {
+            text: clue.destinationClue,
+            cityName,
+            locationName,
+            timeCollected,
+          }],
         }));
       }
 
       if (clue.suspectClue) {
         setCollectedClues(prev => ({
           ...prev,
-          suspect: [...prev.suspect, clue.suspectClue],
+          suspect: [...prev.suspect, {
+            text: clue.suspectClue,
+            cityName,
+            locationName,
+            timeCollected,
+          }],
         }));
       }
     }
@@ -265,9 +279,10 @@ export function useGameState(gameData) {
 
     if (gameOver) return; // Don't trigger encounters if game is over
 
-    // Check for good deed encounter (25% chance in correct cities only, not if encounter already happened)
+    // Check for good deed encounter (25% chance in correct cities only, not final city)
     // Good deeds appear inline in the investigation tab, not as a separate state
-    if (!wrongCity && !hadEncounterInCity && goodDeeds && !currentGoodDeed && Math.random() < 0.25) {
+    // IMPORTANT: Don't trigger at final city - assassination is the main event there
+    if (!wrongCity && !isFinalCity && !hadEncounterInCity && goodDeeds && !currentGoodDeed && Math.random() < 0.25) {
       // Check if high karma triggers fake good deed trap
       const isFakeTrap = karma >= 5 && fakeGoodDeeds && Math.random() < 0.25;
 
@@ -315,7 +330,7 @@ export function useGameState(gameData) {
         return;
       }
     }
-  }, [timeRemaining, cityClues, investigatedLocations, advanceTime, wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, getInjuryTimePenalty, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant]);
+  }, [timeRemaining, cityClues, investigatedLocations, advanceTime, wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, getInjuryTimePenalty, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant, currentCity, currentHour]);
 
   // Rogue investigate - Fast but increases notoriety, gets BOTH clues
   const rogueInvestigate = useCallback((rogueAction) => {
@@ -330,8 +345,10 @@ export function useGameState(gameData) {
     }
 
     // Find one location clue and one suspect clue from available spots
-    const locationClue = cityClues.find(c => c.destinationClue)?.destinationClue;
-    const suspectClue = cityClues.find(c => c.suspectClue)?.suspectClue;
+    const locationClueData = cityClues.find(c => c.destinationClue);
+    const suspectClueData = cityClues.find(c => c.suspectClue);
+    const locationClue = locationClueData?.destinationClue;
+    const suspectClue = suspectClueData?.suspectClue;
 
     // Clear previous results
     setLastEncounterResult(null);
@@ -340,17 +357,32 @@ export function useGameState(gameData) {
     setLastFoundClue({ city: locationClue, suspect: suspectClue });
     setLastRogueAction(rogueAction);
 
+    // Store clues with metadata (city name, rogue action name, time collected)
+    const cityName = currentCity?.name || 'Unknown';
+    const locationName = rogueAction.name; // Use rogue action name as source
+    const timeCollected = currentHour;
+
     if (locationClue) {
       setCollectedClues(prev => ({
         ...prev,
-        city: [...prev.city, locationClue],
+        city: [...prev.city, {
+          text: locationClue,
+          cityName,
+          locationName,
+          timeCollected,
+        }],
       }));
     }
 
     if (suspectClue) {
       setCollectedClues(prev => ({
         ...prev,
-        suspect: [...prev.suspect, suspectClue],
+        suspect: [...prev.suspect, {
+          text: suspectClue,
+          cityName,
+          locationName,
+          timeCollected,
+        }],
       }));
     }
 
@@ -364,7 +396,7 @@ export function useGameState(gameData) {
     advanceTime(ROGUE_TIME_COST);
 
     // No good deed encounters after rogue actions (you're being ruthless)
-  }, [timeRemaining, cityClues, rogueUsedInCity, advanceTime]);
+  }, [timeRemaining, cityClues, rogueUsedInCity, advanceTime, currentCity, currentHour]);
 
   // Get available destinations
   const destinations = useMemo(() => {
@@ -448,19 +480,39 @@ export function useGameState(gameData) {
     setShowCutscene(false);
   }, []);
 
-  // Handle good deed choice
-  const handleGoodDeed = useCallback((helpNPC) => {
-    if (!currentGoodDeed) return;
+  // Unified encounter resolution handler (used by EncounterCard)
+  // This is the new single handler that replaces the three separate handlers above
+  const handleEncounterResolve = useCallback((result) => {
+    if (!result) return;
 
-    if (helpNPC) {
-      const timeCost = currentGoodDeed.time_cost || currentGoodDeed.timeCost || 3;
+    const { type, outcome, timeLost, gadgetId, karmaGain, isTrap, injuryChance, npcName } = result;
 
-      if (currentGoodDeed.isFake) {
-        // Fake good deed - takes longer and causes injury
-        advanceTime(8); // Fake deeds take 8 hours
+    // Apply time penalty
+    if (timeLost > 0) {
+      advanceTime(timeLost);
+    }
 
-        // 75% chance of injury
-        if (Math.random() < 0.75) {
+    // Mark gadget as used (for gadget-based encounters)
+    if (gadgetId) {
+      setUsedGadgets(prev => [...prev, gadgetId]);
+    }
+
+    // Handle good deed specific effects
+    if (type === 'good_deed') {
+      if (outcome === 'helped' && karmaGain) {
+        setKarma(prev => prev + karmaGain);
+        // Add to saved NPCs list
+        if (npcName) {
+          setSavedNPCs(prev => [...prev, {
+            id: currentGoodDeed?.id,
+            name: npcName,
+            title: currentGoodDeed?.npc_title,
+            hasRescued: false,
+          }]);
+        }
+      } else if (outcome === 'trap' && isTrap) {
+        // Handle trap injury
+        if (injuryChance && Math.random() < injuryChance) {
           const injuryTypes = [
             { type: 'limp', effect: '+2h investigations', icon: '🦵' },
             { type: 'broken_hand', effect: 'Gadgets 2x slower', icon: '✋' },
@@ -471,136 +523,18 @@ export function useGameState(gameData) {
           ];
           const injury = pickRandom(injuryTypes);
           setPermanentInjuries(prev => [...prev, injury]);
-
-          // Set result to display in investigation tab
-          setLastGoodDeedResult({
-            isTrap: true,
-            title: 'TRAP!',
-            message: `${currentGoodDeed.trap_reveal || 'It was a trap!'} You've been injured: ${injury.effect}`,
-          });
-        } else {
-          setLastGoodDeedResult({
-            isTrap: true,
-            title: 'Narrow Escape',
-            message: "That was close! You barely escaped the trap!",
-          });
         }
-      } else {
-        // Real good deed
-        advanceTime(timeCost);
-        setKarma(prev => prev + 1);
-        setSavedNPCs(prev => [...prev, {
-          id: currentGoodDeed.id,
-          name: currentGoodDeed.npc_name,
-          title: currentGoodDeed.npc_title,
-          hasRescued: false,
-        }]);
-
-        // Set result to display in investigation tab
-        setLastGoodDeedResult({
-          isTrap: false,
-          title: 'Good Deed Complete',
-          message: currentGoodDeed.gratitude || 'They thank you warmly. +1 Karma',
-        });
       }
+      // Clear good deed
+      setCurrentGoodDeed(null);
     } else {
-      // Player chose to ignore
-      setLastGoodDeedResult(null); // No result to show
+      // Clear henchman/assassination encounter
+      setCurrentEncounter(null);
     }
 
-    // Clear good deed (stay in playing state - good deeds are inline)
-    setCurrentGoodDeed(null);
-  }, [currentGoodDeed, advanceTime]);
-
-  // Handle henchman gadget choice
-  const handleHenchmanGadget = useCallback((gadgetId) => {
-    if (!currentEncounter) return;
-
-    const isCorrect = gadgetId === currentEncounter.correct_gadget;
-    const timePenalty = gadgetId === null
-      ? currentEncounter.time_penalty_none
-      : isCorrect
-      ? 0
-      : currentEncounter.time_penalty_wrong;
-
-    // Mark gadget as used
-    if (gadgetId) {
-      setUsedGadgets(prev => [...prev, gadgetId]);
-    }
-
-    // Advance time based on choice
-    advanceTime(timePenalty);
-
-    // Set result to display in unified results area
-    let resultText, resultType;
-    if (isCorrect) {
-      resultText = currentEncounter.success_text;
-      resultType = 'success';
-    } else if (gadgetId === null) {
-      resultText = currentEncounter.no_gadget_text;
-      resultType = 'no_gadget';
-    } else {
-      resultText = currentEncounter.failure_text;
-      resultType = 'wrong_gadget';
-    }
-
-    setLastEncounterResult({
-      type: 'henchman',
-      name: currentEncounter.name,
-      message: resultText,
-      outcome: resultType,
-      timeLost: timePenalty
-    });
-
-    // Clear encounter (stay in playing state - encounters are inline)
-    setCurrentEncounter(null);
-  }, [currentEncounter, advanceTime]);
-
-  // Handle assassination gadget choice
-  const handleAssassinationGadget = useCallback((gadgetId) => {
-    if (!currentEncounter) return;
-
-    const isCorrect = gadgetId === currentEncounter.correct_gadget;
-    const timePenalty = gadgetId === null
-      ? currentEncounter.time_penalty_none
-      : isCorrect
-      ? 0
-      : currentEncounter.time_penalty_wrong;
-
-    // Mark gadget as used
-    if (gadgetId) {
-      setUsedGadgets(prev => [...prev, gadgetId]);
-    }
-
-    // Advance time based on choice
-    advanceTime(timePenalty);
-
-    // Set result to display in unified results area
-    let resultText, resultType;
-    if (isCorrect) {
-      resultText = currentEncounter.success_text;
-      resultType = 'success';
-    } else if (gadgetId === null) {
-      resultText = currentEncounter.timeout_text || currentEncounter.no_gadget_text;
-      resultType = 'timeout';
-    } else {
-      resultText = currentEncounter.failure_text;
-      resultType = 'wrong_gadget';
-    }
-
-    setLastEncounterResult({
-      type: 'assassination',
-      name: currentEncounter.name,
-      message: resultText,
-      outcome: resultType,
-      timeLost: timePenalty
-    });
-
-    // TODO: Check for NPC rescue if failed and karma is high
-
-    // Clear encounter (stay in playing state - user can now issue warrant)
-    setCurrentEncounter(null);
-  }, [currentEncounter, advanceTime]);
+    // Note: We don't set lastEncounterResult/lastGoodDeedResult anymore
+    // because the EncounterCard shows results in-place before calling onResolve
+  }, [advanceTime, currentGoodDeed]);
 
   // Return to menu
   const returnToMenu = useCallback(() => {
@@ -659,9 +593,7 @@ export function useGameState(gameData) {
     proceedToTrial,
     dismissCutscene,
     returnToMenu,
-    handleGoodDeed,
-    handleHenchmanGadget,
-    handleAssassinationGadget,
+    handleEncounterResolve,
     setActiveTab,
     setSelectedWarrant,
     setMessage,
