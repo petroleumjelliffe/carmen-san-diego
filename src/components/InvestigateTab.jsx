@@ -1,5 +1,6 @@
 import { Clock, Zap, AlertTriangle } from 'lucide-react';
 import { EncounterCard } from './EncounterCard';
+import { FadeIn } from './FadeIn';
 
 function ClueButton({ spot, onInvestigate, disabled, investigated, index }) {
   return (
@@ -125,7 +126,7 @@ export function InvestigateTab({
       </h2>
 
       {/* Apprehended - Shows inline with Continue button */}
-      {isApprehended && (
+      <FadeIn show={isApprehended}>
         <div className="bg-green-900/50 border-2 border-green-400 p-6 rounded-lg text-center">
           <div className="text-5xl mb-3">🚔</div>
           <h3 className="text-2xl font-bold text-green-400 mb-2">SUSPECT APPREHENDED!</h3>
@@ -142,7 +143,7 @@ export function InvestigateTab({
             Continue to Trial
           </button>
         </div>
-      )}
+      </FadeIn>
 
       {!isApprehended && !isFinalCity && !wrongCity && (
         <div className="text-sm text-yellow-200/70 mb-4">
@@ -152,7 +153,7 @@ export function InvestigateTab({
       )}
 
       {/* Unified Encounter Card - handles henchman, assassination, and good deed */}
-      {activeEncounter && encounterType && (
+      <FadeIn show={!!(activeEncounter && encounterType)}>
         <EncounterCard
           type={encounterType}
           encounter={activeEncounter}
@@ -162,7 +163,7 @@ export function InvestigateTab({
           timeRemaining={timeRemaining}
           onResolve={onEncounterResolve}
         />
-      )}
+      </FadeIn>
 
       {wrongCity && (
         <div className="bg-red-800/50 p-4 rounded-lg text-center mb-4">
@@ -172,59 +173,55 @@ export function InvestigateTab({
         </div>
       )}
 
-      {/* Results Area - Shows clue results, sleep, rogue actions (NOT encounter results) */}
-      {hasResults && (
-        <div className="bg-red-950/50 p-4 rounded-lg border border-yellow-400/30 mb-6">
-          <h3 className="text-yellow-400 font-bold mb-3">Latest Activity:</h3>
-
+      {/* Results Area - Simplified flat card with accent strips */}
+      <FadeIn show={hasResults}>
+        <div className="bg-gray-900/80 rounded-lg overflow-hidden mb-6">
           {/* Sleep Result */}
           {lastSleepResult && (
-            <div className="bg-blue-900/50 border border-blue-400 p-3 rounded mb-3">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xl">💤</span>
-                <p className="text-blue-300 font-bold">Rest Period</p>
+            <div className="flex border-l-4 border-blue-500">
+              <div className="p-4 flex-1">
+                <div className="flex items-center gap-2 text-blue-300">
+                  <span className="text-xl">💤</span>
+                  <span className="font-bold">Rest Period</span>
+                </div>
+                <p className="text-yellow-100/80 text-sm mt-1">{lastSleepResult.message}</p>
               </div>
-              <p className="text-blue-200 text-sm">{lastSleepResult.message}</p>
             </div>
           )}
 
           {/* Rogue Action Result */}
           {lastRogueAction && (
-            <div className="bg-orange-900/50 border border-orange-500 p-3 rounded mb-3">
-              <div className="flex items-center gap-2 mb-2">
-                <Zap size={16} className="text-orange-400" />
-                <p className="text-orange-300 font-bold">{lastRogueAction.name}</p>
+            <div className="flex border-l-4 border-orange-500">
+              <div className="p-4 flex-1">
+                <div className="flex items-center gap-2 text-orange-300">
+                  <Zap size={16} />
+                  <span className="font-bold">{lastRogueAction.name}</span>
+                </div>
+                <p className="text-yellow-100/80 text-sm mt-1 italic">{lastRogueAction.success_text}</p>
+                <p className="text-red-400 text-xs mt-2">
+                  <AlertTriangle size={10} className="inline mr-1" />
+                  +{lastRogueAction.notoriety_gain} notoriety
+                </p>
               </div>
-              <p className="text-orange-200 text-sm italic">
-                {lastRogueAction.success_text}
-              </p>
-              <p className="text-red-300 text-xs mt-2">
-                <AlertTriangle size={12} className="inline mr-1" />
-                Notoriety increased by {lastRogueAction.notoriety_gain}
-              </p>
             </div>
           )}
 
-          {/* Investigation Results */}
+          {/* Investigation Result */}
           {lastFoundClue?.city && (
-            <>
-              <p className="text-yellow-100 mb-3">
-                {String.fromCodePoint(0x1F4CD)} {lastFoundClue.city}
-              </p>
-              {lastFoundClue.suspect && (
-                <div className="bg-green-900/50 border border-green-500 p-3 rounded">
-                  <p className="text-green-400 font-bold">
-                    {String.fromCodePoint(0x1F50D)} SUSPECT DESCRIPTION FOUND!
-                  </p>
-                  <p className="text-green-300 mt-1">
-                    {lastFoundClue.suspect}
-                  </p>
-                </div>
-              )}
-            </>
+            <div className="flex border-l-4 border-green-500">
+              <div className="p-4 flex-1">
+                <p className="text-yellow-100/70 text-sm mb-2">📍 {lastFoundClue.city}</p>
+                {lastFoundClue.suspect && (
+                  <div>
+                    <p className="text-green-400 font-bold text-sm">🔍 Suspect intel:</p>
+                    <p className="text-green-300 mt-1">{lastFoundClue.suspect}</p>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
-      )}
+      </FadeIn>
 
       {/* Investigation Spots - Normal 3 options */}
       {cityClues.map((clue, i) => {

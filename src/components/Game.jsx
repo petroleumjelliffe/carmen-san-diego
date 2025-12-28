@@ -10,6 +10,19 @@ import { Briefing } from './Briefing';
 import { Trial } from './Trial';
 import { Debrief } from './Debrief';
 
+// City background images - moody noir-inspired shots from Unsplash
+const CITY_BACKGROUNDS = {
+  paris: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1920&q=80', // Eiffel Tower at dusk
+  tokyo: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1920&q=80', // Tokyo night
+  cairo: 'https://images.unsplash.com/photo-1572252009286-268acec5ca0a?w=1920&q=80', // Pyramids
+  london: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1920&q=80', // London skyline
+  rome: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1920&q=80', // Colosseum
+  berlin: 'https://images.unsplash.com/photo-1560969184-10fe8719e047?w=1920&q=80', // Brandenburg Gate
+  sydney: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=1920&q=80', // Opera House
+  moscow: 'https://images.unsplash.com/photo-1513326738677-b964603b136d?w=1920&q=80', // Red Square
+  default: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1920&q=80', // Generic city night
+};
+
 export function Game({ gameData }) {
   const {
     gameState,
@@ -112,15 +125,28 @@ export function Game({ gameData }) {
     );
   }
 
-  // Main game UI
+  // Get background image for current city
+  const currentCityId = wrongCity && wrongCityData ? wrongCityData.id : currentCity?.id;
+  const backgroundUrl = CITY_BACKGROUNDS[currentCityId] || CITY_BACKGROUNDS.default;
+
+  // Main game UI with city background
   return (
-    <div className="min-h-screen bg-gradient-to-b from-red-900 to-red-950">
+    <div
+      className="min-h-screen bg-red-950"
+      style={{
+        backgroundImage: `
+          linear-gradient(to bottom, rgba(69, 10, 10, 0.85), rgba(69, 10, 10, 0.95)),
+          url('${backgroundUrl}')
+        `,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+      }}
+    >
       <Header
         currentCase={currentCase}
         timeRemaining={timeRemaining}
-        currentHour={currentHour}
-        solvedCases={solvedCases}
-        ranks={ranks}
+        maxTime={settings.total_time}
       />
 
       <LocationBanner

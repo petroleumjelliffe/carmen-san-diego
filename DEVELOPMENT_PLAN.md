@@ -137,13 +137,24 @@ Consolidated henchman, good deed, and assassination into a unified encounter sys
 - [x] Briefing screen as manila folder case file (CLASSIFIED stamp, paper clip, lined paper, DocuSign)
 - [x] Trial screen courtroom aesthetic (wooden bench, verdict stamp, gavel animation)
 - [x] Debrief screen report cards (trophy, promotion banner, stat sections)
-- [ ] Background images for locations/cities
+- [x] Background images for locations/cities (Unsplash city photos with dark overlay)
 - [ ] Travel animation (plane flying on map)
 - [ ] Time advancement animation (clock ticking)
 - [ ] Investigation transitions with background changes
 - [ ] Sleep fade in/out animation
 - [ ] Assassination slow-motion visual effects (desaturation, shake)
 - [ ] Incremental "NOOOO..." speech bubble during timer
+
+### 2.5 UI Simplification (2025-12-27)
+- [x] Header spoiler removal - replaced numeric time with abstract urgency bar
+- [x] Removed rank display, current time, and sleep warnings from header
+- [x] LocationBanner - replaced "Stop X of Y" with dot indicators
+- [x] AirportTab - removed time remaining from header (kept travel time info)
+- [x] Created FadeIn transition component for smooth show/hide animations
+- [x] Applied transitions to InvestigateTab (encounters, results, apprehended)
+- [x] Flattened nested boxes in InvestigateTab results (single card with accent strips)
+- [x] Simplified EncounterCard structure (integrated timer bar, removed nested boxes)
+- [x] Unified encounter styling (consistent gray backgrounds, accent colors for type)
 
 ### 3. Evidence Board Enhancements
 - [x] Cork board aesthetic with wood grain background

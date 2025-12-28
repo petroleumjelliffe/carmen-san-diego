@@ -142,133 +142,127 @@ export function EncounterCard({
   // Styling based on type
   const styles = getEncounterStyles(type, isFakeGoodDeed, urgencyLevel);
 
-  // Render active phase
+  // Render active phase - simplified structure
   if (phase === 'active') {
     return (
-      <div className={`${styles.container} ${urgencyLevel === 'critical' ? 'animate-pulse' : ''}`}>
-        {/* Header */}
-        <div className="flex items-center gap-2 mb-3">
-          {styles.icon}
-          <div>
-            <h3 className={`text-xl font-bold ${styles.titleColor}`}>{styles.title}</h3>
-            <p className={`text-sm ${styles.subtitleColor}`}>{styles.subtitle}</p>
-          </div>
+      <div className={`rounded-lg overflow-hidden mb-4 ${urgencyLevel === 'critical' ? 'animate-pulse' : ''}`}>
+        {/* Integrated timer bar at top */}
+        <div className="relative h-2 bg-gray-800">
+          <div
+            className={`h-full transition-all duration-100 ${styles.timerColor}`}
+            style={{ width: `${timerPercent}%` }}
+          />
         </div>
 
-        {/* Timer Bar */}
-        <div className="bg-gray-800 rounded-full h-4 overflow-hidden mb-3">
-          <div
-            className={`h-full transition-all duration-100 flex items-center justify-center ${styles.timerColor}`}
-            style={{ width: `${timerPercent}%` }}
-          >
-            <span className="text-white font-bold text-xs">
-              {hasTimedOut ? "TIME'S UP!" : `${timeLeft.toFixed(1)}s`}
+        {/* Main content area */}
+        <div className={styles.container}>
+          {/* Header - simplified */}
+          <div className="flex items-center gap-3 mb-4">
+            {styles.icon}
+            <div className="flex-1">
+              <h3 className={`text-lg font-bold ${styles.titleColor}`}>{styles.title}</h3>
+              {type !== 'good_deed' && encounter?.name && (
+                <p className="text-yellow-400 text-sm">{encounter.name}</p>
+              )}
+            </div>
+            <span className="text-white font-mono text-lg">
+              {hasTimedOut ? '0.0' : timeLeft.toFixed(1)}s
             </span>
           </div>
-        </div>
 
-        {/* Description */}
-        <div className="bg-black bg-opacity-40 p-3 rounded mb-3">
-          {type !== 'good_deed' && (
-            <p className="text-yellow-400 font-bold mb-1">{encounter?.name}</p>
-          )}
-          <p className="text-yellow-100">{encounter?.description}</p>
+          {/* Description - no wrapper box */}
+          <p className="text-yellow-100 mb-4">{encounter?.description}</p>
+
+          {/* Plea quote for good deeds */}
           {type === 'good_deed' && encounter?.plea && (
-            <p className="text-yellow-300 italic border-l-4 border-yellow-500 pl-3 mt-2">
+            <p className="text-yellow-300 italic border-l-2 border-yellow-500 pl-3 mb-4">
               "{encounter.plea}"
             </p>
           )}
-        </div>
 
-        {/* Paranoia warning for good deeds */}
-        {type === 'good_deed' && karma >= 1 && !isFakeGoodDeed && (
-          <div className="bg-red-800/50 border border-red-400 p-2 rounded mb-3">
-            <p className="text-red-200 text-sm flex items-center gap-2">
+          {/* Paranoia warning - simplified */}
+          {type === 'good_deed' && karma >= 1 && !isFakeGoodDeed && (
+            <p className="text-red-300 text-sm mb-4 flex items-center gap-2">
               <AlertTriangle size={14} />
-              <span>Is this one real? Or another trap? You can't tell...</span>
+              Could be a trap...
             </p>
-          </div>
-        )}
+          )}
 
-        {/* Penalty info for gadget encounters */}
-        {type !== 'good_deed' && (
-          <div className="bg-blue-900/40 p-2 rounded mb-3 text-sm">
-            <p className="text-blue-200">
-              Correct = <span className="text-green-400">0h</span>,
-              Wrong = <span className="text-orange-400">-{wrongPenalty}h</span>,
-              Timeout = <span className="text-red-400">-{noPenalty}h</span>
+          {/* NOOOO animation for assassination */}
+          {type === 'assassination' && timeLeft < 3 && (
+            <p className="text-red-300 text-2xl font-bold text-center animate-pulse mb-3">
+              {timeLeft < 1 ? 'NOOOOOO!' : 'N...'}
             </p>
-          </div>
-        )}
+          )}
 
-        {/* NOOOO animation for assassination */}
-        {type === 'assassination' && timeLeft < 3 && (
-          <p className="text-red-300 text-2xl font-bold text-center animate-pulse mb-3">
-            {timeLeft < 1 ? 'NOOOOOO!' : 'N...'}
-          </p>
-        )}
-
-        {/* Action buttons */}
-        {type === 'good_deed' ? (
-          <GoodDeedButtons
-            timeRemaining={timeRemaining}
-            timeCost={goodDeedTimeCost}
-            hasTimedOut={hasTimedOut}
-            onChoice={handleGoodDeedChoice}
-          />
-        ) : (
-          <GadgetButtons
-            gadgets={availableGadgets}
-            timeRemaining={timeRemaining}
-            wrongPenalty={wrongPenalty}
-            noPenalty={noPenalty}
-            hasTimedOut={hasTimedOut}
-            onChoice={handleGadgetChoice}
-          />
-        )}
+          {/* Action buttons */}
+          {type === 'good_deed' ? (
+            <GoodDeedButtons
+              timeRemaining={timeRemaining}
+              timeCost={goodDeedTimeCost}
+              hasTimedOut={hasTimedOut}
+              onChoice={handleGoodDeedChoice}
+            />
+          ) : (
+            <GadgetButtons
+              gadgets={availableGadgets}
+              timeRemaining={timeRemaining}
+              wrongPenalty={wrongPenalty}
+              noPenalty={noPenalty}
+              hasTimedOut={hasTimedOut}
+              onChoice={handleGadgetChoice}
+            />
+          )}
+        </div>
       </div>
     );
   }
 
-  // Render resolved phase (result in-place)
+  // Render resolved phase - simplified
+  const isSuccess = result?.outcome === 'success' || result?.outcome === 'helped';
+  const accentColor = isSuccess ? 'border-green-500' : result?.outcome === 'trap' ? 'border-red-500' : 'border-orange-500';
+
   return (
-    <div className={styles.container}>
-      {/* Result header */}
-      <div className="flex items-center gap-2 mb-3">
-        {getResultIcon(result)}
-        <h3 className={`text-xl font-bold ${getResultColor(result)}`}>
-          {getResultTitle(result)}
-        </h3>
-      </div>
+    <div className="bg-gray-900/80 rounded-lg overflow-hidden mb-4">
+      {/* Accent bar */}
+      <div className={`h-1 ${isSuccess ? 'bg-green-500' : result?.outcome === 'trap' ? 'bg-red-500' : 'bg-orange-500'}`} />
 
-      {/* Result message */}
-      <div className={`p-4 rounded mb-4 ${getResultBgColor(result)}`}>
-        <p className="text-yellow-100">{result?.message}</p>
-        {result?.timeLost > 0 && (
-          <p className="text-red-300 text-sm mt-2 flex items-center gap-1">
-            <Clock size={14} />
-            Lost {result.timeLost} hours
-          </p>
-        )}
-        {result?.karmaGain > 0 && (
-          <p className="text-green-300 text-sm mt-2 flex items-center gap-1">
-            <Heart size={14} />
-            +{result.karmaGain} karma
-          </p>
-        )}
-      </div>
+      <div className="p-4">
+        {/* Result header */}
+        <div className="flex items-center gap-3 mb-3">
+          {getResultIcon(result)}
+          <h3 className={`text-lg font-bold ${getResultColor(result)}`}>
+            {getResultTitle(result)}
+          </h3>
+        </div>
 
-      {/* Continue button */}
-      <button
-        onClick={handleContinue}
-        className={`w-full font-bold py-3 px-6 rounded text-lg transition-colors ${
-          result?.outcome === 'success' || result?.outcome === 'helped'
-            ? 'bg-green-600 hover:bg-green-700 text-white'
-            : 'bg-gray-600 hover:bg-gray-700 text-white'
-        }`}
-      >
-        CONTINUE
-      </button>
+        {/* Result message */}
+        <p className="text-yellow-100 mb-3">{result?.message}</p>
+
+        {/* Stats row */}
+        <div className="flex gap-4 text-sm mb-4">
+          {result?.timeLost > 0 && (
+            <span className="text-red-400 flex items-center gap-1">
+              <Clock size={12} /> -{result.timeLost}h
+            </span>
+          )}
+          {result?.karmaGain > 0 && (
+            <span className="text-green-400 flex items-center gap-1">
+              <Heart size={12} /> +{result.karmaGain}
+            </span>
+          )}
+        </div>
+
+        {/* Continue button */}
+        <button
+          onClick={handleContinue}
+          className={`w-full font-bold py-3 rounded transition-colors ${
+            isSuccess ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-700 hover:bg-gray-600'
+          } text-white`}
+        >
+          CONTINUE
+        </button>
+      </div>
     </div>
   );
 }
@@ -337,58 +331,43 @@ function GoodDeedButtons({ timeRemaining, timeCost, hasTimedOut, onChoice }) {
   );
 }
 
-// Helper functions for styling
+// Helper functions for styling - simplified, consistent backgrounds
 function getEncounterStyles(type, isFake, urgencyLevel) {
   const timerColors = {
-    critical: 'bg-red-600 animate-pulse',
+    critical: 'bg-red-500',
     warning: 'bg-orange-500',
-    normal: 'bg-blue-500',
+    normal: 'bg-green-500',
   };
+
+  // All encounters use same dark container, differentiated by accent color and icon
+  const baseContainer = 'bg-gray-900/90 p-4';
 
   if (type === 'assassination') {
     return {
-      container: 'bg-red-900/60 border-2 border-red-500 p-4 rounded-lg mb-4',
-      icon: <Skull size={28} className="text-red-500" />,
-      title: 'ASSASSINATION ATTEMPT!',
-      subtitle: 'TIMER ACTIVE - CHOOSE FAST!',
-      titleColor: 'text-red-500',
-      subtitleColor: 'text-orange-400 font-bold',
+      container: baseContainer,
+      icon: <Skull size={24} className="text-red-500" />,
+      title: 'ASSASSINATION ATTEMPT',
+      titleColor: 'text-red-400',
       timerColor: timerColors[urgencyLevel],
     };
   }
 
   if (type === 'henchman') {
     return {
-      container: 'bg-orange-900/50 border-2 border-orange-500 p-4 rounded-lg mb-4',
+      container: baseContainer,
       icon: <Zap size={24} className="text-orange-400" />,
       title: 'HENCHMAN ENCOUNTER',
-      subtitle: '"You\'re on the right track..." - They\'re trying to stop you!',
       titleColor: 'text-orange-400',
-      subtitleColor: 'text-green-400',
       timerColor: timerColors[urgencyLevel],
     };
   }
 
-  // Good deed
-  if (isFake) {
-    return {
-      container: 'bg-red-900/50 border-2 border-red-400 p-4 rounded-lg mb-4',
-      icon: <AlertTriangle size={24} className="text-red-400" />,
-      title: 'URGENT SITUATION',
-      subtitle: 'Quick decision needed!',
-      titleColor: 'text-yellow-400',
-      subtitleColor: 'text-red-300',
-      timerColor: timerColors[urgencyLevel],
-    };
-  }
-
+  // Good deed (real or fake - player can't tell)
   return {
-    container: 'bg-blue-900/50 border-2 border-blue-400 p-4 rounded-lg mb-4',
+    container: baseContainer,
     icon: <Heart size={24} className="text-yellow-400" />,
-    title: 'GOOD DEED OPPORTUNITY',
-    subtitle: 'Quick decision needed!',
+    title: 'SOMEONE NEEDS HELP',
     titleColor: 'text-yellow-400',
-    subtitleColor: 'text-blue-300',
     timerColor: timerColors[urgencyLevel],
   };
 }
@@ -421,16 +400,6 @@ function getResultTitle(result) {
   if (result?.outcome === 'timeout') return 'TOO SLOW!';
   if (result?.outcome === 'skipped') return 'SKIPPED';
   return 'RESULT';
-}
-
-function getResultBgColor(result) {
-  if (result?.outcome === 'success' || result?.outcome === 'helped') {
-    return 'bg-green-900/50 border border-green-400';
-  }
-  if (result?.outcome === 'trap') {
-    return 'bg-red-900/50 border border-red-400';
-  }
-  return 'bg-orange-900/50 border border-orange-400';
 }
 
 export default EncounterCard;

@@ -61,15 +61,9 @@ export function AirportTab({ destinations, timeRemaining, travelTime, onTravel }
           </div>
         </div>
 
-        <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-2 text-gray-400">
-            <Clock size={14} />
-            <span>Travel time: <span className="text-yellow-300 font-mono">{travelTime}h</span></span>
-          </div>
-          <div className="text-gray-500">|</div>
-          <div className="text-gray-400">
-            Time remaining: <span className={`font-mono ${timeRemaining <= 12 ? 'text-red-400' : 'text-yellow-300'}`}>{timeRemaining}h</span>
-          </div>
+        <div className="flex items-center gap-2 text-sm text-gray-400">
+          <Clock size={14} />
+          <span>Travel time: <span className="text-yellow-300 font-mono">{travelTime}h</span> per flight</span>
         </div>
       </div>
 

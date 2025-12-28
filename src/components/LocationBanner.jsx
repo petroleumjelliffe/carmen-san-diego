@@ -1,5 +1,25 @@
 import { MapPin } from 'lucide-react';
 
+// Progress dots - visual indicator without revealing exact city count
+function ProgressDots({ current, total }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      {Array.from({ length: total }).map((_, i) => (
+        <span
+          key={i}
+          className={`w-2 h-2 rounded-full transition-all ${
+            i < current
+              ? 'bg-green-500'
+              : i === current
+              ? 'bg-yellow-400'
+              : 'bg-gray-600'
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function LocationBanner({ currentCity, currentCityIndex, wrongCity, wrongCityData, citiesPerCase }) {
   return (
     <div className="bg-red-800 py-3">
@@ -10,15 +30,13 @@ export function LocationBanner({ currentCity, currentCityIndex, wrongCity, wrong
             ? `${wrongCityData.name}, ${wrongCityData.country}`
             : `${currentCity?.name}, ${currentCity?.country}`}
         </span>
-        {wrongCity ? (
-          <span className="ml-auto text-red-400 text-sm font-bold">
-            WRONG TRAIL
-          </span>
-        ) : (
-          <span className="ml-auto text-yellow-200/50 text-sm">
-            Stop {currentCityIndex + 1} of {citiesPerCase}
-          </span>
-        )}
+        <span className="ml-auto">
+          {wrongCity ? (
+            <span className="text-red-400 text-sm font-bold">WRONG TRAIL</span>
+          ) : (
+            <ProgressDots current={currentCityIndex} total={citiesPerCase} />
+          )}
+        </span>
       </div>
     </div>
   );
