@@ -134,7 +134,9 @@ Consolidated henchman, good deed, and assassination into a unified encounter sys
 
 ### 2. Visual Enhancements (Next Priority)
 - [x] AirportTab departure board aesthetic with boarding pass-style flight cards
-- [x] Briefing screen as manila folder case file (CLASSIFIED stamp, paper clip, lined paper)
+- [x] Briefing screen as manila folder case file (CLASSIFIED stamp, paper clip, lined paper, DocuSign)
+- [x] Trial screen courtroom aesthetic (wooden bench, verdict stamp, gavel animation)
+- [x] Debrief screen report cards (trophy, promotion banner, stat sections)
 - [ ] Background images for locations/cities
 - [ ] Travel animation (plane flying on map)
 - [ ] Time advancement animation (clock ticking)
@@ -151,6 +153,15 @@ Consolidated henchman, good deed, and assassination into a unified encounter sys
 - [x] Suspect count display
 - [ ] Red string connecting clues (optional)
 - [ ] Auto-elimination animation when clues gathered
+
+### 3.5 UX Improvements (2025-12-27)
+- [x] Briefing split into two steps: Case Details → Equipment
+- [x] DocuSign-style signature required before proceeding to equipment
+- [x] Interactive trait selector in Dossier (tap to cycle: Gender, Hair, Hobby)
+- [x] Clues displayed as quotes with city/location/time attribution
+- [x] "N suspects match" counter on photo section
+- [x] Photos auto-dismiss when traits are selected
+- [x] Clue metadata includes timeCollected for attribution
 
 ### 4. Mobile Optimization
 - [x] Static tab bar (fixed at bottom on mobile, inline on desktop)
@@ -216,9 +227,10 @@ carmen-san-diego/
 
 | File | Purpose |
 |------|---------|
-| `src/hooks/useGameState.js` | Core game logic, encounter triggers, state management |
+| `src/hooks/useGameState.js` | Core game logic, encounter triggers, clue metadata |
 | `src/components/InvestigateTab.jsx` | Inline encounter rendering, investigation UI |
-| `src/components/DossierTab.jsx` | Evidence board, warrant issuance |
+| `src/components/DossierTab.jsx` | Evidence board, interactive trait selector, warrant |
+| `src/components/Briefing.jsx` | Two-step briefing: case details → equipment |
 | `src/components/Game.jsx` | Component orchestration, state routing |
 | `config/encounters.yaml` | Henchman and assassination encounter definitions |
 | `config/gadgets.yaml` | Gadget definitions with correct_gadget mappings |

@@ -244,17 +244,32 @@ export function useGameState(gameData) {
     } else {
       setLastFoundClue({ city: clue.destinationClue, suspect: clue.suspectClue });
 
+      // Store clues with metadata (city name, location name, time collected)
+      const cityName = currentCity?.name || 'Unknown';
+      const locationName = spot.name;
+      const timeCollected = currentHour;
+
       if (clue.destinationClue) {
         setCollectedClues(prev => ({
           ...prev,
-          city: [...prev.city, clue.destinationClue],
+          city: [...prev.city, {
+            text: clue.destinationClue,
+            cityName,
+            locationName,
+            timeCollected,
+          }],
         }));
       }
 
       if (clue.suspectClue) {
         setCollectedClues(prev => ({
           ...prev,
-          suspect: [...prev.suspect, clue.suspectClue],
+          suspect: [...prev.suspect, {
+            text: clue.suspectClue,
+            cityName,
+            locationName,
+            timeCollected,
+          }],
         }));
       }
     }
@@ -264,9 +279,10 @@ export function useGameState(gameData) {
 
     if (gameOver) return; // Don't trigger encounters if game is over
 
-    // Check for good deed encounter (25% chance in correct cities only, not if encounter already happened)
+    // Check for good deed encounter (25% chance in correct cities only, not final city)
     // Good deeds appear inline in the investigation tab, not as a separate state
-    if (!wrongCity && !hadEncounterInCity && goodDeeds && !currentGoodDeed && Math.random() < 0.25) {
+    // IMPORTANT: Don't trigger at final city - assassination is the main event there
+    if (!wrongCity && !isFinalCity && !hadEncounterInCity && goodDeeds && !currentGoodDeed && Math.random() < 0.25) {
       // Check if high karma triggers fake good deed trap
       const isFakeTrap = karma >= 5 && fakeGoodDeeds && Math.random() < 0.25;
 
@@ -314,7 +330,7 @@ export function useGameState(gameData) {
         return;
       }
     }
-  }, [timeRemaining, cityClues, investigatedLocations, advanceTime, wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, getInjuryTimePenalty, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant]);
+  }, [timeRemaining, cityClues, investigatedLocations, advanceTime, wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, getInjuryTimePenalty, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant, currentCity, currentHour]);
 
   // Rogue investigate - Fast but increases notoriety, gets BOTH clues
   const rogueInvestigate = useCallback((rogueAction) => {
@@ -329,8 +345,10 @@ export function useGameState(gameData) {
     }
 
     // Find one location clue and one suspect clue from available spots
-    const locationClue = cityClues.find(c => c.destinationClue)?.destinationClue;
-    const suspectClue = cityClues.find(c => c.suspectClue)?.suspectClue;
+    const locationClueData = cityClues.find(c => c.destinationClue);
+    const suspectClueData = cityClues.find(c => c.suspectClue);
+    const locationClue = locationClueData?.destinationClue;
+    const suspectClue = suspectClueData?.suspectClue;
 
     // Clear previous results
     setLastEncounterResult(null);
@@ -339,17 +357,32 @@ export function useGameState(gameData) {
     setLastFoundClue({ city: locationClue, suspect: suspectClue });
     setLastRogueAction(rogueAction);
 
+    // Store clues with metadata (city name, rogue action name, time collected)
+    const cityName = currentCity?.name || 'Unknown';
+    const locationName = rogueAction.name; // Use rogue action name as source
+    const timeCollected = currentHour;
+
     if (locationClue) {
       setCollectedClues(prev => ({
         ...prev,
-        city: [...prev.city, locationClue],
+        city: [...prev.city, {
+          text: locationClue,
+          cityName,
+          locationName,
+          timeCollected,
+        }],
       }));
     }
 
     if (suspectClue) {
       setCollectedClues(prev => ({
         ...prev,
-        suspect: [...prev.suspect, suspectClue],
+        suspect: [...prev.suspect, {
+          text: suspectClue,
+          cityName,
+          locationName,
+          timeCollected,
+        }],
       }));
     }
 
@@ -363,7 +396,7 @@ export function useGameState(gameData) {
     advanceTime(ROGUE_TIME_COST);
 
     // No good deed encounters after rogue actions (you're being ruthless)
-  }, [timeRemaining, cityClues, rogueUsedInCity, advanceTime]);
+  }, [timeRemaining, cityClues, rogueUsedInCity, advanceTime, currentCity, currentHour]);
 
   // Get available destinations
   const destinations = useMemo(() => {
