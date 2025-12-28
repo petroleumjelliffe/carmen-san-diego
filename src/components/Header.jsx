@@ -1,9 +1,47 @@
-// Simplified header - no spoilers (time, rank, clock removed)
-// Urgency bar - abstract progress indicator without spoiling exact time
+import { useState, useEffect, useRef } from 'react';
+import { Clock, MapPin, Moon } from 'lucide-react';
+
+// Format hour as 12-hour time with AM/PM
+function formatTime(hour) {
+  const h = ((hour % 24) + 24) % 24; // Normalize to 0-23
+  const h12 = h % 12 || 12;
+  const ampm = h < 12 ? 'AM' : 'PM';
+  return `${h12}:00 ${ampm}`;
+}
+
+// Animated clock that ticks toward target hour
+function AnimatedClock({ targetHour, tickSpeed = 0.5, onAnimatingChange }) {
+  const [displayHour, setDisplayHour] = useState(targetHour);
+  const isAnimating = displayHour !== targetHour;
+
+  useEffect(() => {
+    // Notify parent of animation state changes
+    onAnimatingChange?.(isAnimating);
+  }, [isAnimating, onAnimatingChange]);
+
+  useEffect(() => {
+    if (displayHour === targetHour) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setDisplayHour(prev => (prev + 1) % 24);
+    }, tickSpeed * 1000);
+
+    return () => clearTimeout(timer);
+  }, [displayHour, targetHour, tickSpeed]);
+
+  return (
+    <span className={isAnimating ? 'text-yellow-300' : ''}>
+      {formatTime(displayHour)}
+    </span>
+  );
+}
+
+// Urgency bar - abstract progress indicator
 function UrgencyBar({ timeRemaining, maxTime = 72 }) {
   const percent = Math.max(0, Math.min(100, (timeRemaining / maxTime) * 100));
 
-  // Color based on urgency level
   const getColor = () => {
     if (timeRemaining <= 12) return 'bg-red-500';
     if (timeRemaining <= 24) return 'bg-orange-500';
@@ -11,42 +49,80 @@ function UrgencyBar({ timeRemaining, maxTime = 72 }) {
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-yellow-200/70 text-xs hidden sm:inline">Urgency</span>
-      <div className="w-16 sm:w-24 h-2 bg-gray-800 rounded-full overflow-hidden">
-        <div
-          className={`h-full transition-all duration-500 ${getColor()}`}
-          style={{ width: `${percent}%` }}
-        />
+    <div className="w-16 sm:w-20 h-2 bg-gray-800 rounded-full overflow-hidden">
+      <div
+        className={`h-full transition-all duration-500 ${getColor()}`}
+        style={{ width: `${percent}%` }}
+      />
+    </div>
+  );
+}
+
+// Sleeping pill overlay - shows only while clock is animating through sleep
+function SleepingPill({ show }) {
+  if (!show) return null;
+
+  return (
+    <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50">
+      <div className="bg-blue-900 border border-blue-400 rounded-full px-4 py-2 flex items-center gap-2 shadow-lg animate-pulse">
+        <Moon size={16} className="text-blue-300" />
+        <span className="text-blue-100 font-bold text-sm">SLEEPING</span>
       </div>
     </div>
   );
 }
 
-export function Header({ currentCase, timeRemaining, maxTime = 72 }) {
+export function Header({
+  currentCity,
+  wrongCity,
+  wrongCityData,
+  timeRemaining,
+  currentHour,
+  maxTime = 72,
+  timeTickSpeed = 0.5,
+  lastSleepResult,
+}) {
+  const [isClockAnimating, setIsClockAnimating] = useState(false);
+
+  // Determine location to display
+  const locationName = wrongCity && wrongCityData
+    ? `${wrongCityData.name}, ${wrongCityData.country}`
+    : currentCity
+    ? `${currentCity.name}, ${currentCity.country}`
+    : 'Unknown Location';
+
   return (
-    <div className="bg-red-950 border-b-4 border-yellow-400 p-2 sm:p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Mobile layout: Single row */}
-        <div className="sm:hidden flex justify-between items-center">
-          <h1 className="text-lg font-bold text-yellow-400" style={{ fontFamily: 'serif' }}>
-            SHADOW SYNDICATE
-          </h1>
-          <UrgencyBar timeRemaining={timeRemaining} maxTime={maxTime} />
+    <div className="sticky top-0 z-40 bg-gray-900/95 backdrop-blur border-b border-yellow-400/50">
+      <div className="max-w-4xl mx-auto px-4 py-2 relative">
+        {/* Single row layout */}
+        <div className="flex justify-between items-center">
+          {/* Location */}
+          <div className="flex items-center gap-2">
+            <MapPin size={18} className="text-yellow-400" />
+            <span className="text-yellow-100 font-medium truncate max-w-[180px] sm:max-w-none">
+              {locationName}
+            </span>
+            {wrongCity && (
+              <span className="text-red-400 text-xs font-bold ml-1">WRONG TRAIL</span>
+            )}
+          </div>
+
+          {/* Time + Urgency */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 text-yellow-100 font-mono text-sm">
+              <Clock size={14} className="text-yellow-400" />
+              <AnimatedClock
+                targetHour={currentHour}
+                tickSpeed={timeTickSpeed}
+                onAnimatingChange={setIsClockAnimating}
+              />
+            </div>
+            <UrgencyBar timeRemaining={timeRemaining} maxTime={maxTime} />
+          </div>
         </div>
 
-        {/* Desktop layout: Title + Case + Urgency */}
-        <div className="hidden sm:flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-yellow-400" style={{ fontFamily: 'serif' }}>
-              THE SHADOW SYNDICATE
-            </h1>
-            <div className="text-yellow-200/70 text-sm">
-              {currentCase?.stolenItem?.name}
-            </div>
-          </div>
-          <UrgencyBar timeRemaining={timeRemaining} maxTime={maxTime} />
-        </div>
+        {/* Sleeping pill - only shows while clock is animating through sleep hours */}
+        <SleepingPill show={isClockAnimating && !!lastSleepResult} />
       </div>
     </div>
   );

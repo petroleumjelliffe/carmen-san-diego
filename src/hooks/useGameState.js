@@ -45,7 +45,13 @@ export function useGameState(gameData) {
   const [currentEncounter, setCurrentEncounter] = useState(null); // Current henchman/assassination encounter
   const [usedGadgets, setUsedGadgets] = useState([]); // Gadgets used in current case
 
+  // Investigation animation state
+  const [isInvestigating, setIsInvestigating] = useState(false);
+
   const { settings, citiesById, investigationSpots, assassinationAttempts, goodDeeds, fakeGoodDeeds, rogueActions, encounters, gadgets } = gameData;
+
+  // Get tick speed from settings (for syncing clue reveal with clock animation)
+  const timeTickSpeed = settings.time_tick_speed || 0.5;
 
   // Current city data
   const currentCity = useMemo(() => {
@@ -225,6 +231,7 @@ export function useGameState(gameData) {
   // Investigate a location
   const investigate = useCallback((locationIndex) => {
     if (!cityClues || !cityClues[locationIndex]) return;
+    if (isInvestigating) return; // Don't allow new investigation while one is in progress
 
     const clue = cityClues[locationIndex];
     const spot = clue.spot;
@@ -243,107 +250,121 @@ export function useGameState(gameData) {
       return;
     }
 
-    // Mark as investigated
-    setInvestigatedLocations(prev => [...prev, spot.id]);
+    // Start investigating - show ticker while clock animates
+    setIsInvestigating(true);
+    setLastFoundClue({ city: null, suspect: null }); // Clear previous clue
     setLastRogueAction(null); // Clear rogue action flag
     setLastEncounterResult(null); // Clear previous encounter result
 
-    // Check for injury-based clue missing
-    const missedClue = shouldMissClue();
+    // Mark as investigated
+    setInvestigatedLocations(prev => [...prev, spot.id]);
 
-    if (missedClue) {
-      setLastFoundClue({ city: null, suspect: null });
-      setMessage(`You investigated the ${spot.name}, but your injuries made you miss the clue...`);
-    } else {
-      setLastFoundClue({ city: clue.destinationClue, suspect: clue.suspectClue });
-
-      // Store clues with metadata (city name, location name, time collected)
-      const cityName = currentCity?.name || 'Unknown';
-      const locationName = spot.name;
-      const timeCollected = currentHour;
-
-      if (clue.destinationClue) {
-        setCollectedClues(prev => ({
-          ...prev,
-          city: [...prev.city, {
-            text: clue.destinationClue,
-            cityName,
-            locationName,
-            timeCollected,
-          }],
-        }));
-      }
-
-      if (clue.suspectClue) {
-        setCollectedClues(prev => ({
-          ...prev,
-          suspect: [...prev.suspect, {
-            text: clue.suspectClue,
-            cityName,
-            locationName,
-            timeCollected,
-          }],
-        }));
-      }
-    }
-
-    // Advance time with injury penalties (checks for sleep and game over)
+    // Advance time immediately (starts clock animation)
     const gameOver = advanceTime(totalTimeCost);
 
-    if (gameOver) return; // Don't trigger encounters if game is over
+    if (gameOver) {
+      setIsInvestigating(false);
+      return;
+    }
 
-    // Check for good deed encounter (25% chance in correct cities only, not final city)
-    // Good deeds appear inline in the investigation tab, not as a separate state
-    // IMPORTANT: Don't trigger at final city - assassination is the main event there
-    if (!wrongCity && !isFinalCity && !hadEncounterInCity && goodDeeds && !currentGoodDeed && Math.random() < 0.25) {
-      // Check if high karma triggers fake good deed trap
-      const isFakeTrap = karma >= 5 && fakeGoodDeeds && Math.random() < 0.25;
+    // Calculate animation duration based on time cost and tick speed
+    const animationDuration = totalTimeCost * timeTickSpeed * 1000;
 
-      if (isFakeTrap) {
-        const fakeDeed = pickRandom(fakeGoodDeeds);
-        setCurrentGoodDeed({ ...fakeDeed, isFake: true });
+    // Delay clue reveal until clock animation completes
+    setTimeout(() => {
+      setIsInvestigating(false);
+
+      // Check for injury-based clue missing
+      const missedClue = shouldMissClue();
+
+      if (missedClue) {
+        setMessage(`You investigated the ${spot.name}, but your injuries made you miss the clue...`);
       } else {
-        const deed = pickRandom(goodDeeds);
-        setCurrentGoodDeed({ ...deed, isFake: false });
-      }
-      return; // Don't trigger encounter if good deed is shown
-    }
+        setLastFoundClue({ city: clue.destinationClue, suspect: clue.suspectClue });
 
-    // ENCOUNTER TRIGGER: Only on FIRST investigation in correct cities
-    // Henchman in non-final cities, Assassination in final city
-    if (!wrongCity && !hadEncounterInCity && encounters) {
-      setHadEncounterInCity(true); // Mark that encounter happened
+        // Store clues with metadata (city name, location name, time collected)
+        const cityName = currentCity?.name || 'Unknown';
+        const locationName = spot.name;
+        const timeCollected = currentHour;
 
-      if (isFinalCity && !wrongCity && encounters.assassination_attempts) {
-        // CORRECT FINAL CITY ONLY: Trigger assassination attempt (high stakes!)
-        const assassinationEncounter = pickRandom(encounters.assassination_attempts);
-        setCurrentEncounter({ ...assassinationEncounter, type: 'assassination' });
-        // Don't change gameState - render inline in InvestigateTab
-        return; // Wait for assassination to be resolved before allowing apprehension
-      } else if (!isFinalCity && currentCityIndex > 0 && encounters.henchman_encounters) {
-        // MIDDLE CITIES ONLY (not first, not last): Trigger henchman encounter
-        // "You're on the right track!" - signals player is in correct city
-        const henchmanEncounter = pickRandom(encounters.henchman_encounters);
-        setCurrentEncounter({ ...henchmanEncounter, type: 'henchman' });
-        // Don't change gameState - render inline in InvestigateTab
-      }
-    }
+        if (clue.destinationClue) {
+          setCollectedClues(prev => ({
+            ...prev,
+            city: [...prev.city, {
+              text: clue.destinationClue,
+              cityName,
+              locationName,
+              timeCollected,
+            }],
+          }));
+        }
 
-    // APPREHENSION: Second investigation at final city (after assassination resolved)
-    // If we're at final city after the assassination attempt
-    if (isFinalCity && hadEncounterInCity && !currentEncounter) {
-      if (selectedWarrant) {
-        // Apprehend the suspect! Show inline in content area with Continue button
-        setMessage(`SUSPECT APPREHENDED! ${selectedWarrant.name} is now in custody.`);
-        setGameState('apprehended'); // Triggers inline UI in InvestigateTab
-        return;
-      } else {
-        // No warrant issued yet - guide the player
-        setMessage("You've cornered the suspect! Issue a warrant in the Dossier tab to make an arrest.");
-        return;
+        if (clue.suspectClue) {
+          setCollectedClues(prev => ({
+            ...prev,
+            suspect: [...prev.suspect, {
+              text: clue.suspectClue,
+              cityName,
+              locationName,
+              timeCollected,
+            }],
+          }));
+        }
       }
-    }
-  }, [timeRemaining, cityClues, investigatedLocations, advanceTime, wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, getInjuryTimePenalty, getInvestigationCost, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant, currentCity, currentHour]);
+
+      // Check for good deed encounter (25% chance in correct cities only, not final city)
+      // Good deeds appear inline in the investigation tab, not as a separate state
+      // IMPORTANT: Don't trigger at final city - assassination is the main event there
+      if (!wrongCity && !isFinalCity && !hadEncounterInCity && goodDeeds && !currentGoodDeed && Math.random() < 0.25) {
+        // Check if high karma triggers fake good deed trap
+        const isFakeTrap = karma >= 5 && fakeGoodDeeds && Math.random() < 0.25;
+
+        if (isFakeTrap) {
+          const fakeDeed = pickRandom(fakeGoodDeeds);
+          setCurrentGoodDeed({ ...fakeDeed, isFake: true });
+        } else {
+          const deed = pickRandom(goodDeeds);
+          setCurrentGoodDeed({ ...deed, isFake: false });
+        }
+        return; // Don't trigger encounter if good deed is shown
+      }
+
+      // ENCOUNTER TRIGGER: Only on FIRST investigation in correct cities
+      // Henchman in non-final cities, Assassination in final city
+      if (!wrongCity && !hadEncounterInCity && encounters) {
+        setHadEncounterInCity(true); // Mark that encounter happened
+
+        if (isFinalCity && !wrongCity && encounters.assassination_attempts) {
+          // CORRECT FINAL CITY ONLY: Trigger assassination attempt (high stakes!)
+          const assassinationEncounter = pickRandom(encounters.assassination_attempts);
+          setCurrentEncounter({ ...assassinationEncounter, type: 'assassination' });
+          // Don't change gameState - render inline in InvestigateTab
+          return; // Wait for assassination to be resolved before allowing apprehension
+        } else if (!isFinalCity && currentCityIndex > 0 && encounters.henchman_encounters) {
+          // MIDDLE CITIES ONLY (not first, not last): Trigger henchman encounter
+          // "You're on the right track!" - signals player is in correct city
+          const henchmanEncounter = pickRandom(encounters.henchman_encounters);
+          setCurrentEncounter({ ...henchmanEncounter, type: 'henchman' });
+          // Don't change gameState - render inline in InvestigateTab
+        }
+      }
+
+      // APPREHENSION: Second investigation at final city (after assassination resolved)
+      // If we're at final city after the assassination attempt
+      if (isFinalCity && hadEncounterInCity && !currentEncounter) {
+        if (selectedWarrant) {
+          // Apprehend the suspect! Show inline in content area with Continue button
+          setMessage(`SUSPECT APPREHENDED! ${selectedWarrant.name} is now in custody.`);
+          setGameState('apprehended'); // Triggers inline UI in InvestigateTab
+          return;
+        } else {
+          // No warrant issued yet - guide the player
+          setMessage("You've cornered the suspect! Issue a warrant in the Dossier tab to make an arrest.");
+          return;
+        }
+      }
+    }, animationDuration);
+  }, [timeRemaining, cityClues, investigatedLocations, advanceTime, wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, getInjuryTimePenalty, getInvestigationCost, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant, currentCity, currentHour, isInvestigating, timeTickSpeed]);
 
   // Rogue investigate - Fast but increases notoriety, gets BOTH clues
   const rogueInvestigate = useCallback((rogueAction) => {
@@ -445,6 +466,7 @@ export function useGameState(gameData) {
     setLastEncounterResult(null); // Clear encounter result
     setRogueUsedInCity(false); // Reset rogue action for new city
     setHadEncounterInCity(false); // Reset encounter flag for new city
+    setIsInvestigating(false); // Cancel any pending investigation
 
     if (destination.isCorrect) {
       // Advance to next city (no cutscene - assassination only happens when issuing warrant in final city)
@@ -595,6 +617,9 @@ export function useGameState(gameData) {
     // Phase 4: Gadget Encounters
     currentEncounter,
     availableGadgets,
+
+    // Investigation animation
+    isInvestigating,
 
     // Actions
     startNewCase,

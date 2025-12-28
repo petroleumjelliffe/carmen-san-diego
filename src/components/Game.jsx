@@ -1,7 +1,6 @@
 import { useGameState } from '../hooks/useGameState';
 import { Menu } from './Menu';
 import { Header } from './Header';
-import { LocationBanner } from './LocationBanner';
 import { TabBar } from './TabBar';
 import { InvestigateTab } from './InvestigateTab';
 import { AirportTab } from './AirportTab';
@@ -54,6 +53,7 @@ export function Game({ gameData }) {
     lastRogueAction,
     currentEncounter,
     availableGadgets,
+    isInvestigating,
     startNewCase,
     acceptBriefing,
     investigate,
@@ -145,17 +145,14 @@ export function Game({ gameData }) {
       }}
     >
       <Header
-        currentCase={currentCase}
-        timeRemaining={timeRemaining}
-        maxTime={settings.total_time}
-      />
-
-      <LocationBanner
         currentCity={currentCity}
-        currentCityIndex={currentCityIndex}
         wrongCity={wrongCity}
         wrongCityData={wrongCityData}
-        citiesPerCase={settings.cities_per_case}
+        timeRemaining={timeRemaining}
+        currentHour={currentHour}
+        maxTime={settings.total_time}
+        timeTickSpeed={settings.time_tick_speed || 0.5}
+        lastSleepResult={lastSleepResult}
       />
 
       <TabBar
@@ -181,7 +178,6 @@ export function Game({ gameData }) {
             collectedClues={collectedClues}
             lastFoundClue={lastFoundClue}
             lastRogueAction={lastRogueAction}
-            lastSleepResult={lastSleepResult}
             rogueUsedInCity={rogueUsedInCity}
             currentGoodDeed={currentGoodDeed}
             karma={karma}
@@ -196,6 +192,7 @@ export function Game({ gameData }) {
             selectedWarrant={selectedWarrant}
             onProceedToTrial={proceedToTrial}
             encounterTimers={encounterTimers}
+            isInvestigating={isInvestigating}
           />
         )}
 

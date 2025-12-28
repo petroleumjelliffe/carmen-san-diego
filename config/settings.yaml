@@ -2,6 +2,7 @@ settings:
   total_time: 72
   cities_per_case: 4
   travel_time: 4
+  time_tick_speed: 0.5  # seconds per hour tick when clock animates
 
 # Encounter timer settings (in seconds)
 # Henchman: auto-resolves with no_gadget penalty when timer expires

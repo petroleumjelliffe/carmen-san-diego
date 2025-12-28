@@ -51,7 +51,6 @@ export function InvestigateTab({
   collectedClues,
   lastFoundClue,
   lastRogueAction,
-  lastSleepResult,
   rogueUsedInCity,
   currentGoodDeed,
   karma,
@@ -66,6 +65,7 @@ export function InvestigateTab({
   selectedWarrant,
   onProceedToTrial,
   encounterTimers,
+  isInvestigating,
 }) {
   if (!cityClues) return null;
 
@@ -92,8 +92,6 @@ export function InvestigateTab({
     return 10;
   };
 
-  // Check if we have any results to display (only clues, sleep, rogue - not encounters)
-  const hasResults = lastFoundClue?.city || lastSleepResult || lastRogueAction;
 
   return (
     <div className="space-y-4">
@@ -147,42 +145,43 @@ export function InvestigateTab({
         </div>
       )}
 
-      {/* Results Area - Quote bubble style */}
-      <FadeIn show={hasResults}>
+      {/* Investigation Results - single container, content swaps between investigating and results */}
+      {(isInvestigating || lastFoundClue?.city || lastFoundClue?.suspect || lastRogueAction) && (
         <div className="bg-gray-900/80 rounded-lg overflow-hidden mb-6">
-          {/* Sleep Result */}
-          {lastSleepResult && (
-            <div className="p-4 border-l-4 border-blue-500">
-              <p className="text-yellow-100 italic">"{lastSleepResult.message}"</p>
+          {isInvestigating ? (
+            <div className="p-4 border-l-4 border-yellow-400">
+              <p className="text-yellow-100 italic animate-pulse">Investigating...</p>
             </div>
-          )}
+          ) : (
+            <>
+              {/* Rogue Action Result */}
+              {lastRogueAction && (
+                <div className="p-4 border-l-4 border-orange-500">
+                  <p className="text-yellow-100 italic">"{lastRogueAction.success_text}"</p>
+                  <p className="text-red-400 text-xs mt-2">
+                    <AlertTriangle size={10} className="inline mr-1" />
+                    +{lastRogueAction.notoriety_gain} notoriety
+                  </p>
+                </div>
+              )}
 
-          {/* Rogue Action Result */}
-          {lastRogueAction && (
-            <div className="p-4 border-l-4 border-orange-500">
-              <p className="text-yellow-100 italic">"{lastRogueAction.success_text}"</p>
-              <p className="text-red-400 text-xs mt-2">
-                <AlertTriangle size={10} className="inline mr-1" />
-                +{lastRogueAction.notoriety_gain} notoriety
-              </p>
-            </div>
-          )}
+              {/* Investigation Result - City clue */}
+              {lastFoundClue?.city && (
+                <div className="p-4 border-l-4 border-yellow-500">
+                  <p className="text-yellow-100 italic">"{lastFoundClue.city}"</p>
+                </div>
+              )}
 
-          {/* Investigation Result - City clue */}
-          {lastFoundClue?.city && (
-            <div className="p-4 border-l-4 border-yellow-500">
-              <p className="text-yellow-100 italic">"{lastFoundClue.city}"</p>
-            </div>
-          )}
-
-          {/* Investigation Result - Suspect clue */}
-          {lastFoundClue?.suspect && (
-            <div className="p-4 border-l-4 border-green-500">
-              <p className="text-yellow-100 italic">"{lastFoundClue.suspect}"</p>
-            </div>
+              {/* Investigation Result - Suspect clue */}
+              {lastFoundClue?.suspect && (
+                <div className="p-4 border-l-4 border-green-500">
+                  <p className="text-yellow-100 italic">"{lastFoundClue.suspect}"</p>
+                </div>
+              )}
+            </>
           )}
         </div>
-      </FadeIn>
+      )}
 
       {/* Investigation Spots - Normal 3 options */}
       {cityClues.map((clue, i) => {
@@ -194,7 +193,7 @@ export function InvestigateTab({
             spot={clue.spot}
             index={i}
             onInvestigate={onInvestigate}
-            disabled={timeRemaining < nextInvestigationCost}
+            disabled={timeRemaining < nextInvestigationCost || isInvestigating}
             investigated={investigated}
           />
         );
@@ -205,7 +204,7 @@ export function InvestigateTab({
         <RogueActionButton
           rogueAction={availableRogueAction}
           onRogueAction={onRogueAction}
-          disabled={timeRemaining < ROGUE_TIME_COST}
+          disabled={timeRemaining < ROGUE_TIME_COST || isInvestigating}
           used={rogueUsedInCity}
         />
       )}

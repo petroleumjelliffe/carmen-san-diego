@@ -285,6 +285,11 @@ FINAL CITY (city 4):
    - 3rd investigation in a city: 8 hours
    - Each subsequent investigation doubles in time cost
 9. **Rogue action exception** - The rogue cop action is special: it gives BOTH clue types (location + suspect) for a fixed 2-hour cost, but increases notoriety. This is the only way to get both clues from a single action.
+10. **Encounter priority order** - On first investigation in correct cities:
+    - **Henchman** (cities 2-3): Always triggers, confirms player is on right track
+    - **Assassination** (city 4): Always triggers, high stakes climax
+    - **Apprehension** (city 4, 2nd investigation): After assassination resolved
+    - **Good deed**: Can trigger on ANY investigation if no henchman/assassination, but only once per case (25% chance)
 
 ---
 
