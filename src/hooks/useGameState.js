@@ -45,7 +45,6 @@ export function useGameState(gameData) {
   const [currentEncounter, setCurrentEncounter] = useState(null); // Current henchman/assassination encounter
   const [usedGadgets, setUsedGadgets] = useState([]); // Gadgets used in current case
   const [hadGoodDeedInCase, setHadGoodDeedInCase] = useState(false); // Only one good deed per case
-  const [encounterIndex, setEncounterIndex] = useState(0); // Index in pre-generated encounter sequence
 
   // Dossier trait selections (persists across tab switches)
   const [selectedTraits, setSelectedTraits] = useState({
@@ -168,7 +167,6 @@ export function useGameState(gameData) {
     setHadGoodDeedInCase(false); // Reset good deed flag for new case
     setRogueUsedInCity(false);
     setHadEncounterInCity(false);
-    setEncounterIndex(0); // Reset encounter sequence index
     setSelectedTraits({ gender: null, hair: null, hobby: null }); // Reset trait selections
   }, [gameData, settings.total_time]);
 
@@ -385,25 +383,19 @@ export function useGameState(gameData) {
       }
     }
 
-    // ENCOUNTER TRIGGER: Henchman/assassination ALWAYS happen on first investigation in correct cities
+    // ENCOUNTER TRIGGER: Use pre-generated encounter from cityData
     // These take priority over good deeds
     if (!wrongCity && !hadEncounterInCity) {
       setHadEncounterInCity(true); // Mark that encounter happened
 
-      if (isFinalCity && encounters?.assassination_attempts) {
-        // CORRECT FINAL CITY: Trigger assassination attempt (high stakes!)
-        const assassinationEncounter = pickRandom(encounters.assassination_attempts);
-        setCurrentEncounter({ ...assassinationEncounter, type: 'assassination' });
-        return; // Wait for assassination to be resolved before allowing apprehension
-      } else if (!isFinalCity && currentCityIndex > 0 && currentCase?.encounterSequence) {
-        // MIDDLE CITIES (not first, not last): Use pre-generated encounter sequence
-        // Each encounter matches a gadget the player has
-        const nextEncounter = currentCase.encounterSequence[encounterIndex];
-        if (nextEncounter) {
-          setEncounterIndex(prev => prev + 1);
-          setCurrentEncounter({ ...nextEncounter, type: 'henchman' });
-          return; // Show henchman encounter
-        }
+      // Get pre-assigned encounter for this city
+      const cityData = currentCase?.cityData?.[currentCityIndex];
+      const preAssignedEncounter = cityData?.encounter;
+
+      if (preAssignedEncounter) {
+        const encounterType = isFinalCity ? 'assassination' : 'henchman';
+        setCurrentEncounter({ ...preAssignedEncounter, type: encounterType });
+        return; // Show encounter
       }
     }
 
@@ -439,7 +431,7 @@ export function useGameState(gameData) {
         return;
       }
     }
-  }, [wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant, currentCity, currentHour, currentCityIndex, hadGoodDeedInCase, encounterIndex, currentCase]);
+  }, [wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant, currentCity, currentHour, currentCityIndex, hadGoodDeedInCase, currentCase]);
 
   // Rogue investigate - returns action config or null if invalid
   // Fast but increases notoriety, gets BOTH clues
