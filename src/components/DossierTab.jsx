@@ -1,4 +1,4 @@
-import { User, X, MapPin, Clock } from 'lucide-react';
+import { User, X, MapPin, Clock, FileText } from 'lucide-react';
 import { useMemo } from 'react';
 
 // Pushpin decoration component
@@ -251,9 +251,19 @@ export function DossierTab({
             />
           </div>
 
-          <p className="text-xs text-amber-700 text-center italic mt-2">
-            Tap fields to cycle values
-          </p>
+          <div className="flex items-center justify-between mt-3">
+            <p className="text-xs text-amber-700 italic">
+              Tap fields to cycle values
+            </p>
+            {hasAnyTraits && (
+              <button
+                onClick={onResetTraits}
+                className="text-xs text-amber-700 hover:text-amber-900 underline"
+              >
+                Reset
+              </button>
+            )}
+          </div>
         </NoteCard>
       </div>
 
@@ -264,14 +274,18 @@ export function DossierTab({
             <span className="font-bold text-green-900">
               {remainingCount} suspect{remainingCount !== 1 ? 's' : ''} match
             </span>
-            {hasAnyTraits && (
-              <button
-                onClick={onResetTraits}
-                className="text-xs text-green-700 hover:text-green-900 underline"
-              >
-                Reset
-              </button>
-            )}
+            <button
+              onClick={onIssueWarrant}
+              disabled={!selectedWarrant}
+              className={`font-bold px-3 py-1 rounded transition-all text-xs flex items-center gap-1 ${
+                selectedWarrant
+                  ? 'bg-red-600 hover:bg-red-500 text-white shadow-md'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              <FileText size={12} />
+              Issue Warrant
+            </button>
           </div>
 
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 py-2">
@@ -292,32 +306,6 @@ export function DossierTab({
               );
             })}
           </div>
-        </NoteCard>
-      </div>
-
-      {/* Warrant Button */}
-      <div className="relative">
-        <NoteCard color="pink" rotation={-1}>
-          <button
-            onClick={onIssueWarrant}
-            disabled={!selectedWarrant}
-            className={`w-full font-bold py-3 rounded transition-all text-sm ${
-              selectedWarrant
-                ? 'bg-red-600 hover:bg-red-500 text-white shadow-md'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            {selectedWarrant
-              ? `🚨 ISSUE WARRANT: ${selectedWarrant.name}`
-              : "Select a Suspect Above"}
-          </button>
-          {selectedWarrant && (
-            <p className="text-center text-xs text-gray-600 mt-2">
-              {isFinalCity
-                ? "Ready to apprehend!"
-                : "Continue tracking..."}
-            </p>
-          )}
         </NoteCard>
       </div>
 
