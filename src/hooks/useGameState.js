@@ -45,6 +45,7 @@ export function useGameState(gameData) {
   const [currentEncounter, setCurrentEncounter] = useState(null); // Current henchman/assassination encounter
   const [usedGadgets, setUsedGadgets] = useState([]); // Gadgets used in current case
   const [hadGoodDeedInCase, setHadGoodDeedInCase] = useState(false); // Only one good deed per case
+  const [encounterIndex, setEncounterIndex] = useState(0); // Index in pre-generated encounter sequence
 
   // Dossier trait selections (persists across tab switches)
   const [selectedTraits, setSelectedTraits] = useState({
@@ -76,7 +77,7 @@ export function useGameState(gameData) {
   const [travelOrigin, setTravelOrigin] = useState(null);
   const [travelDestination, setTravelDestination] = useState(null);
 
-  const { settings, citiesById, investigationSpots, assassinationAttempts, goodDeeds, fakeGoodDeeds, rogueActions, encounters, gadgets } = gameData;
+  const { settings, citiesById, investigationSpots, assassinationAttempts, goodDeeds, fakeGoodDeeds, rogueActions, encounters } = gameData;
 
   // Get tick speed from settings (for syncing clue reveal with clock animation)
   const timeTickSpeed = settings.time_tick_speed || 0.5;
@@ -167,6 +168,7 @@ export function useGameState(gameData) {
     setHadGoodDeedInCase(false); // Reset good deed flag for new case
     setRogueUsedInCity(false);
     setHadEncounterInCity(false);
+    setEncounterIndex(0); // Reset encounter sequence index
     setSelectedTraits({ gender: null, hair: null, hobby: null }); // Reset trait selections
   }, [gameData, settings.total_time]);
 
@@ -385,20 +387,23 @@ export function useGameState(gameData) {
 
     // ENCOUNTER TRIGGER: Henchman/assassination ALWAYS happen on first investigation in correct cities
     // These take priority over good deeds
-    if (!wrongCity && !hadEncounterInCity && encounters) {
+    if (!wrongCity && !hadEncounterInCity) {
       setHadEncounterInCity(true); // Mark that encounter happened
 
-      if (isFinalCity && encounters.assassination_attempts) {
+      if (isFinalCity && encounters?.assassination_attempts) {
         // CORRECT FINAL CITY: Trigger assassination attempt (high stakes!)
         const assassinationEncounter = pickRandom(encounters.assassination_attempts);
         setCurrentEncounter({ ...assassinationEncounter, type: 'assassination' });
         return; // Wait for assassination to be resolved before allowing apprehension
-      } else if (!isFinalCity && currentCityIndex > 0 && encounters.henchman_encounters) {
-        // MIDDLE CITIES (not first, not last): Trigger henchman encounter
-        // "You're on the right track!" - signals player is on correct path
-        const henchmanEncounter = pickRandom(encounters.henchman_encounters);
-        setCurrentEncounter({ ...henchmanEncounter, type: 'henchman' });
-        return; // Show henchman encounter
+      } else if (!isFinalCity && currentCityIndex > 0 && currentCase?.encounterSequence) {
+        // MIDDLE CITIES (not first, not last): Use pre-generated encounter sequence
+        // Each encounter matches a gadget the player has
+        const nextEncounter = currentCase.encounterSequence[encounterIndex];
+        if (nextEncounter) {
+          setEncounterIndex(prev => prev + 1);
+          setCurrentEncounter({ ...nextEncounter, type: 'henchman' });
+          return; // Show henchman encounter
+        }
       }
     }
 
@@ -434,7 +439,7 @@ export function useGameState(gameData) {
         return;
       }
     }
-  }, [wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant, currentCity, currentHour, currentCityIndex, hadGoodDeedInCase]);
+  }, [wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant, currentCity, currentHour, currentCityIndex, hadGoodDeedInCase, encounterIndex, currentCase]);
 
   // Rogue investigate - returns action config or null if invalid
   // Fast but increases notoriety, gets BOTH clues
@@ -531,14 +536,14 @@ export function useGameState(gameData) {
     return getDestinations(gameData, currentCase, currentCityIndex);
   }, [gameData, currentCase, currentCityIndex, gameState]);
 
-  // Get available gadgets with used status
+  // Get available gadgets with used status (only the 3 pre-selected for this case)
   const availableGadgets = useMemo(() => {
-    if (!gadgets) return [];
-    return gadgets.map(gadget => ({
+    const caseGadgets = currentCase?.gadgets || [];
+    return caseGadgets.map(gadget => ({
       ...gadget,
       used: usedGadgets.includes(gadget.id)
     }));
-  }, [gadgets, usedGadgets]);
+  }, [currentCase?.gadgets, usedGadgets]);
 
   // Travel to a destination - starts animation, returns travel time
   const travel = useCallback((destination) => {

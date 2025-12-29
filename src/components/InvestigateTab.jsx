@@ -171,17 +171,10 @@ export function InvestigateTab({
                   </div>
                 )}
 
-                {/* Investigation Result - City clue */}
-                {lastFoundClue?.city && (
+                {/* Investigation Result - any clue type (same styling) */}
+                {(lastFoundClue?.city || lastFoundClue?.suspect) && (
                   <div className="p-4 border-l-4 border-yellow-500">
-                    <p className="text-yellow-100 italic">"{lastFoundClue.city}"</p>
-                  </div>
-                )}
-
-                {/* Investigation Result - Suspect clue */}
-                {lastFoundClue?.suspect && (
-                  <div className="p-4 border-l-4 border-green-500">
-                    <p className="text-yellow-100 italic">"{lastFoundClue.suspect}"</p>
+                    <p className="text-yellow-100 italic">"{lastFoundClue.city || lastFoundClue.suspect}"</p>
                   </div>
                 )}
               </>
