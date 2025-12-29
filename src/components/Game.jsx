@@ -1,10 +1,13 @@
+import { useEffect } from 'react';
 import { useGameState } from '../hooks/useGameState';
+import { useTravelAnimation } from '../hooks/useTravelAnimation';
 import { Menu } from './Menu';
 import { Header } from './Header';
 import { TabBar } from './TabBar';
 import { InvestigateTab } from './InvestigateTab';
 import { AirportTab } from './AirportTab';
 import { DossierTab } from './DossierTab';
+import { TravelAnimation } from './TravelAnimation';
 import { Briefing } from './Briefing';
 import { Trial } from './Trial';
 import { Debrief } from './Debrief';
@@ -57,11 +60,15 @@ export function Game({ gameData }) {
     cycleSelectedTrait,
     resetSelectedTraits,
     isInvestigating,
+    isTraveling,
+    travelOrigin,
+    travelDestination,
     startNewCase,
     acceptBriefing,
     investigate,
     rogueInvestigate,
     travel,
+    completeTravelAnimation,
     issueWarrant,
     completeTrial,
     proceedToTrial,
@@ -71,7 +78,22 @@ export function Game({ gameData }) {
     setSelectedWarrant,
   } = useGameState(gameData);
 
-  const { ranks, suspects, settings, rogueActions, encounterTimers } = gameData;
+  const { ranks, suspects, settings, rogueActions, encounterTimers, citiesById } = gameData;
+
+  // Travel animation
+  const { isAnimating, progress, travelData, startAnimation } = useTravelAnimation(
+    completeTravelAnimation
+  );
+
+  // Start travel animation when isTraveling becomes true
+  useEffect(() => {
+    if (isTraveling && travelOrigin && travelDestination) {
+      const destCity = citiesById[travelDestination.cityId];
+      if (destCity) {
+        startAnimation(travelOrigin, destCity);
+      }
+    }
+  }, [isTraveling, travelOrigin, travelDestination, citiesById, startAnimation]);
 
   // Menu screen
   if (gameState === 'menu') {
@@ -166,66 +188,76 @@ export function Game({ gameData }) {
       <div className="flex-1 overflow-y-auto">
         <div
           className="max-w-4xl mx-auto p-4 pb-24 sm:pb-4 min-h-full grid"
-          style={{ alignItems: 'end' }}
+          style={{ alignItems: isAnimating ? 'center' : 'end' }}
         >
           <div>
-            {message && (
-              <div className="bg-yellow-400/20 border border-yellow-400 text-yellow-100 px-4 py-2 rounded mb-4">
-                {message}
-              </div>
-            )}
-
-            {activeTab === 'investigate' && (
-              <InvestigateTab
-                isFinalCity={isFinalCity}
-                wrongCity={wrongCity}
-                cityClues={cityClues}
-                investigatedLocations={investigatedLocations}
-                timeRemaining={timeRemaining}
-                nextInvestigationCost={nextInvestigationCost}
-                collectedClues={collectedClues}
-                lastFoundClue={lastFoundClue}
-                lastRogueAction={lastRogueAction}
-                rogueUsedInCity={rogueUsedInCity}
-                currentGoodDeed={currentGoodDeed}
-                karma={karma}
-                onInvestigate={investigate}
-                rogueActions={rogueActions}
-                onRogueAction={rogueInvestigate}
-                notoriety={notoriety}
-                currentEncounter={currentEncounter}
-                availableGadgets={availableGadgets}
-                onEncounterResolve={handleEncounterResolve}
-                isApprehended={gameState === 'apprehended'}
-                selectedWarrant={selectedWarrant}
-                onProceedToTrial={proceedToTrial}
-                encounterTimers={encounterTimers}
-                isInvestigating={isInvestigating}
-                cityFact={currentCity?.fact}
+            {/* Travel Animation - shown during flight */}
+            {isAnimating && travelData ? (
+              <TravelAnimation
+                travelData={travelData}
+                progress={progress}
               />
-            )}
+            ) : (
+              <>
+                {message && (
+                  <div className="bg-yellow-400/20 border border-yellow-400 text-yellow-100 px-4 py-2 rounded mb-4">
+                    {message}
+                  </div>
+                )}
 
-            {activeTab === 'airport' && (
-              <AirportTab
-                destinations={destinations}
-                timeRemaining={timeRemaining}
-                travelTime={settings.travel_time}
-                onTravel={travel}
-              />
-            )}
+                {activeTab === 'investigate' && (
+                  <InvestigateTab
+                    isFinalCity={isFinalCity}
+                    wrongCity={wrongCity}
+                    cityClues={cityClues}
+                    investigatedLocations={investigatedLocations}
+                    timeRemaining={timeRemaining}
+                    nextInvestigationCost={nextInvestigationCost}
+                    collectedClues={collectedClues}
+                    lastFoundClue={lastFoundClue}
+                    lastRogueAction={lastRogueAction}
+                    rogueUsedInCity={rogueUsedInCity}
+                    currentGoodDeed={currentGoodDeed}
+                    karma={karma}
+                    onInvestigate={investigate}
+                    rogueActions={rogueActions}
+                    onRogueAction={rogueInvestigate}
+                    notoriety={notoriety}
+                    currentEncounter={currentEncounter}
+                    availableGadgets={availableGadgets}
+                    onEncounterResolve={handleEncounterResolve}
+                    isApprehended={gameState === 'apprehended'}
+                    selectedWarrant={selectedWarrant}
+                    onProceedToTrial={proceedToTrial}
+                    encounterTimers={encounterTimers}
+                    isInvestigating={isInvestigating}
+                    cityFact={currentCity?.fact}
+                  />
+                )}
 
-            {activeTab === 'dossier' && (
-              <DossierTab
-                collectedClues={collectedClues}
-                suspects={suspects}
-                selectedWarrant={selectedWarrant}
-                isFinalCity={isFinalCity}
-                onSelectWarrant={setSelectedWarrant}
-                onIssueWarrant={issueWarrant}
-                selectedTraits={selectedTraits}
-                onCycleTrait={cycleSelectedTrait}
-                onResetTraits={resetSelectedTraits}
-              />
+                {activeTab === 'airport' && (
+                  <AirportTab
+                    destinations={destinations}
+                    timeRemaining={timeRemaining}
+                    travelTime={settings.travel_time}
+                    onTravel={travel}
+                  />
+                )}
+
+                {activeTab === 'dossier' && (
+                  <DossierTab
+                    collectedClues={collectedClues}
+                    suspects={suspects}
+                    selectedWarrant={selectedWarrant}
+                    isFinalCity={isFinalCity}
+                    onSelectWarrant={setSelectedWarrant}
+                    onIssueWarrant={issueWarrant}
+                    selectedTraits={selectedTraits}
+                    onCycleTrait={cycleSelectedTrait}
+                    onResetTraits={resetSelectedTraits}
+                  />
+                )}
+              </>
             )}
           </div>
         </div>

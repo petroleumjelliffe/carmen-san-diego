@@ -3,46 +3,62 @@ cities:
     name: Paris
     country: France
     region: europe
+    lat: 48.8566
+    lon: 2.3522
     fact: "The Eiffel Tower was originally intended to be a temporary structure, built for the 1889 World's Fair."
 
   - id: tokyo
     name: Tokyo
     country: Japan
     region: asia
+    lat: 35.6762
+    lon: 139.6503
     fact: "Tokyo's Shibuya Crossing is the busiest pedestrian intersection in the world, with up to 3,000 people crossing at once."
 
   - id: cairo
     name: Cairo
     country: Egypt
     region: africa
+    lat: 30.0444
+    lon: 31.2357
     fact: "The Great Pyramid of Giza was the tallest man-made structure in the world for over 3,800 years."
 
   - id: london
     name: London
     country: United Kingdom
     region: europe
+    lat: 51.5074
+    lon: -0.1278
     fact: "Big Ben is actually the name of the bell inside the tower, not the tower itself."
 
   - id: rome
     name: Rome
     country: Italy
     region: europe
+    lat: 41.9028
+    lon: 12.4964
     fact: "The Trevi Fountain collects roughly 3,000 euros in coins every day, which goes to charity."
 
   - id: berlin
     name: Berlin
     country: Germany
     region: europe
+    lat: 52.5200
+    lon: 13.4050
     fact: "Berlin has more bridges than Venice — over 1,700 compared to Venice's 400."
 
   - id: sydney
     name: Sydney
     country: Australia
     region: oceania
+    lat: -33.8688
+    lon: 151.2093
     fact: "The Sydney Opera House's roof is covered with over 1 million tiles that were made in Sweden."
 
   - id: moscow
     name: Moscow
     country: Russia
     region: europe
+    lat: 55.7558
+    lon: 37.6173
     fact: "Moscow's metro system is so deep that some stations double as nuclear bunkers."

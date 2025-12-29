@@ -56,6 +56,11 @@ export function useGameState(gameData) {
   // Investigation animation state
   const [isInvestigating, setIsInvestigating] = useState(false);
 
+  // Travel animation state
+  const [isTraveling, setIsTraveling] = useState(false);
+  const [travelOrigin, setTravelOrigin] = useState(null);
+  const [travelDestination, setTravelDestination] = useState(null);
+
   const { settings, citiesById, investigationSpots, assassinationAttempts, goodDeeds, fakeGoodDeeds, rogueActions, encounters, gadgets } = gameData;
 
   // Get tick speed from settings (for syncing clue reveal with clock animation)
@@ -459,7 +464,7 @@ export function useGameState(gameData) {
     }));
   }, [gadgets, usedGadgets]);
 
-  // Travel to a destination
+  // Travel to a destination - starts animation
   const travel = useCallback((destination) => {
     // Apply injury time penalties to travel
     const timePenalty = getInjuryTimePenalty();
@@ -469,6 +474,27 @@ export function useGameState(gameData) {
       setMessage("Not enough time to travel!");
       return;
     }
+
+    // Store origin and destination for animation
+    setTravelOrigin(currentCity);
+    setTravelDestination(destination);
+    setIsTraveling(true);
+  }, [timeRemaining, settings.travel_time, getInjuryTimePenalty, currentCity]);
+
+  // Complete travel after animation finishes
+  const completeTravelAnimation = useCallback(() => {
+    if (!travelDestination) return;
+
+    const destination = travelDestination;
+
+    // Apply injury time penalties to travel
+    const timePenalty = getInjuryTimePenalty();
+    const travelTime = settings.travel_time + timePenalty;
+
+    // Clear animation state
+    setIsTraveling(false);
+    setTravelOrigin(null);
+    setTravelDestination(null);
 
     // Clear city-specific state
     setInvestigatedLocations([]);
@@ -488,13 +514,13 @@ export function useGameState(gameData) {
       setActiveTab('investigate');
     } else {
       setWrongCity(true);
-      setWrongCityData({ name: destination.name, country: destination.country });
+      setWrongCityData({ name: destination.name, country: destination.country, id: destination.cityId });
       setMessage(`You've arrived in ${destination.name}, but something feels off...`);
     }
 
     // Advance time (checks for sleep and game over)
     advanceTime(travelTime);
-  }, [timeRemaining, settings.travel_time, advanceTime, getInjuryTimePenalty]);
+  }, [travelDestination, settings.travel_time, advanceTime, getInjuryTimePenalty]);
 
   // Issue a warrant - just confirms the suspect selection (can be done anytime)
   // The actual apprehension happens on second investigation at final city
@@ -658,12 +684,18 @@ export function useGameState(gameData) {
     // Investigation animation
     isInvestigating,
 
+    // Travel animation
+    isTraveling,
+    travelOrigin,
+    travelDestination,
+
     // Actions
     startNewCase,
     acceptBriefing,
     investigate,
     rogueInvestigate,
     travel,
+    completeTravelAnimation,
     issueWarrant,
     completeTrial,
     proceedToTrial,
