@@ -5,7 +5,24 @@ cities:
     region: europe
     lat: 48.8566
     lon: 2.3522
+    icon: 🗼
     fact: "The Eiffel Tower was originally intended to be a temporary structure, built for the 1889 World's Fair."
+    investigation_spots:
+      - id: eiffel_tower
+        name: Eiffel Tower
+        neighborhood: 7th Arrondissement
+        icon: 🗼
+        time_cost: 3
+      - id: louvre
+        name: The Louvre
+        neighborhood: 1st Arrondissement
+        icon: 🎨
+        time_cost: 3
+      - id: notre_dame
+        name: Notre-Dame
+        neighborhood: Île de la Cité
+        icon: ⛪
+        time_cost: 3
 
   - id: tokyo
     name: Tokyo
@@ -13,7 +30,24 @@ cities:
     region: asia
     lat: 35.6762
     lon: 139.6503
+    icon: 🗾
     fact: "Tokyo's Shibuya Crossing is the busiest pedestrian intersection in the world, with up to 3,000 people crossing at once."
+    investigation_spots:
+      - id: shibuya_crossing
+        name: Shibuya Crossing
+        neighborhood: Shibuya
+        icon: 🚶
+        time_cost: 3
+      - id: sensoji_temple
+        name: Senso-ji Temple
+        neighborhood: Asakusa
+        icon: ⛩️
+        time_cost: 3
+      - id: tokyo_tower
+        name: Tokyo Tower
+        neighborhood: Minato
+        icon: 🗼
+        time_cost: 3
 
   - id: cairo
     name: Cairo
@@ -21,7 +55,24 @@ cities:
     region: africa
     lat: 30.0444
     lon: 31.2357
+    icon: 🔺
     fact: "The Great Pyramid of Giza was the tallest man-made structure in the world for over 3,800 years."
+    investigation_spots:
+      - id: great_pyramid
+        name: Great Pyramid
+        neighborhood: Giza
+        icon: 🔺
+        time_cost: 3
+      - id: khan_el_khalili
+        name: Khan el-Khalili
+        neighborhood: Islamic Cairo
+        icon: 🏺
+        time_cost: 3
+      - id: nile_corniche
+        name: Nile Corniche
+        neighborhood: Downtown
+        icon: 🌊
+        time_cost: 3
 
   - id: london
     name: London
@@ -29,7 +80,24 @@ cities:
     region: europe
     lat: 51.5074
     lon: -0.1278
+    icon: 🏰
     fact: "Big Ben is actually the name of the bell inside the tower, not the tower itself."
+    investigation_spots:
+      - id: big_ben
+        name: Big Ben
+        neighborhood: Westminster
+        icon: 🕰️
+        time_cost: 3
+      - id: tower_bridge
+        name: Tower Bridge
+        neighborhood: Tower Hamlets
+        icon: 🌉
+        time_cost: 3
+      - id: piccadilly_circus
+        name: Piccadilly Circus
+        neighborhood: West End
+        icon: 🎪
+        time_cost: 3
 
   - id: rome
     name: Rome
@@ -37,7 +105,24 @@ cities:
     region: europe
     lat: 41.9028
     lon: 12.4964
+    icon: 🏛️
     fact: "The Trevi Fountain collects roughly 3,000 euros in coins every day, which goes to charity."
+    investigation_spots:
+      - id: colosseum
+        name: Colosseum
+        neighborhood: Palatino
+        icon: 🏛️
+        time_cost: 3
+      - id: trevi_fountain
+        name: Trevi Fountain
+        neighborhood: Trevi
+        icon: ⛲
+        time_cost: 3
+      - id: vatican
+        name: Vatican
+        neighborhood: Vatican City
+        icon: ⛪
+        time_cost: 3
 
   - id: berlin
     name: Berlin
@@ -45,7 +130,24 @@ cities:
     region: europe
     lat: 52.5200
     lon: 13.4050
+    icon: 🚪
     fact: "Berlin has more bridges than Venice — over 1,700 compared to Venice's 400."
+    investigation_spots:
+      - id: brandenburg_gate
+        name: Brandenburg Gate
+        neighborhood: Mitte
+        icon: 🚪
+        time_cost: 3
+      - id: east_side_gallery
+        name: East Side Gallery
+        neighborhood: Friedrichshain
+        icon: 🎨
+        time_cost: 3
+      - id: alexanderplatz
+        name: Alexanderplatz
+        neighborhood: Mitte
+        icon: 🏙️
+        time_cost: 3
 
   - id: sydney
     name: Sydney
@@ -53,7 +155,24 @@ cities:
     region: oceania
     lat: -33.8688
     lon: 151.2093
+    icon: 🎭
     fact: "The Sydney Opera House's roof is covered with over 1 million tiles that were made in Sweden."
+    investigation_spots:
+      - id: opera_house
+        name: Opera House
+        neighborhood: Circular Quay
+        icon: 🎭
+        time_cost: 3
+      - id: bondi_beach
+        name: Bondi Beach
+        neighborhood: Bondi
+        icon: 🏖️
+        time_cost: 3
+      - id: harbour_bridge
+        name: Harbour Bridge
+        neighborhood: The Rocks
+        icon: 🌉
+        time_cost: 3
 
   - id: moscow
     name: Moscow
@@ -61,4 +180,21 @@ cities:
     region: europe
     lat: 55.7558
     lon: 37.6173
+    icon: 🏰
     fact: "Moscow's metro system is so deep that some stations double as nuclear bunkers."
+    investigation_spots:
+      - id: red_square
+        name: Red Square
+        neighborhood: Kitay-gorod
+        icon: 🏛️
+        time_cost: 3
+      - id: kremlin
+        name: The Kremlin
+        neighborhood: Tverskoy
+        icon: 🏰
+        time_cost: 3
+      - id: arbat_street
+        name: Arbat Street
+        neighborhood: Arbat
+        icon: 🛍️
+        time_cost: 3

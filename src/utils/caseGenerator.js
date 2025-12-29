@@ -102,6 +102,9 @@ export function generateCase(gameData) {
     // Pre-select dead ends for if player visits wrong city from here
     const shuffledDeadEnds = shuffle([...deadEnds]);
 
+    // Get city-specific investigation spots (fallback to generic spots if not defined)
+    const cityInvestigationSpots = city?.investigation_spots || investigationSpots;
+
     return {
       cityId,
       cityName: city?.name || cityId,
@@ -112,6 +115,7 @@ export function generateCase(gameData) {
       locationClues,
       destinations,
       deadEndClues: shuffledDeadEnds.slice(0, 3),
+      investigationSpots: cityInvestigationSpots,  // City-specific spots
       // Assign encounter for this city (if applicable)
       // City 0 = no encounter, Cities 1-2 = henchman, Final = assassination
       encounter: isFinalCity

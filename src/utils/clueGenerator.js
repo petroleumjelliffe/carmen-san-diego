@@ -17,9 +17,12 @@ export function generateCluesForCity(gameData, currentCase, cityIndex, isWrongCi
     }));
   }
 
+  // Use city-specific investigation spots from cityData (fallback to generic if not available)
+  const cityInvestigationSpots = cityData.investigationSpots || investigationSpots;
+
   // Wrong city - use pre-generated dead ends
   if (isWrongCity) {
-    return investigationSpots.map((spot, i) => ({
+    return cityInvestigationSpots.map((spot, i) => ({
       spot,
       destinationClue: cityData.deadEndClues[i % cityData.deadEndClues.length],
       suspectClue: null,
@@ -29,7 +32,7 @@ export function generateCluesForCity(gameData, currentCase, cityIndex, isWrongCi
   // Correct city - use pre-generated clues
   let locationClueIndex = 0;
 
-  return investigationSpots.map((spot, i) => {
+  return cityInvestigationSpots.map((spot, i) => {
     if (i === cityData.suspectSpotIndex) {
       // This spot gets the suspect clue
       return {
