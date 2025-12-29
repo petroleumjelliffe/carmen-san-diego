@@ -5,6 +5,7 @@ import { useActionQueue } from '../hooks/useActionQueue';
 import { Menu } from './Menu';
 import { Header } from './Header';
 import { TabBar } from './TabBar';
+import { HomeTab } from './HomeTab';
 import { InvestigateTab } from './InvestigateTab';
 import { AirportTab } from './AirportTab';
 import { DossierTab } from './DossierTab';
@@ -226,7 +227,7 @@ export function Game({ gameData }) {
       className="h-screen flex flex-col overflow-hidden bg-gray-900"
       style={{
         backgroundImage: `
-          linear-gradient(to bottom, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.85)),
+          linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.4)),
           url('${backgroundUrl}')
         `,
         backgroundSize: 'cover',
@@ -280,6 +281,13 @@ export function Game({ gameData }) {
                   </div>
                 )}
 
+                {activeTab === 'home' && (
+                  <HomeTab
+                    currentCity={currentCity}
+                    cityFact={currentCity?.fact}
+                  />
+                )}
+
                 {activeTab === 'investigate' && (
                   <InvestigateTab
                     isFinalCity={isFinalCity}
@@ -310,6 +318,7 @@ export function Game({ gameData }) {
                     actionPhase={actionPhase}
                     actionLabel={pendingAction?.label}
                     actionHoursRemaining={actionHoursRemaining}
+                    currentCity={currentCity}
                   />
                 )}
 

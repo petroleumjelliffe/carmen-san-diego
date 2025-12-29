@@ -1,6 +1,9 @@
 import { useState } from 'react';
-import { Plane, Clock, MapPin } from 'lucide-react';
 import { latLonToSVG, getFlightArcControlPoint } from '../utils/geoUtils';
+import { MapMarker } from './MapMarker';
+import { OptionCard } from './OptionCard';
+import { OptionTray } from './OptionTray';
+import { useIsDesktop } from '../hooks/useMediaQuery';
 
 // Simplified but recognizable world map continents
 function WorldMapOutlines() {
@@ -40,238 +43,141 @@ function WorldMapOutlines() {
   );
 }
 
-// Clickable city marker on the map
-function CityMarker({ city, point, isCurrent, isHovered, disabled, onClick, onHover }) {
-  const baseSize = isCurrent ? 10 : 8;
-  const hoverSize = baseSize + 4;
-  const size = isHovered ? hoverSize : baseSize;
-
-  return (
-    <g
-      className={disabled ? 'cursor-not-allowed' : 'cursor-pointer'}
-      onClick={() => !disabled && !isCurrent && onClick?.()}
-      onMouseEnter={() => !isCurrent && onHover?.(city.cityId || city.id)}
-      onMouseLeave={() => onHover?.(null)}
-    >
-      {/* Pulse ring for current city */}
-      {isCurrent && (
-        <circle
-          cx={point.x}
-          cy={point.y}
-          r="18"
-          fill="none"
-          stroke="#22c55e"
-          strokeWidth="2"
-          opacity="0.4"
-          className="animate-ping"
-          style={{ animationDuration: '2s' }}
-        />
-      )}
-
-      {/* Hover highlight ring */}
-      {isHovered && !isCurrent && (
-        <circle
-          cx={point.x}
-          cy={point.y}
-          r={size + 6}
-          fill="rgba(59, 130, 246, 0.2)"
-        />
-      )}
-
-      {/* Outer glow */}
-      <circle
-        cx={point.x}
-        cy={point.y}
-        r={size + 2}
-        fill={isCurrent ? 'rgba(34, 197, 94, 0.3)' : 'rgba(59, 130, 246, 0.3)'}
-      />
-
-      {/* Main dot */}
-      <circle
-        cx={point.x}
-        cy={point.y}
-        r={size}
-        fill={isCurrent ? '#22c55e' : disabled ? '#6b7280' : '#3b82f6'}
-        className={!isCurrent && !disabled ? 'transition-all duration-150' : ''}
-      />
-
-      {/* Inner highlight */}
-      <circle
-        cx={point.x}
-        cy={point.y}
-        r={size * 0.4}
-        fill="white"
-        opacity={isCurrent ? 1 : 0.8}
-      />
-
-      {/* City label */}
-      <text
-        x={point.x}
-        y={point.y - size - 8}
-        textAnchor="middle"
-        fill={isCurrent ? '#22c55e' : disabled ? '#6b7280' : '#60a5fa'}
-        fontSize="10"
-        fontWeight="bold"
-        fontFamily="monospace"
-        className="pointer-events-none select-none"
-      >
-        {city.name?.toUpperCase()}
-      </text>
-    </g>
-  );
-}
-
 export function AirportTab({ destinations, timeRemaining, travelTime, onTravel, currentCity }) {
   const [hoveredCity, setHoveredCity] = useState(null);
+  const isDesktop = useIsDesktop();
+
+  const width = 800;
+  const height = 400;
   const canTravel = timeRemaining >= travelTime;
 
-  const svgWidth = 800;
-  const svgHeight = 400;
-
-  // Calculate positions for all cities
-  const currentPoint = currentCity?.lat
-    ? latLonToSVG(currentCity.lat, currentCity.lon, svgWidth, svgHeight)
+  // Convert current city to SVG coordinates
+  const currentPoint = currentCity?.lat && currentCity?.lon
+    ? latLonToSVG(currentCity.lat, currentCity.lon, width, height)
     : null;
 
+  // Convert destinations to SVG coordinates
   const destinationPoints = destinations.map(dest => ({
-    ...dest,
-    point: dest.lat
-      ? latLonToSVG(dest.lat, dest.lon, svgWidth, svgHeight)
-      : null
-  })).filter(d => d.point);
+    cityId: dest.cityId,
+    point: latLonToSVG(dest.lat, dest.lon, width, height),
+  }));
 
-  // Match TravelAnimation container structure exactly
   return (
-    <div className="flex flex-col items-center justify-center py-4">
-      {/* Header - matches TravelAnimation header structure */}
-      <div className="text-center mb-3">
-        <div className="flex items-center justify-center gap-2 mb-1">
-          <Plane className="text-yellow-400" size={18} />
-          <span className="text-blue-300 text-xs font-mono uppercase tracking-wider">
-            Select Destination
-          </span>
-          <div className={`px-2 py-0.5 rounded text-xs font-mono ${
-            canTravel ? 'bg-green-900/50 text-green-400' : 'bg-red-900/50 text-red-400'
-          }`}>
-            {canTravel ? 'READY' : 'DELAYED'}
-          </div>
-        </div>
-        <div className="flex items-center justify-center gap-4 text-xs text-gray-400">
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-green-500"></span>
-            {currentCity?.name || 'Current'}
-          </span>
-          <span className="flex items-center gap-1">
-            <Clock size={10} />
-            <span className="text-yellow-300 font-mono">{travelTime}h</span> flight
-          </span>
-        </div>
-      </div>
-
-      {/* SVG Map - same max-w-2xl as TravelAnimation */}
-      <div className="w-full max-w-2xl">
+    <div className="relative h-[600px]">
+      {/* World Map Background */}
+      <div className="absolute inset-0 flex items-center justify-center">
         <svg
-          viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-          className="w-full h-auto rounded-lg overflow-hidden"
-          style={{
-            background: 'linear-gradient(180deg, #0a1628 0%, #0f2847 100%)',
-            boxShadow: 'inset 0 0 60px rgba(0, 100, 200, 0.1)'
-          }}
+          viewBox={`0 0 ${width} ${height}`}
+          className="w-full h-full"
+          style={{ maxHeight: '500px' }}
         >
-          {/* Defs */}
+          {/* Background gradient */}
           <defs>
-            <pattern id="airportGrid" width="50" height="50" patternUnits="userSpaceOnUse">
+            <linearGradient id="worldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" stopOpacity="1" />
+              <stop offset="100%" stopColor="#1e293b" stopOpacity="1" />
+            </linearGradient>
+
+            {/* Grid pattern */}
+            <pattern
+              id="worldGrid"
+              x="0"
+              y="0"
+              width="40"
+              height="40"
+              patternUnits="userSpaceOnUse"
+            >
               <path
-                d="M 50 0 L 0 0 0 50"
+                d="M 40 0 L 0 0 0 40"
                 fill="none"
-                stroke="rgba(100, 150, 255, 0.05)"
+                stroke="rgba(100, 116, 139, 0.05)"
                 strokeWidth="0.5"
               />
             </pattern>
           </defs>
 
-          {/* Grid background */}
-          <rect width="100%" height="100%" fill="url(#airportGrid)" />
+          {/* Background */}
+          <rect x="0" y="0" width={width} height={height} fill="url(#worldGradient)" />
+          <rect x="0" y="0" width={width} height={height} fill="url(#worldGrid)" />
 
-          {/* World map silhouette */}
+          {/* World map outlines */}
           <WorldMapOutlines />
 
-          {/* Curved flight paths from current to destinations */}
+          {/* Flight paths from current city to each destination */}
           {currentPoint && destinationPoints.map(dest => {
+            const destination = destinations.find(d => d.cityId === dest.cityId);
+            const isHovered = hoveredCity === dest.cityId;
             const controlPoint = getFlightArcControlPoint(currentPoint, dest.point);
             const pathD = `M ${currentPoint.x} ${currentPoint.y} Q ${controlPoint.x} ${controlPoint.y} ${dest.point.x} ${dest.point.y}`;
+
             return (
               <path
                 key={`path-${dest.cityId}`}
                 d={pathD}
                 fill="none"
-                stroke={hoveredCity === dest.cityId ? 'rgba(59, 130, 246, 0.5)' : 'rgba(100, 150, 255, 0.15)'}
-                strokeWidth={hoveredCity === dest.cityId ? 2 : 1}
-                strokeDasharray={hoveredCity === dest.cityId ? 'none' : '4 4'}
-                className="transition-all duration-150"
+                stroke={isHovered ? 'rgba(100, 150, 255, 0.5)' : 'rgba(100, 150, 255, 0.15)'}
+                strokeWidth={isHovered ? '2' : '1.5'}
+                strokeDasharray={isHovered ? 'none' : '4 4'}
+                className="transition-all duration-200"
               />
             );
           })}
 
-          {/* Destination city markers */}
-          {destinationPoints.map(dest => (
-            <CityMarker
-              key={dest.cityId}
-              city={dest}
-              point={dest.point}
-              isCurrent={false}
-              isHovered={hoveredCity === dest.cityId}
-              disabled={!canTravel}
-              onClick={() => onTravel(dest)}
-              onHover={setHoveredCity}
-            />
-          ))}
+          {/* Destination markers */}
+          {destinations.map((dest, index) => {
+            const destPoint = destinationPoints[index].point;
+            return (
+              <MapMarker
+                key={dest.cityId}
+                x={destPoint.x}
+                y={destPoint.y}
+                label={dest.name}
+                variant="destination"
+                pulsing={canTravel}
+                isHovered={hoveredCity === dest.cityId}
+                disabled={!canTravel}
+                onClick={() => canTravel && onTravel(dest)}
+                onHover={(hovered) => setHoveredCity(hovered ? dest.cityId : null)}
+              />
+            );
+          })}
 
           {/* Current city marker (on top) */}
           {currentPoint && (
-            <CityMarker
-              city={currentCity}
-              point={currentPoint}
-              isCurrent={true}
-              isHovered={false}
+            <MapMarker
+              x={currentPoint.x}
+              y={currentPoint.y}
+              label={currentCity.name}
+              variant="current"
               disabled={true}
             />
           )}
         </svg>
       </div>
 
-      {/* Destination list - matches TravelAnimation progress bar area */}
-      <div className="w-full max-w-2xl mt-3 px-4">
-        <div className="grid grid-cols-2 gap-2">
+      {/* Option Tray - Responsive */}
+      <div className={`absolute ${
+        isDesktop
+          ? 'right-0 top-0 bottom-0 w-64 p-4'
+          : 'bottom-0 left-0 right-0 h-48 p-4'
+      } bg-gray-900/90 backdrop-blur-sm`}>
+        <OptionTray orientation={isDesktop ? 'vertical' : 'horizontal'}>
           {destinations.map(dest => (
-            <button
-              key={dest.cityId}
-              onClick={() => onTravel(dest)}
-              disabled={!canTravel}
-              onMouseEnter={() => setHoveredCity(dest.cityId)}
-              onMouseLeave={() => setHoveredCity(null)}
-              className={`text-left p-2 rounded transition-all ${
-                !canTravel
-                  ? 'opacity-50 cursor-not-allowed bg-gray-800/50'
-                  : hoveredCity === dest.cityId
-                    ? 'bg-blue-700 scale-[1.02]'
-                    : 'bg-gray-800/50 hover:bg-gray-700/50'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <MapPin size={12} className="text-blue-400 flex-shrink-0" />
-                <span className="text-white text-sm font-medium truncate">{dest.name}</span>
-              </div>
-              <div className="text-gray-400 text-xs truncate pl-5">{dest.country}</div>
-            </button>
+            <div key={dest.cityId} className="snap-start">
+              <OptionCard
+                icon={dest.icon || '🌍'}
+                title={dest.name}
+                subtitle={dest.country}
+                duration={travelTime}
+                transfers={0}
+                disabled={!canTravel}
+                selected={hoveredCity === dest.cityId}
+                onClick={() => canTravel && onTravel(dest)}
+                variant="travel"
+              />
+            </div>
           ))}
-        </div>
-
-        {!canTravel && (
-          <div className="text-center text-red-400 text-xs mt-2">
-            Need at least {travelTime} hours to travel
-          </div>
-        )}
+        </OptionTray>
       </div>
     </div>
   );

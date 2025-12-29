@@ -1,45 +1,11 @@
+import { useState, useEffect } from 'react';
 import { Zap, AlertTriangle, Loader } from 'lucide-react';
 import { EncounterCard } from './EncounterCard';
 import { FadeIn } from './FadeIn';
-
-function ClueButton({ spot, onInvestigate, disabled, investigated, index }) {
-  return (
-    <button
-      onClick={() => onInvestigate(index)}
-      disabled={disabled || investigated}
-      className={`w-full p-3 text-left rounded-lg transition-all text-sm ${
-        investigated
-          ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-          : disabled
-          ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-          : 'bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-yellow-100 cursor-pointer'
-      }`}
-    >
-      <span>{investigated ? '✓ ' : ''}{spot.name}</span>
-    </button>
-  );
-}
-
-function RogueActionButton({ rogueAction, onRogueAction, disabled, used }) {
-  return (
-    <button
-      onClick={() => onRogueAction(rogueAction)}
-      disabled={disabled || used}
-      className={`w-full p-3 text-left rounded-lg transition-all border-l-4 text-sm ${
-        used
-          ? 'bg-gray-700 text-gray-400 cursor-not-allowed border-gray-600'
-          : disabled
-          ? 'bg-gray-800 text-gray-500 cursor-not-allowed border-gray-700'
-          : 'bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-yellow-100 cursor-pointer border-orange-500'
-      }`}
-    >
-      <div className="flex items-center gap-2">
-        <Zap size={14} className="text-orange-400" />
-        <span className="font-bold">{used ? '✓ ' : ''}{rogueAction.name}</span>
-      </div>
-    </button>
-  );
-}
+import { CityMapView } from './CityMapView';
+import { OptionCard } from './OptionCard';
+import { OptionTray } from './OptionTray';
+import { useIsDesktop } from '../hooks/useMediaQuery';
 
 export function InvestigateTab({
   isFinalCity,
@@ -70,7 +36,12 @@ export function InvestigateTab({
   actionPhase,
   actionLabel,
   actionHoursRemaining,
+  currentCity,
 }) {
+  const [hoveredSpotId, setHoveredSpotId] = useState(null);
+  const [investigatingSpotIndex, setInvestigatingSpotIndex] = useState(null);
+  const isDesktop = useIsDesktop();
+
   if (!cityClues) return null;
 
   const ROGUE_TIME_COST = 2;
@@ -96,69 +67,85 @@ export function InvestigateTab({
     return 10;
   };
 
+  // Only block map for major overlays (not investigation results)
+  const hasBlockingOverlay = isApprehended || activeEncounter;
+
+  // Determine if animation is in progress
+  const isAnimating = actionPhase === 'ticking' || actionPhase === 'pending';
+
+  // Clear investigating spot index when action completes
+  useEffect(() => {
+    if (actionPhase === 'idle' || actionPhase === 'complete') {
+      setInvestigatingSpotIndex(null);
+    }
+  }, [actionPhase]);
 
   return (
-    <div className="space-y-3">
-        {/* Apprehended - Shows inline with Continue button */}
-        <FadeIn show={isApprehended}>
-          <div className="bg-green-900/50 border-2 border-green-400 p-6 rounded-lg text-center">
-            <div className="text-5xl mb-3">🚔</div>
-            <h3 className="text-2xl font-bold text-green-400 mb-2">SUSPECT APPREHENDED!</h3>
-            <p className="text-yellow-100 text-lg mb-2">
-              {selectedWarrant?.name} is now in custody.
-            </p>
-            <p className="text-yellow-200/70 mb-4">
-              Time to face the court and see if you got the right person...
-            </p>
-            <button
-              onClick={onProceedToTrial}
-              className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 px-6 rounded-lg text-lg transition-all"
-            >
-              Continue to Trial
-            </button>
-          </div>
-        </FadeIn>
-
-        {/* Unified Encounter Card - handles henchman, assassination, and good deed */}
-        <FadeIn show={!!(activeEncounter && encounterType)}>
-          <EncounterCard
-            type={encounterType}
-            encounter={activeEncounter}
-            timerDuration={getTimerDuration()}
-            availableGadgets={availableGadgets}
-            karma={karma}
-            timeRemaining={timeRemaining}
-            onResolve={onEncounterResolve}
+    <div className="relative h-[600px]">
+      {/* City Map Background */}
+      {!hasBlockingOverlay && (
+        <div className="absolute inset-0 bg-gray-900/80 backdrop-blur-sm rounded-lg">
+          <CityMapView
+            currentCity={currentCity}
+            spots={cityClues}
+            investigatedSpots={investigatedLocations}
+            onSpotClick={(index) => {
+              setInvestigatingSpotIndex(index);
+              onInvestigate(index);
+            }}
+            hoveredSpotId={hoveredSpotId}
+            onSpotHover={setHoveredSpotId}
+            investigatingSpotIndex={investigatingSpotIndex}
+            isAnimating={isAnimating}
           />
-        </FadeIn>
+        </div>
+      )}
 
-        {wrongCity && (
-          <div className="bg-red-800/50 p-4 rounded-lg text-center">
-            <p className="text-yellow-200/70">
-              The trail seems cold here... but you can still ask around.
-            </p>
-          </div>
-        )}
-
-        {/* City Fact - shows when first arriving (no investigations yet) */}
-        {cityFact && investigatedLocations.length === 0 && !activeEncounter && !isApprehended && !isInvestigating && (
-          <div className="bg-gray-900/80 rounded-lg overflow-hidden">
-            <div className="p-4 border-l-4 border-blue-400">
-              <p className="text-yellow-100 italic">"{cityFact}"</p>
-            </div>
-          </div>
-        )}
-
-        {/* Investigation Results - single container, content swaps between phases and results */}
-        {(actionPhase && actionPhase !== 'idle' || lastFoundClue?.city || lastFoundClue?.suspect || lastRogueAction) && (
-          <div className="bg-gray-900/80 rounded-lg overflow-hidden">
-            {actionPhase && actionPhase !== 'idle' ? (
-              /* Action in progress - show spinner with label, clock in header shows time */
-              <div className="p-6 flex flex-col items-center justify-center gap-3">
-                <Loader className="animate-spin text-yellow-400" size={32} />
-                <p className="text-yellow-100 font-medium">{actionLabel || 'Working...'}</p>
+      {/* Blocking Overlays - only for encounters and apprehension */}
+      {hasBlockingOverlay && (
+        <div className="absolute inset-0 bg-gray-900/95 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="max-w-2xl w-full space-y-3">
+            {/* Apprehended - Shows inline with Continue button */}
+            <FadeIn show={isApprehended}>
+              <div className="bg-green-900/50 border-2 border-green-400 p-6 rounded-lg text-center">
+                <div className="text-5xl mb-3">🚔</div>
+                <h3 className="text-2xl font-bold text-green-400 mb-2">SUSPECT APPREHENDED!</h3>
+                <p className="text-yellow-100 text-lg mb-2">
+                  {selectedWarrant?.name} is now in custody.
+                </p>
+                <p className="text-yellow-200/70 mb-4">
+                  Time to face the court and see if you got the right person...
+                </p>
+                <button
+                  onClick={onProceedToTrial}
+                  className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 px-6 rounded-lg text-lg transition-all"
+                >
+                  Continue to Trial
+                </button>
               </div>
-            ) : (
+            </FadeIn>
+
+            {/* Unified Encounter Card - handles henchman, assassination, and good deed */}
+            <FadeIn show={!!(activeEncounter && encounterType)}>
+              <EncounterCard
+                type={encounterType}
+                encounter={activeEncounter}
+                timerDuration={getTimerDuration()}
+                availableGadgets={availableGadgets}
+                karma={karma}
+                timeRemaining={timeRemaining}
+                onResolve={onEncounterResolve}
+              />
+            </FadeIn>
+          </div>
+        </div>
+      )}
+
+      {/* Investigation Results Banner - above map */}
+      {!hasBlockingOverlay && !isAnimating && (lastFoundClue?.city || lastFoundClue?.suspect || lastRogueAction) && (
+        <div className="absolute top-4 left-4 right-4 z-10">
+          <div className="bg-gray-900/95 backdrop-blur-sm rounded-lg overflow-hidden shadow-lg">
+            {(
               <>
                 {/* Rogue Action Result */}
                 {lastRogueAction && (
@@ -180,39 +167,67 @@ export function InvestigateTab({
               </>
             )}
           </div>
-        )}
-
-        {/* Section heading */}
-        <h2 className="text-lg font-bold text-yellow-400">Investigate</h2>
-
-        {/* Investigation Spots - 2x2 grid layout */}
-        <div className="grid grid-cols-2 gap-2">
-          {cityClues.map((clue, i) => {
-            const investigated = investigatedLocations.includes(clue.spot.id);
-            const actionBusy = actionPhase && actionPhase !== 'idle';
-
-            return (
-              <ClueButton
-                key={clue.spot.id}
-                spot={clue.spot}
-                index={i}
-                onInvestigate={onInvestigate}
-                disabled={timeRemaining < nextInvestigationCost || isInvestigating || actionBusy}
-                investigated={investigated}
-              />
-            );
-          })}
-
-          {/* Rogue Cop Tactic - 4th option in grid */}
-          {availableRogueAction && onRogueAction && (
-            <RogueActionButton
-              rogueAction={availableRogueAction}
-              onRogueAction={onRogueAction}
-              disabled={timeRemaining < ROGUE_TIME_COST || isInvestigating || (actionPhase && actionPhase !== 'idle')}
-              used={rogueUsedInCity}
-            />
-          )}
         </div>
+      )}
+
+      {/* Wrong City Message - banner at top */}
+      {wrongCity && !hasBlockingOverlay && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-800/95 backdrop-blur-sm px-6 py-3 rounded-lg text-center shadow-lg z-10">
+          <p className="text-yellow-200">
+            The trail seems cold here... but you can still ask around.
+          </p>
+        </div>
+      )}
+
+      {/* Option Tray - Responsive */}
+      {!hasBlockingOverlay && (
+        <div className={`absolute ${
+          isDesktop
+            ? 'right-0 top-0 bottom-0 w-64 p-4'
+            : 'bottom-0 left-0 right-0 h-48 p-4'
+        } bg-gray-900/90 backdrop-blur-sm`}>
+          <OptionTray orientation={isDesktop ? 'vertical' : 'horizontal'}>
+            {/* Investigation Spots */}
+            {cityClues.map((clue, i) => {
+              const investigated = investigatedLocations.includes(clue.spot.id);
+              const actionBusy = actionPhase && actionPhase !== 'idle';
+
+              return (
+                <div key={clue.spot.id} className="snap-start">
+                  <OptionCard
+                    icon={clue.spot.icon || '📍'}
+                    title={clue.spot.name}
+                    subtitle={clue.spot.neighborhood || currentCity?.name}
+                    duration={nextInvestigationCost}
+                    transfers={0}
+                    disabled={investigated || timeRemaining < nextInvestigationCost || isInvestigating || actionBusy}
+                    selected={hoveredSpotId === clue.spot.id}
+                    onClick={() => !investigated && onInvestigate(i)}
+                    variant="investigation"
+                  />
+                </div>
+              );
+            })}
+
+            {/* Rogue Action as option in tray */}
+            {availableRogueAction && onRogueAction && (
+              <div key="rogue-action" className="snap-start">
+                <OptionCard
+                  icon="⚡"
+                  title={availableRogueAction.name}
+                  subtitle="Rogue Tactic"
+                  duration={ROGUE_TIME_COST}
+                  transfers={0}
+                  disabled={rogueUsedInCity || timeRemaining < ROGUE_TIME_COST || isInvestigating || (actionPhase && actionPhase !== 'idle')}
+                  selected={false}
+                  onClick={() => onRogueAction(availableRogueAction)}
+                  variant="investigation"
+                />
+              </div>
+            )}
+          </OptionTray>
+        </div>
+      )}
     </div>
   );
 }

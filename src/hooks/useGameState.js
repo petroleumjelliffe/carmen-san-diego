@@ -173,6 +173,7 @@ export function useGameState(gameData) {
   // Accept briefing and start playing
   const acceptBriefing = useCallback(() => {
     setGameState('playing');
+    setActiveTab('home'); // Start at home tab to show city fact
   }, []);
 
   // Helper function to advance time and check for auto-sleep
@@ -606,11 +607,12 @@ export function useGameState(gameData) {
       setWrongCity(false);
       setWrongCityData(null);
       setCurrentCityIndex(prev => prev + 1);
-      setActiveTab('investigate');
+      setActiveTab('home');
     } else {
       setWrongCity(true);
       setWrongCityData({ name: destination.name, country: destination.country, id: destination.cityId });
       setMessage(`You've arrived in ${destination.name}, but something feels off...`);
+      setActiveTab('home');
     }
 
     // Time was already ticked by the action queue, no need to advance here
