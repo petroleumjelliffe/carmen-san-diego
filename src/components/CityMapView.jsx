@@ -22,27 +22,70 @@ export function CityMapView({
   // Animation progress state (0 to 1)
   const [animationProgress, setAnimationProgress] = useState(0);
 
+  // Calculate optimal scale to fit all landmarks
+  const calculateOptimalScale = () => {
+    if (!currentCity || !currentCity.lat || !currentCity.lon || !spots || spots.length === 0) {
+      return 0.05;
+    }
+
+    // Get all landmark coordinates
+    const landmarkCoords = spots
+      .filter(s => s.spot.lat && s.spot.lon)
+      .map(s => ({ lat: s.spot.lat, lon: s.spot.lon }));
+
+    if (landmarkCoords.length === 0) return 0.05;
+
+    // Calculate bounds
+    const lats = landmarkCoords.map(c => c.lat);
+    const lons = landmarkCoords.map(c => c.lon);
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
+    const minLon = Math.min(...lons);
+    const maxLon = Math.max(...lons);
+
+    // Calculate range in degrees
+    const latRange = maxLat - minLat;
+    const lonRange = maxLon - minLon;
+
+    // Convert to meters (approximate)
+    const latRangeMeters = latRange * 111000; // 1 degree lat ≈ 111km
+    const lonRangeMeters = lonRange * 111000 * Math.cos(currentCity.lat * Math.PI / 180);
+
+    // Calculate scale to fit with padding
+    const padding = 100; // pixels
+    const availableWidth = width - 2 * padding;
+    const availableHeight = height - 2 * padding;
+
+    const scaleByLat = latRangeMeters > 0 ? availableHeight / latRangeMeters : 0.05;
+    const scaleByLon = lonRangeMeters > 0 ? availableWidth / lonRangeMeters : 0.05;
+
+    // Use the smaller scale to ensure everything fits, with min/max bounds
+    // Min scale of 0.01 (zoomed out), max scale of 0.2 (zoomed in)
+    const optimalScale = Math.max(0.01, Math.min(scaleByLat, scaleByLon, 0.2));
+
+    return optimalScale;
+  };
+
+  const scale = calculateOptimalScale();
+
   // Convert lat/lon to SVG coordinates using city center as reference
   const latLonToCitySVG = (lat, lon) => {
     if (!currentCity || !currentCity.lat || !currentCity.lon) {
       return { x: width / 2, y: height / 2 };
     }
 
-    // Simple mercator-like projection centered on the city
-    // Scale factor to zoom in on the city (smaller = more zoomed in)
-    const scale = 15000; // Adjust to fit landmarks within view
-
     const centerLat = currentCity.lat;
     const centerLon = currentCity.lon;
 
-    // Calculate offset from city center
-    const dx = (lon - centerLon) * scale * Math.cos(centerLat * Math.PI / 180);
-    const dy = (centerLat - lat) * scale; // Inverted Y axis
+    // Calculate offset from city center in meters, then apply scale
+    // 1 degree latitude ≈ 111km = 111000m
+    const latDiffMeters = (centerLat - lat) * 111000;
+    const lonDiffMeters = (lon - centerLon) * 111000 * Math.cos(centerLat * Math.PI / 180);
 
-    // Center in SVG viewport
+    // Apply scale (pixels per meter) and center in SVG viewport
     return {
-      x: width / 2 + dx,
-      y: height / 2 + dy,
+      x: width / 2 + (lonDiffMeters * scale),
+      y: height / 2 + (latDiffMeters * scale),
     };
   };
 
@@ -92,17 +135,8 @@ export function CityMapView({
 
   return (
     <div className="relative w-full h-full bg-gray-900 rounded-lg overflow-hidden">
-      {/* Background map image */}
-      {mapImage && (
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `linear-gradient(to bottom, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.3)), url('${mapImage}')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        />
-      )}
+      {/* Dark gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900" />
 
       <svg
         viewBox={`0 0 ${width} ${height}`}

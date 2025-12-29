@@ -82,7 +82,7 @@ export function InvestigateTab({
     <div className="relative h-[600px]">
       {/* City Map Background */}
       {!hasBlockingOverlay && (
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 z-0">
           <CityMapView
             currentCity={currentCity}
             spots={cityClues}
@@ -141,7 +141,7 @@ export function InvestigateTab({
 
       {/* Investigation Results Banner - above map */}
       {!hasBlockingOverlay && !isAnimating && (lastFoundClue?.city || lastFoundClue?.suspect || lastRogueAction) && (
-        <div className="absolute top-4 left-4 right-4 z-10">
+        <div className="absolute top-4 left-4 right-4 z-20">
           <div className="bg-gray-900/95 backdrop-blur-sm rounded-lg overflow-hidden shadow-lg">
             {(
               <>
@@ -170,7 +170,7 @@ export function InvestigateTab({
 
       {/* Wrong City Message - banner at top */}
       {wrongCity && !hasBlockingOverlay && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-800/95 backdrop-blur-sm px-6 py-3 rounded-lg text-center shadow-lg z-10">
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-800/95 backdrop-blur-sm px-6 py-3 rounded-lg text-center shadow-lg z-20">
           <p className="text-yellow-200">
             The trail seems cold here... but you can still ask around.
           </p>
@@ -179,7 +179,7 @@ export function InvestigateTab({
 
       {/* Option Tray - Always horizontal at bottom */}
       {!hasBlockingOverlay && (
-        <div className="absolute bottom-0 left-0 right-0 h-48 p-4 bg-gray-900/90 backdrop-blur-sm">
+        <div className="absolute bottom-0 left-0 right-0 h-48 p-4 bg-gray-900/90 backdrop-blur-sm z-30">
           <OptionTray orientation="horizontal">
             {/* Investigation Spots */}
             {cityClues.map((clue, i) => {

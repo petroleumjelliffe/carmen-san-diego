@@ -60,13 +60,20 @@ export function MapMarker({
           stroke={style.color}
           strokeWidth="2"
           opacity="0.4"
-          className="animate-ping"
-          style={{
-            animationDuration: '2s',
-            transformOrigin: `${x}px ${y}px`,
-            transformBox: 'fill-box',
-          }}
-        />
+        >
+          <animate
+            attributeName="r"
+            values="18;28;18"
+            dur="2s"
+            repeatCount="indefinite"
+          />
+          <animate
+            attributeName="opacity"
+            values="0.4;0.1;0.4"
+            dur="2s"
+            repeatCount="indefinite"
+          />
+        </circle>
       )}
 
       {/* Hover highlight ring */}
