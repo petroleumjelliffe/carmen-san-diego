@@ -475,11 +475,17 @@ export function useGameState(gameData) {
       return;
     }
 
+    // Use wrongCityData if in wrong city, otherwise use currentCity
+    // This ensures the animation shows where you actually ARE, not the trail city
+    const actualOrigin = wrongCity && wrongCityData
+      ? citiesById[wrongCityData.id] || wrongCityData
+      : currentCity;
+
     // Store origin and destination for animation
-    setTravelOrigin(currentCity);
+    setTravelOrigin(actualOrigin);
     setTravelDestination(destination);
     setIsTraveling(true);
-  }, [timeRemaining, settings.travel_time, getInjuryTimePenalty, currentCity]);
+  }, [timeRemaining, settings.travel_time, getInjuryTimePenalty, currentCity, wrongCity, wrongCityData, citiesById]);
 
   // Complete travel after animation finishes
   const completeTravelAnimation = useCallback(() => {

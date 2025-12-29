@@ -241,6 +241,7 @@ export function Game({ gameData }) {
                     timeRemaining={timeRemaining}
                     travelTime={settings.travel_time}
                     onTravel={travel}
+                    currentCity={wrongCity && wrongCityData ? citiesById[wrongCityData.id] || wrongCityData : currentCity}
                   />
                 )}
 

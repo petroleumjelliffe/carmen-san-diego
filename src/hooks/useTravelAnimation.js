@@ -18,6 +18,7 @@ export function useTravelAnimation(onComplete) {
 
   const animationRef = useRef(null);
   const startTimeRef = useRef(null);
+  const durationRef = useRef(3000); // Store duration in ref for immediate access
   const onCompleteRef = useRef(onComplete);
 
   // Keep onComplete ref updated
@@ -25,14 +26,14 @@ export function useTravelAnimation(onComplete) {
     onCompleteRef.current = onComplete;
   }, [onComplete]);
 
-  // Animation loop
+  // Animation loop - uses durationRef instead of travelData
   const animate = useCallback((timestamp) => {
     if (!startTimeRef.current) {
       startTimeRef.current = timestamp;
     }
 
     const elapsed = timestamp - startTimeRef.current;
-    const duration = travelData?.duration || 3000;
+    const duration = durationRef.current;
     const newProgress = Math.min(elapsed / duration, 1);
 
     setProgress(newProgress);
@@ -40,14 +41,16 @@ export function useTravelAnimation(onComplete) {
     if (newProgress < 1) {
       animationRef.current = requestAnimationFrame(animate);
     } else {
-      // Animation complete
-      setIsAnimating(false);
-      startTimeRef.current = null;
-      if (onCompleteRef.current) {
-        onCompleteRef.current();
-      }
+      // Animation complete - ensure we show 100% before completing
+      setTimeout(() => {
+        setIsAnimating(false);
+        startTimeRef.current = null;
+        if (onCompleteRef.current) {
+          onCompleteRef.current();
+        }
+      }, 100); // Small delay to show completed state
     }
-  }, [travelData?.duration]);
+  }, []);
 
   // Start animation
   const startAnimation = useCallback((originCity, destCity) => {
@@ -65,6 +68,9 @@ export function useTravelAnimation(onComplete) {
       destCity.lat, destCity.lon
     );
     const duration = getAnimationDuration(distance);
+
+    // Store duration in ref BEFORE starting animation
+    durationRef.current = duration;
 
     // Calculate SVG coordinates (using 800x400 viewport)
     const svgWidth = 800;
