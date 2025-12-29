@@ -1,4 +1,4 @@
-import { Zap, AlertTriangle } from 'lucide-react';
+import { Zap, AlertTriangle, Loader } from 'lucide-react';
 import { EncounterCard } from './EncounterCard';
 import { FadeIn } from './FadeIn';
 
@@ -67,6 +67,9 @@ export function InvestigateTab({
   encounterTimers,
   isInvestigating,
   cityFact,
+  actionPhase,
+  actionLabel,
+  actionHoursRemaining,
 }) {
   if (!cityClues) return null;
 
@@ -146,12 +149,14 @@ export function InvestigateTab({
           </div>
         )}
 
-        {/* Investigation Results - single container, content swaps between investigating and results */}
-        {(isInvestigating || lastFoundClue?.city || lastFoundClue?.suspect || lastRogueAction) && (
+        {/* Investigation Results - single container, content swaps between phases and results */}
+        {(actionPhase && actionPhase !== 'idle' || lastFoundClue?.city || lastFoundClue?.suspect || lastRogueAction) && (
           <div className="bg-gray-900/80 rounded-lg overflow-hidden">
-            {isInvestigating ? (
-              <div className="p-4 border-l-4 border-yellow-400">
-                <p className="text-yellow-100 italic animate-pulse">Investigating...</p>
+            {actionPhase && actionPhase !== 'idle' ? (
+              /* Action in progress - show spinner with label, clock in header shows time */
+              <div className="p-6 flex flex-col items-center justify-center gap-3">
+                <Loader className="animate-spin text-yellow-400" size={32} />
+                <p className="text-yellow-100 font-medium">{actionLabel || 'Working...'}</p>
               </div>
             ) : (
               <>
@@ -191,6 +196,7 @@ export function InvestigateTab({
         <div className="grid grid-cols-2 gap-2">
           {cityClues.map((clue, i) => {
             const investigated = investigatedLocations.includes(clue.spot.id);
+            const actionBusy = actionPhase && actionPhase !== 'idle';
 
             return (
               <ClueButton
@@ -198,7 +204,7 @@ export function InvestigateTab({
                 spot={clue.spot}
                 index={i}
                 onInvestigate={onInvestigate}
-                disabled={timeRemaining < nextInvestigationCost || isInvestigating}
+                disabled={timeRemaining < nextInvestigationCost || isInvestigating || actionBusy}
                 investigated={investigated}
               />
             );
@@ -209,7 +215,7 @@ export function InvestigateTab({
             <RogueActionButton
               rogueAction={availableRogueAction}
               onRogueAction={onRogueAction}
-              disabled={timeRemaining < ROGUE_TIME_COST || isInvestigating}
+              disabled={timeRemaining < ROGUE_TIME_COST || isInvestigating || (actionPhase && actionPhase !== 'idle')}
               used={rogueUsedInCity}
             />
           )}

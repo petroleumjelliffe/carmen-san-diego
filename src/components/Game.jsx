@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useGameState } from '../hooks/useGameState';
 import { useTravelAnimation } from '../hooks/useTravelAnimation';
+import { useActionQueue } from '../hooks/useActionQueue';
 import { Menu } from './Menu';
 import { Header } from './Header';
 import { TabBar } from './TabBar';
@@ -11,6 +12,7 @@ import { TravelAnimation } from './TravelAnimation';
 import { Briefing } from './Briefing';
 import { Trial } from './Trial';
 import { Debrief } from './Debrief';
+import { Loader } from 'lucide-react';
 
 // City background images - moody noir-inspired shots from Unsplash
 const CITY_BACKGROUNDS = {
@@ -63,12 +65,16 @@ export function Game({ gameData }) {
     isTraveling,
     travelOrigin,
     travelDestination,
+    advanceTimeByOne,
     startNewCase,
     acceptBriefing,
     investigate,
+    completeInvestigation,
     rogueInvestigate,
+    completeRogueInvestigation,
     travel,
     completeTravelAnimation,
+    getTravelTimeConfig,
     issueWarrant,
     completeTrial,
     proceedToTrial,
@@ -80,9 +86,68 @@ export function Game({ gameData }) {
 
   const { ranks, suspects, settings, rogueActions, encounterTimers, citiesById } = gameData;
 
+  // Action queue for staged time advancement
+  const {
+    phase: actionPhase,
+    pendingAction,
+    hoursRemaining: actionHoursRemaining,
+    isBusy: isActionBusy,
+    queueAction,
+    completeAction,
+  } = useActionQueue({
+    onTickHour: advanceTimeByOne,
+    tickSpeed: (settings.time_tick_speed || 0.5) * 1000, // Match clock animation speed
+    spinnerDuration: 500,
+  });
+
+  // Wrapped investigate function that queues the action
+  const handleInvestigate = useCallback((locationIndex) => {
+    const actionConfig = investigate(locationIndex);
+    if (actionConfig) {
+      queueAction({
+        ...actionConfig,
+        onComplete: () => {
+          completeInvestigation();
+          completeAction();
+        },
+      });
+    }
+  }, [investigate, queueAction, completeInvestigation, completeAction]);
+
+  // Wrapped rogue action function that queues the action
+  const handleRogueAction = useCallback((rogueAction) => {
+    const actionConfig = rogueInvestigate(rogueAction);
+    if (actionConfig) {
+      queueAction({
+        ...actionConfig,
+        onComplete: () => {
+          completeRogueInvestigation();
+          completeAction();
+        },
+      });
+    }
+  }, [rogueInvestigate, queueAction, completeRogueInvestigation, completeAction]);
+
+  // Handler for when flight animation completes - queues time ticking
+  const handleFlightAnimationComplete = useCallback(() => {
+    const travelConfig = getTravelTimeConfig();
+    if (travelConfig) {
+      queueAction({
+        ...travelConfig,
+        onComplete: () => {
+          completeTravelAnimation();
+          completeAction();
+        },
+      });
+    } else {
+      // Fallback if no config (shouldn't happen)
+      completeTravelAnimation();
+    }
+  }, [getTravelTimeConfig, queueAction, completeTravelAnimation, completeAction]);
+
   // Travel animation
   const { isAnimating, progress, travelData, startAnimation } = useTravelAnimation(
-    completeTravelAnimation
+    handleFlightAnimationComplete
   );
 
   // Start travel animation when isTraveling becomes true
@@ -192,7 +257,7 @@ export function Game({ gameData }) {
         <div className="flex-1 overflow-y-auto">
           <div
             className="max-w-6xl mx-auto p-4 pb-24 md:pb-4 min-h-full grid"
-            style={{ alignItems: isAnimating ? 'center' : 'end' }}
+            style={{ alignItems: isAnimating || (actionPhase === 'ticking' && pendingAction?.type === 'travel') ? 'center' : 'end' }}
           >
           <div>
             {/* Travel Animation - shown during flight */}
@@ -201,6 +266,12 @@ export function Game({ gameData }) {
                 travelData={travelData}
                 progress={progress}
               />
+            ) : actionPhase === 'ticking' && pendingAction?.type === 'travel' ? (
+              /* Travel time ticking - spinner while clock in header shows time */
+              <div className="bg-gray-900/80 rounded-lg p-8 flex flex-col items-center justify-center gap-4">
+                <Loader className="animate-spin text-yellow-400" size={48} />
+                <p className="text-yellow-100 font-medium text-lg">Arriving at destination...</p>
+              </div>
             ) : (
               <>
                 {message && (
@@ -223,9 +294,9 @@ export function Game({ gameData }) {
                     rogueUsedInCity={rogueUsedInCity}
                     currentGoodDeed={currentGoodDeed}
                     karma={karma}
-                    onInvestigate={investigate}
+                    onInvestigate={handleInvestigate}
                     rogueActions={rogueActions}
-                    onRogueAction={rogueInvestigate}
+                    onRogueAction={handleRogueAction}
                     notoriety={notoriety}
                     currentEncounter={currentEncounter}
                     availableGadgets={availableGadgets}
@@ -236,6 +307,9 @@ export function Game({ gameData }) {
                     encounterTimers={encounterTimers}
                     isInvestigating={isInvestigating}
                     cityFact={currentCity?.fact}
+                    actionPhase={actionPhase}
+                    actionLabel={pendingAction?.label}
+                    actionHoursRemaining={actionHoursRemaining}
                   />
                 )}
 

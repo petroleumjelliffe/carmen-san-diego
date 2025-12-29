@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { generateCase } from '../utils/caseGenerator';
 import { generateCluesForCity, getDestinations } from '../utils/clueGenerator';
 import { pickRandom } from '../utils/helpers';
@@ -55,6 +55,21 @@ export function useGameState(gameData) {
 
   // Investigation animation state
   const [isInvestigating, setIsInvestigating] = useState(false);
+  const [pendingInvestigation, setPendingInvestigation] = useState(null); // { locationIndex, spot, clue }
+  const [pendingRogueAction, setPendingRogueAction] = useState(null); // { rogueAction, locationClue, suspectClue }
+
+  // Refs to avoid stale closure issues in action queue callbacks
+  const pendingInvestigationRef = useRef(null);
+  const pendingRogueActionRef = useRef(null);
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    pendingInvestigationRef.current = pendingInvestigation;
+  }, [pendingInvestigation]);
+
+  useEffect(() => {
+    pendingRogueActionRef.current = pendingRogueAction;
+  }, [pendingRogueAction]);
 
   // Travel animation state
   const [isTraveling, setIsTraveling] = useState(false);
@@ -195,6 +210,39 @@ export function useGameState(gameData) {
     return false; // Game continues
   }, [currentHour, timeRemaining]);
 
+  // Advance time by exactly 1 hour (for action queue ticking)
+  // Returns extra hours if sleep was triggered
+  const advanceTimeByOne = useCallback(() => {
+    const newHour = (currentHour + 1) % 24;
+
+    // Check if we just hit 11pm (23:00) - trigger sleep
+    if (currentHour === 22 && newHour === 23) {
+      // AUTO-SLEEP: Will rest from 11pm → 6am (7 hours)
+      // Don't set sleep result yet - wait until we actually sleep through to 6am
+    }
+
+    // Check if we're in sleep hours (11pm-6am) and just woke up at 6am
+    if (currentHour === 5 && newHour === 6) {
+      setLastSleepResult({
+        message: `You rested until 6am.`,
+        hoursLost: 0, // Already counted
+      });
+    }
+
+    setCurrentHour(newHour);
+    setTimeRemaining(prev => {
+      const newRemaining = prev - 1;
+      // Check if time ran out
+      if (newRemaining <= 0) {
+        setGameState('debrief');
+      }
+      return newRemaining;
+    });
+
+    // Return whether we should add sleep hours (hit 11pm)
+    return newHour === 23;
+  }, [currentHour]);
+
   // Calculate progressive investigation cost (2h, 4h, 8h based on order)
   const getInvestigationCost = useCallback((investigationCount) => {
     // Each investigation doubles: 2h, 4h, 8h
@@ -243,10 +291,11 @@ export function useGameState(gameData) {
     return false;
   }, [permanentInjuries]);
 
-  // Investigate a location
+  // Investigate a location - returns action config or null if invalid
+  // Call this to START an investigation, then use completeInvestigation when time ticks complete
   const investigate = useCallback((locationIndex) => {
-    if (!cityClues || !cityClues[locationIndex]) return;
-    if (isInvestigating) return; // Don't allow new investigation while one is in progress
+    if (!cityClues || !cityClues[locationIndex]) return null;
+    if (isInvestigating) return null; // Don't allow new investigation while one is in progress
 
     const clue = cityClues[locationIndex];
     const spot = clue.spot;
@@ -258,15 +307,16 @@ export function useGameState(gameData) {
 
     if (timeRemaining < totalTimeCost) {
       setMessage("Not enough time for this investigation!");
-      return;
+      return null;
     }
 
     if (investigatedLocations.includes(spot.id)) {
-      return;
+      return null;
     }
 
-    // Start investigating - show ticker while clock animates
+    // Start investigating - set pending state
     setIsInvestigating(true);
+    setPendingInvestigation({ locationIndex, spot, clue });
     setLastFoundClue({ city: null, suspect: null }); // Clear previous clue
     setLastRogueAction(null); // Clear rogue action flag
     setLastEncounterResult(null); // Clear previous encounter result
@@ -275,123 +325,129 @@ export function useGameState(gameData) {
     // Mark as investigated
     setInvestigatedLocations(prev => [...prev, spot.id]);
 
-    // Advance time immediately (starts clock animation)
-    const gameOver = advanceTime(totalTimeCost);
+    // Return the action config for the action queue
+    return {
+      type: 'investigate',
+      hoursCost: totalTimeCost,
+      spinnerDuration: 500,
+      label: `Investigating ${spot.name}...`,
+    };
+  }, [timeRemaining, cityClues, investigatedLocations, getInjuryTimePenalty, getInvestigationCost, isInvestigating]);
 
-    if (gameOver) {
-      setIsInvestigating(false);
-      return;
+  // Complete an investigation - reveals clue and triggers encounters
+  // Called by action queue when time ticking is complete
+  const completeInvestigation = useCallback(() => {
+    const pending = pendingInvestigationRef.current;
+    if (!pending) return;
+
+    const { spot, clue } = pending;
+
+    setIsInvestigating(false);
+    setPendingInvestigation(null);
+
+    // Check for injury-based clue missing
+    const missedClue = shouldMissClue();
+
+    if (missedClue) {
+      setMessage(`You investigated the ${spot.name}, but your injuries made you miss the clue...`);
+    } else {
+      setLastFoundClue({ city: clue.destinationClue, suspect: clue.suspectClue });
+
+      // Store clues with metadata (city name, location name, time collected)
+      const cityName = currentCity?.name || 'Unknown';
+      const locationName = spot.name;
+      const timeCollected = currentHour;
+
+      if (clue.destinationClue) {
+        setCollectedClues(prev => ({
+          ...prev,
+          city: [...prev.city, {
+            text: clue.destinationClue,
+            cityName,
+            locationName,
+            timeCollected,
+          }],
+        }));
+      }
+
+      if (clue.suspectClue) {
+        setCollectedClues(prev => ({
+          ...prev,
+          suspect: [...prev.suspect, {
+            text: clue.suspectClue,
+            cityName,
+            locationName,
+            timeCollected,
+          }],
+        }));
+      }
     }
 
-    // Calculate animation duration based on time cost and tick speed
-    const animationDuration = totalTimeCost * timeTickSpeed * 1000;
+    // ENCOUNTER TRIGGER: Henchman/assassination ALWAYS happen on first investigation in correct cities
+    // These take priority over good deeds
+    if (!wrongCity && !hadEncounterInCity && encounters) {
+      setHadEncounterInCity(true); // Mark that encounter happened
 
-    // Delay clue reveal until clock animation completes
-    setTimeout(() => {
-      setIsInvestigating(false);
+      if (isFinalCity && encounters.assassination_attempts) {
+        // CORRECT FINAL CITY: Trigger assassination attempt (high stakes!)
+        const assassinationEncounter = pickRandom(encounters.assassination_attempts);
+        setCurrentEncounter({ ...assassinationEncounter, type: 'assassination' });
+        return; // Wait for assassination to be resolved before allowing apprehension
+      } else if (!isFinalCity && currentCityIndex > 0 && encounters.henchman_encounters) {
+        // MIDDLE CITIES (not first, not last): Trigger henchman encounter
+        // "You're on the right track!" - signals player is on correct path
+        const henchmanEncounter = pickRandom(encounters.henchman_encounters);
+        setCurrentEncounter({ ...henchmanEncounter, type: 'henchman' });
+        return; // Show henchman encounter
+      }
+    }
 
-      // Check for injury-based clue missing
-      const missedClue = shouldMissClue();
+    // GOOD DEED: Can trigger on any investigation if no henchman/assassination, once per case
+    // Only triggers if: not in wrong city, no encounter just triggered, haven't had one this case
+    if (!wrongCity && !hadGoodDeedInCase && goodDeeds && !currentGoodDeed && Math.random() < 0.25) {
+      // Check if high karma triggers fake good deed trap
+      const isFakeTrap = karma >= 5 && fakeGoodDeeds && Math.random() < 0.25;
 
-      if (missedClue) {
-        setMessage(`You investigated the ${spot.name}, but your injuries made you miss the clue...`);
+      setHadGoodDeedInCase(true); // Mark that good deed happened this case
+
+      if (isFakeTrap) {
+        const fakeDeed = pickRandom(fakeGoodDeeds);
+        setCurrentGoodDeed({ ...fakeDeed, isFake: true });
       } else {
-        setLastFoundClue({ city: clue.destinationClue, suspect: clue.suspectClue });
-
-        // Store clues with metadata (city name, location name, time collected)
-        const cityName = currentCity?.name || 'Unknown';
-        const locationName = spot.name;
-        const timeCollected = currentHour;
-
-        if (clue.destinationClue) {
-          setCollectedClues(prev => ({
-            ...prev,
-            city: [...prev.city, {
-              text: clue.destinationClue,
-              cityName,
-              locationName,
-              timeCollected,
-            }],
-          }));
-        }
-
-        if (clue.suspectClue) {
-          setCollectedClues(prev => ({
-            ...prev,
-            suspect: [...prev.suspect, {
-              text: clue.suspectClue,
-              cityName,
-              locationName,
-              timeCollected,
-            }],
-          }));
-        }
+        const deed = pickRandom(goodDeeds);
+        setCurrentGoodDeed({ ...deed, isFake: false });
       }
+      return; // Show good deed encounter
+    }
 
-      // ENCOUNTER TRIGGER: Henchman/assassination ALWAYS happen on first investigation in correct cities
-      // These take priority over good deeds
-      if (!wrongCity && !hadEncounterInCity && encounters) {
-        setHadEncounterInCity(true); // Mark that encounter happened
-
-        if (isFinalCity && encounters.assassination_attempts) {
-          // CORRECT FINAL CITY: Trigger assassination attempt (high stakes!)
-          const assassinationEncounter = pickRandom(encounters.assassination_attempts);
-          setCurrentEncounter({ ...assassinationEncounter, type: 'assassination' });
-          return; // Wait for assassination to be resolved before allowing apprehension
-        } else if (!isFinalCity && currentCityIndex > 0 && encounters.henchman_encounters) {
-          // MIDDLE CITIES (not first, not last): Trigger henchman encounter
-          // "You're on the right track!" - signals player is on correct path
-          const henchmanEncounter = pickRandom(encounters.henchman_encounters);
-          setCurrentEncounter({ ...henchmanEncounter, type: 'henchman' });
-          return; // Show henchman encounter
-        }
+    // APPREHENSION: Second investigation at final city (after assassination resolved)
+    // If we're at final city after the assassination attempt
+    if (isFinalCity && hadEncounterInCity && !currentEncounter) {
+      if (selectedWarrant) {
+        // Apprehend the suspect! Show inline in content area with Continue button
+        setMessage(`SUSPECT APPREHENDED! ${selectedWarrant.name} is now in custody.`);
+        setGameState('apprehended'); // Triggers inline UI in InvestigateTab
+        return;
+      } else {
+        // No warrant issued yet - guide the player
+        setMessage("You've cornered the suspect! Issue a warrant in the Dossier tab to make an arrest.");
+        return;
       }
+    }
+  }, [wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant, currentCity, currentHour, currentCityIndex, hadGoodDeedInCase]);
 
-      // GOOD DEED: Can trigger on any investigation if no henchman/assassination, once per case
-      // Only triggers if: not in wrong city, no encounter just triggered, haven't had one this case
-      if (!wrongCity && !hadGoodDeedInCase && goodDeeds && !currentGoodDeed && Math.random() < 0.25) {
-        // Check if high karma triggers fake good deed trap
-        const isFakeTrap = karma >= 5 && fakeGoodDeeds && Math.random() < 0.25;
-
-        setHadGoodDeedInCase(true); // Mark that good deed happened this case
-
-        if (isFakeTrap) {
-          const fakeDeed = pickRandom(fakeGoodDeeds);
-          setCurrentGoodDeed({ ...fakeDeed, isFake: true });
-        } else {
-          const deed = pickRandom(goodDeeds);
-          setCurrentGoodDeed({ ...deed, isFake: false });
-        }
-        return; // Show good deed encounter
-      }
-
-      // APPREHENSION: Second investigation at final city (after assassination resolved)
-      // If we're at final city after the assassination attempt
-      if (isFinalCity && hadEncounterInCity && !currentEncounter) {
-        if (selectedWarrant) {
-          // Apprehend the suspect! Show inline in content area with Continue button
-          setMessage(`SUSPECT APPREHENDED! ${selectedWarrant.name} is now in custody.`);
-          setGameState('apprehended'); // Triggers inline UI in InvestigateTab
-          return;
-        } else {
-          // No warrant issued yet - guide the player
-          setMessage("You've cornered the suspect! Issue a warrant in the Dossier tab to make an arrest.");
-          return;
-        }
-      }
-    }, animationDuration);
-  }, [timeRemaining, cityClues, investigatedLocations, advanceTime, wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, getInjuryTimePenalty, getInvestigationCost, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant, currentCity, currentHour, isInvestigating, timeTickSpeed, hadGoodDeedInCase]);
-
-  // Rogue investigate - Fast but increases notoriety, gets BOTH clues
+  // Rogue investigate - returns action config or null if invalid
+  // Fast but increases notoriety, gets BOTH clues
   const rogueInvestigate = useCallback((rogueAction) => {
-    if (!cityClues) return;
-    if (rogueUsedInCity) return; // Already used in this city
+    if (!cityClues) return null;
+    if (rogueUsedInCity) return null; // Already used in this city
+    if (isInvestigating) return null; // Don't allow during investigation
 
     const ROGUE_TIME_COST = 2; // Fixed 2h - fastest option
 
     if (timeRemaining < ROGUE_TIME_COST) {
       setMessage("Not enough time for this action!");
-      return;
+      return null;
     }
 
     // Find one location clue and one suspect clue from available spots
@@ -400,9 +456,35 @@ export function useGameState(gameData) {
     const locationClue = locationClueData?.destinationClue;
     const suspectClue = suspectClueData?.suspectClue;
 
-    // Clear previous results
+    // Set up pending state
+    setIsInvestigating(true);
+    setPendingRogueAction({ rogueAction, locationClue, suspectClue });
+    setLastFoundClue({ city: null, suspect: null }); // Clear previous clue
+    setLastRogueAction(null); // Clear previous rogue action
     setLastEncounterResult(null);
-    setLastSleepResult(null); // Clear sleep result so badge doesn't show during day actions
+    setLastSleepResult(null);
+
+    // Mark rogue as used in this city (can't use again)
+    setRogueUsedInCity(true);
+
+    // Return the action config for the action queue
+    return {
+      type: 'rogue',
+      hoursCost: ROGUE_TIME_COST,
+      spinnerDuration: 300, // Faster - it's a rogue action
+      label: `${rogueAction.name}...`,
+    };
+  }, [timeRemaining, cityClues, rogueUsedInCity, isInvestigating]);
+
+  // Complete rogue investigation - reveals clues and updates notoriety
+  const completeRogueInvestigation = useCallback(() => {
+    const pending = pendingRogueActionRef.current;
+    if (!pending) return;
+
+    const { rogueAction, locationClue, suspectClue } = pending;
+
+    setIsInvestigating(false);
+    setPendingRogueAction(null);
 
     // Rogue actions always get BOTH clues (if available)
     setLastFoundClue({ city: locationClue, suspect: suspectClue });
@@ -437,17 +519,11 @@ export function useGameState(gameData) {
       }));
     }
 
-    // Mark rogue as used in this city (can't use again)
-    setRogueUsedInCity(true);
-
     // Increase notoriety
     setNotoriety(prev => prev + rogueAction.notoriety_gain);
 
-    // Advance time (fixed 2h cost)
-    advanceTime(ROGUE_TIME_COST);
-
     // No good deed encounters after rogue actions (you're being ruthless)
-  }, [timeRemaining, cityClues, rogueUsedInCity, advanceTime, currentCity, currentHour]);
+  }, [currentCity, currentHour]);
 
   // Get available destinations
   const destinations = useMemo(() => {
@@ -464,7 +540,7 @@ export function useGameState(gameData) {
     }));
   }, [gadgets, usedGadgets]);
 
-  // Travel to a destination - starts animation
+  // Travel to a destination - starts animation, returns travel time
   const travel = useCallback((destination) => {
     // Apply injury time penalties to travel
     const timePenalty = getInjuryTimePenalty();
@@ -472,7 +548,7 @@ export function useGameState(gameData) {
 
     if (timeRemaining < travelTime) {
       setMessage("Not enough time to travel!");
-      return;
+      return null;
     }
 
     // Use wrongCityData if in wrong city, otherwise use currentCity
@@ -485,17 +561,32 @@ export function useGameState(gameData) {
     setTravelOrigin(actualOrigin);
     setTravelDestination(destination);
     setIsTraveling(true);
+
+    // Return travel time so caller can queue time ticking
+    return travelTime;
   }, [timeRemaining, settings.travel_time, getInjuryTimePenalty, currentCity, wrongCity, wrongCityData, citiesById]);
 
-  // Complete travel after animation finishes
-  const completeTravelAnimation = useCallback(() => {
-    if (!travelDestination) return;
-
-    const destination = travelDestination;
+  // Called after flight animation completes - returns action config for time ticking
+  const getTravelTimeConfig = useCallback(() => {
+    if (!travelDestination) return null;
 
     // Apply injury time penalties to travel
     const timePenalty = getInjuryTimePenalty();
     const travelTime = settings.travel_time + timePenalty;
+
+    return {
+      type: 'travel',
+      hoursCost: travelTime,
+      spinnerDuration: 0, // No spinner - flight animation was the visual
+      label: 'Arriving...',
+    };
+  }, [travelDestination, settings.travel_time, getInjuryTimePenalty]);
+
+  // Complete travel after time ticking finishes
+  const completeTravelAnimation = useCallback(() => {
+    if (!travelDestination) return;
+
+    const destination = travelDestination;
 
     // Clear animation state
     setIsTraveling(false);
@@ -524,9 +615,8 @@ export function useGameState(gameData) {
       setMessage(`You've arrived in ${destination.name}, but something feels off...`);
     }
 
-    // Advance time (checks for sleep and game over)
-    advanceTime(travelTime);
-  }, [travelDestination, settings.travel_time, advanceTime, getInjuryTimePenalty]);
+    // Time was already ticked by the action queue, no need to advance here
+  }, [travelDestination]);
 
   // Issue a warrant - just confirms the suspect selection (can be done anytime)
   // The actual apprehension happens on second investigation at final city
@@ -695,12 +785,18 @@ export function useGameState(gameData) {
     travelOrigin,
     travelDestination,
 
+    // Time advancement for action queue
+    advanceTimeByOne,
+
     // Actions
     startNewCase,
     acceptBriefing,
     investigate,
+    completeInvestigation,
     rogueInvestigate,
+    completeRogueInvestigation,
     travel,
+    getTravelTimeConfig,
     completeTravelAnimation,
     issueWarrant,
     completeTrial,
