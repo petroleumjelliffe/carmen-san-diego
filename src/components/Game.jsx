@@ -179,17 +179,21 @@ export function Game({ gameData }) {
         lastSleepResult={lastSleepResult}
       />
 
-      <TabBar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-      />
+      {/* 2-column layout wrapper */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Sidebar tabs - desktop only */}
+        <TabBar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          variant="sidebar"
+        />
 
-      {/* Main content area - flex-1 to fill remaining space, grid for bottom alignment */}
-      <div className="flex-1 overflow-y-auto">
-        <div
-          className="max-w-4xl mx-auto p-4 pb-24 sm:pb-4 min-h-full grid"
-          style={{ alignItems: isAnimating ? 'center' : 'end' }}
-        >
+        {/* Main content area */}
+        <div className="flex-1 overflow-y-auto">
+          <div
+            className="max-w-6xl mx-auto p-4 pb-24 md:pb-4 min-h-full grid"
+            style={{ alignItems: isAnimating ? 'center' : 'end' }}
+          >
           <div>
             {/* Travel Animation - shown during flight */}
             {isAnimating && travelData ? (
@@ -262,7 +266,15 @@ export function Game({ gameData }) {
             )}
           </div>
         </div>
+        </div>
       </div>
+
+      {/* Mobile bottom tabs */}
+      <TabBar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        variant="mobile"
+      />
     </div>
   );
 }
