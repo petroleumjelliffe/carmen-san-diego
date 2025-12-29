@@ -102,8 +102,16 @@ export function generateCase(gameData) {
     // Pre-select dead ends for if player visits wrong city from here
     const shuffledDeadEnds = shuffle([...deadEnds]);
 
-    // Get city-specific investigation spots (fallback to generic spots if not defined)
-    const cityInvestigationSpots = city?.investigation_spots || investigationSpots;
+    // Parse city landmarks by type
+    const landmarks = city?.landmarks || [];
+    const hotel = landmarks.find(l => l.type === 'hotel') || null;
+    const rogueLocation = landmarks.find(l => l.type === 'rogue') || null;
+    const cityInvestigationSpots = landmarks.filter(l => l.type === 'investigation');
+
+    // Fallback to generic investigation spots if none defined
+    const investigationSpotsToUse = cityInvestigationSpots.length > 0
+      ? cityInvestigationSpots
+      : investigationSpots;
 
     return {
       cityId,
@@ -115,7 +123,9 @@ export function generateCase(gameData) {
       locationClues,
       destinations,
       deadEndClues: shuffledDeadEnds.slice(0, 3),
-      investigationSpots: cityInvestigationSpots,  // City-specific spots
+      investigationSpots: investigationSpotsToUse,  // City-specific spots
+      hotel,  // City-specific hotel
+      rogueLocation,  // City-specific rogue location
       // Assign encounter for this city (if applicable)
       // City 0 = no encounter, Cities 1-2 = henchman, Final = assassination
       encounter: isFinalCity

@@ -36,6 +36,8 @@ export function InvestigateTab({
   actionLabel,
   actionHoursRemaining,
   currentCity,
+  hotel,
+  rogueLocation,
 }) {
   const [hoveredSpotId, setHoveredSpotId] = useState(null);
   const [investigatingSpotIndex, setInvestigatingSpotIndex] = useState(null);
@@ -95,6 +97,7 @@ export function InvestigateTab({
             onSpotHover={setHoveredSpotId}
             investigatingSpotIndex={investigatingSpotIndex}
             isAnimating={isAnimating}
+            hotel={hotel}
           />
         </div>
       )}
@@ -204,15 +207,15 @@ export function InvestigateTab({
             })}
 
             {/* Rogue Action as option in tray */}
-            {availableRogueAction && onRogueAction && (
+            {availableRogueAction && onRogueAction && rogueLocation && (
               <div key="rogue-action" className="snap-start">
                 <OptionCard
-                  icon="⚡"
-                  title={availableRogueAction.name}
-                  subtitle="Rogue Tactic"
-                  duration={ROGUE_TIME_COST}
+                  icon={rogueLocation.icon || "⚡"}
+                  title={rogueLocation.name || availableRogueAction.name}
+                  subtitle={rogueLocation.neighborhood || "Rogue Tactic"}
+                  duration={rogueLocation.time_cost || ROGUE_TIME_COST}
                   transfers={0}
-                  disabled={rogueUsedInCity || timeRemaining < ROGUE_TIME_COST || isInvestigating || (actionPhase && actionPhase !== 'idle')}
+                  disabled={rogueUsedInCity || timeRemaining < (rogueLocation.time_cost || ROGUE_TIME_COST) || isInvestigating || (actionPhase && actionPhase !== 'idle')}
                   selected={false}
                   onClick={() => onRogueAction(availableRogueAction)}
                   variant="investigation"

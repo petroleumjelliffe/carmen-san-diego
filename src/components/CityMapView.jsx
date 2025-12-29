@@ -15,6 +15,7 @@ export function CityMapView({
   onSpotHover,
   investigatingSpotIndex = null,
   isAnimating = false,
+  hotel = null,
 }) {
   const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 500 });
@@ -48,10 +49,15 @@ export function CityMapView({
       return 0.05;
     }
 
-    // Get all landmark coordinates
+    // Get all landmark coordinates (including hotel if available)
     const landmarkCoords = spots
       .filter(s => s.spot.lat && s.spot.lon)
       .map(s => ({ lat: s.spot.lat, lon: s.spot.lon }));
+
+    // Include hotel in bounds calculation
+    if (hotel?.lat && hotel?.lon) {
+      landmarkCoords.push({ lat: hotel.lat, lon: hotel.lon });
+    }
 
     if (landmarkCoords.length === 0) return 0.05;
 
@@ -94,6 +100,11 @@ export function CityMapView({
     const landmarkCoords = spots
       .filter(s => s.spot.lat && s.spot.lon)
       .map(s => ({ lat: s.spot.lat, lon: s.spot.lon }));
+
+    // Include hotel in center calculation
+    if (hotel?.lat && hotel?.lon) {
+      landmarkCoords.push({ lat: hotel.lat, lon: hotel.lon });
+    }
 
     if (landmarkCoords.length === 0) {
       return { lat: currentCity.lat, lon: currentCity.lon };
@@ -148,10 +159,14 @@ export function CityMapView({
     return fallbackPositions[index] || { x: width / 2, y: height / 2 };
   });
 
-  // Player position (bottom center of available space, above the tray)
-  const trayHeight = 192; // h-48 = 192px
-  const availableHeight = height - trayHeight;
-  const playerPos = { x: width / 2, y: availableHeight * 0.85 };
+  // Player position (at hotel if available, otherwise bottom center)
+  const playerPos = hotel?.lat && hotel?.lon
+    ? latLonToCitySVG(hotel.lat, hotel.lon)
+    : (() => {
+        const trayHeight = 192; // h-48 = 192px
+        const availableHeight = height - trayHeight;
+        return { x: width / 2, y: availableHeight * 0.85 };
+      })();
 
   // Animate progress when investigating
   useEffect(() => {
@@ -241,12 +256,12 @@ export function CityMapView({
           );
         })}
 
-        {/* Player marker (always at bottom center) */}
+        {/* Player marker (at hotel) */}
         <MapMarker
           x={playerPos.x}
           y={playerPos.y}
-          label="YOU"
-          icon="🔍"
+          label={hotel?.name || "YOU"}
+          icon={hotel?.icon || "🔍"}
           variant="current"
           disabled={true}
         />

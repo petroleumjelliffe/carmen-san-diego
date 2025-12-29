@@ -51,6 +51,8 @@ export function Game({ gameData }) {
     isFinalCity,
     destinations,
     nextInvestigationCost,
+    hotel,
+    rogueLocation,
     karma,
     notoriety,
     savedNPCs,
@@ -319,6 +321,8 @@ export function Game({ gameData }) {
                     actionLabel={pendingAction?.label}
                     actionHoursRemaining={actionHoursRemaining}
                     currentCity={currentCity}
+                    hotel={hotel}
+                    rogueLocation={rogueLocation}
                   />
                 )}
 
