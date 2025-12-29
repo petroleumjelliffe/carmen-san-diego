@@ -1,5 +1,5 @@
-import { User, X, MapPin, Clock } from 'lucide-react';
-import { useState, useMemo, useCallback } from 'react';
+import { User, X, MapPin, Clock, FileText } from 'lucide-react';
+import { useMemo } from 'react';
 
 // Pushpin decoration component
 function Pushpin() {
@@ -32,7 +32,7 @@ function formatTime(hour) {
 }
 
 // Trait cycling button - tap to cycle through values
-function TraitField({ label, value, options, onCycle }) {
+function TraitField({ label, value, onCycle }) {
   const displayValue = value || '—';
   const hasValue = value !== null;
 
@@ -157,30 +157,10 @@ export function DossierTab({
   isFinalCity,
   onSelectWarrant,
   onIssueWarrant,
+  selectedTraits,
+  onCycleTrait,
+  onResetTraits,
 }) {
-  // Player-selected traits (tap to cycle)
-  const [selectedTraits, setSelectedTraits] = useState({
-    gender: null,   // null | 'male' | 'female'
-    hair: null,     // null | 'dark' | 'light'
-    hobby: null,    // null | 'intellectual' | 'physical'
-  });
-
-  // Trait options for cycling
-  const traitOptions = {
-    gender: [null, 'male', 'female'],
-    hair: [null, 'dark', 'light'],
-    hobby: [null, 'intellectual', 'physical'],
-  };
-
-  // Cycle to next trait value
-  const cycleTrait = useCallback((trait) => {
-    setSelectedTraits(prev => {
-      const options = traitOptions[trait];
-      const currentIndex = options.indexOf(prev[trait]);
-      const nextIndex = (currentIndex + 1) % options.length;
-      return { ...prev, [trait]: options[nextIndex] };
-    });
-  }, []);
 
   // Stable rotations for each suspect based on their id
   const rotations = useMemo(() => {
@@ -213,10 +193,10 @@ export function DossierTab({
 
   return (
     <div
-      className="space-y-6 p-4 rounded-lg min-h-[500px]"
-      style={{
-        background: 'linear-gradient(135deg, #b8956c 0%, #a0845c 50%, #c4a574 100%)',
-        backgroundImage: `
+      className="space-y-4 p-4 rounded-lg"
+        style={{
+          background: 'linear-gradient(135deg, #b8956c 0%, #a0845c 50%, #c4a574 100%)',
+          backgroundImage: `
           linear-gradient(135deg, #b8956c 0%, #a0845c 50%, #c4a574 100%),
           url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")
         `,
@@ -257,26 +237,33 @@ export function DossierTab({
             <TraitField
               label="Gender"
               value={selectedTraits.gender}
-              options={traitOptions.gender}
-              onCycle={() => cycleTrait('gender')}
+              onCycle={() => onCycleTrait('gender')}
             />
             <TraitField
               label="Hair"
               value={selectedTraits.hair}
-              options={traitOptions.hair}
-              onCycle={() => cycleTrait('hair')}
+              onCycle={() => onCycleTrait('hair')}
             />
             <TraitField
               label="Hobby"
               value={selectedTraits.hobby}
-              options={traitOptions.hobby}
-              onCycle={() => cycleTrait('hobby')}
+              onCycle={() => onCycleTrait('hobby')}
             />
           </div>
 
-          <p className="text-xs text-amber-700 text-center italic mt-2">
-            Tap fields to cycle values
-          </p>
+          <div className="flex items-center justify-between mt-3">
+            <p className="text-xs text-amber-700 italic">
+              Tap fields to cycle values
+            </p>
+            {hasAnyTraits && (
+              <button
+                onClick={onResetTraits}
+                className="text-xs text-amber-700 hover:text-amber-900 underline"
+              >
+                Reset
+              </button>
+            )}
+          </div>
         </NoteCard>
       </div>
 
@@ -287,14 +274,18 @@ export function DossierTab({
             <span className="font-bold text-green-900">
               {remainingCount} suspect{remainingCount !== 1 ? 's' : ''} match
             </span>
-            {hasAnyTraits && (
-              <button
-                onClick={() => setSelectedTraits({ gender: null, hair: null, hobby: null })}
-                className="text-xs text-green-700 hover:text-green-900 underline"
-              >
-                Reset
-              </button>
-            )}
+            <button
+              onClick={onIssueWarrant}
+              disabled={!selectedWarrant}
+              className={`font-bold px-3 py-1 rounded transition-all text-xs flex items-center gap-1 ${
+                selectedWarrant
+                  ? 'bg-red-600 hover:bg-red-500 text-white shadow-md'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              <FileText size={12} />
+              Issue Warrant
+            </button>
           </div>
 
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 py-2">
@@ -315,32 +306,6 @@ export function DossierTab({
               );
             })}
           </div>
-        </NoteCard>
-      </div>
-
-      {/* Warrant Button */}
-      <div className="relative">
-        <NoteCard color="pink" rotation={-1}>
-          <button
-            onClick={onIssueWarrant}
-            disabled={!selectedWarrant}
-            className={`w-full font-bold py-3 rounded transition-all text-sm ${
-              selectedWarrant
-                ? 'bg-red-600 hover:bg-red-500 text-white shadow-md'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            {selectedWarrant
-              ? `🚨 ISSUE WARRANT: ${selectedWarrant.name}`
-              : "Select a Suspect Above"}
-          </button>
-          {selectedWarrant && (
-            <p className="text-center text-xs text-gray-600 mt-2">
-              {isFinalCity
-                ? "Ready to apprehend!"
-                : "Continue tracking..."}
-            </p>
-          )}
         </NoteCard>
       </div>
 

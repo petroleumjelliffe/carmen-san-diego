@@ -25,17 +25,37 @@ export function generateCluesForCity(gameData, currentCase, cityIndex, isWrongCi
     }));
   }
 
-  // Final city - assassination plot clues
+  // Final city - assassination plot clues + suspect clues
   if (isFinalCity) {
     const shuffledFinal = shuffle([...finalCityClues]);
-    return investigationSpots.map((spot, i) => ({
-      spot,
-      destinationClue: shuffledFinal[i % shuffledFinal.length].text,
-      suspectClue: null,
-    }));
+
+    // Final city still needs suspect clues for identification
+    // Use the last trait in the order (or a random one if none left)
+    const traitToReveal = currentCase.traitOrder[cityIndex] || currentCase.traitOrder[currentCase.traitOrder.length - 1];
+    const traitValue = currentCase.suspect[traitToReveal];
+    const traitClues = suspectClues[traitToReveal]?.[traitValue] || [];
+
+    return investigationSpots.map((spot, i) => {
+      let destClue = null;
+      let suspClue = null;
+
+      if (spot.gives.includes('destination')) {
+        destClue = shuffledFinal[i % shuffledFinal.length].text;
+      }
+
+      if (spot.gives.includes('suspect')) {
+        suspClue = pickRandom(traitClues);
+      }
+
+      return {
+        spot,
+        destinationClue: destClue,
+        suspectClue: suspClue,
+      };
+    });
   }
 
-  // Normal city - destination + suspect clues
+  // Normal city - spots give EITHER destination OR suspect (not both)
   const nextCityId = currentCase.cities[cityIndex + 1];
   const cityClues = destinationClues[nextCityId] || [];
   const shuffledCityClues = shuffle([...cityClues]);
@@ -46,18 +66,22 @@ export function generateCluesForCity(gameData, currentCase, cityIndex, isWrongCi
   const traitClues = suspectClues[traitToReveal]?.[traitValue] || [];
 
   return investigationSpots.map((spot, i) => {
-    // Get destination clue
-    const destClue = shuffledCityClues[i % shuffledCityClues.length];
-
-    // Get suspect clue only if this spot gives it
+    // Each spot gives EITHER destination OR suspect (not both)
+    let destClue = null;
     let suspClue = null;
+
+    if (spot.gives.includes('destination')) {
+      const clue = shuffledCityClues[i % shuffledCityClues.length];
+      destClue = clue?.text || 'No information available.';
+    }
+
     if (spot.gives.includes('suspect')) {
       suspClue = pickRandom(traitClues);
     }
 
     return {
       spot,
-      destinationClue: destClue?.text || 'No information available.',
+      destinationClue: destClue,
       suspectClue: suspClue,
     };
   });

@@ -1,5 +1,5 @@
 import { GameLayout } from './GameLayout';
-import { TopPanel } from './TopPanel';
+import { Header } from './Header';
 import { FileText, MapPin, Clock, Shield, Briefcase, ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
@@ -310,9 +310,20 @@ export function Briefing({ currentCase, startingCity, settings, onAccept }) {
     );
   };
 
+  // Fake city object for HQ
+  const hqCity = { name: 'HQ', country: '' };
+
   return (
     <GameLayout
-      topPanel={<TopPanel location="ACME HQ" timeRemaining={settings.total_time} />}
+      topPanel={
+        <Header
+          currentCity={hqCity}
+          timeRemaining={settings.total_time}
+          currentHour={8}
+          maxTime={settings.total_time}
+          timeTickSpeed={settings.time_tick_speed || 0.5}
+        />
+      }
       bottomPanel={getBottomPanel()}
     >
       <ManilaFolder caseNumber={caseNumber}>

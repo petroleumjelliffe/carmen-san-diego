@@ -58,8 +58,8 @@ export function Debrief({
 }) {
   // Get current rank
   const currentRank = ranks.find(
-    (rank) => solvedCases >= rank.cases_required && (ranks[ranks.indexOf(rank) + 1]
-      ? solvedCases < ranks[ranks.indexOf(rank) + 1].cases_required
+    (rank) => solvedCases >= rank.min_cases && (ranks[ranks.indexOf(rank) + 1]
+      ? solvedCases < ranks[ranks.indexOf(rank) + 1].min_cases
       : true)
   ) || ranks[0];
 
@@ -107,16 +107,14 @@ export function Debrief({
           </p>
         </div>
 
-        {/* Promotion Banner */}
-        {isWon && (
+        {/* Promotion Banner - only show if rank actually increased */}
+        {isWon && previousRank && previousRank.label !== currentRank.label && (
           <div className="bg-gradient-to-r from-yellow-600 via-yellow-500 to-yellow-600 rounded-lg p-4 text-center shadow-lg">
             <div className="flex items-center justify-center gap-3">
               <Award className="text-yellow-900" size={28} />
               <div>
-                <p className="text-yellow-900 font-bold text-lg">PROMOTION</p>
-                <p className="text-yellow-800">
-                  {previousRank?.name || 'Rookie'} → <span className="font-bold">{currentRank.name}</span>
-                </p>
+                <p className="text-yellow-900 font-bold text-lg">NEW RANK</p>
+                <p className="text-yellow-800 font-bold text-xl">{currentRank.label}</p>
               </div>
               <Award className="text-yellow-900" size={28} />
             </div>
@@ -137,23 +135,6 @@ export function Debrief({
           </ReportSection>
         )}
 
-        {/* Case Stats */}
-        <ReportSection title="CASE SUMMARY" icon={MapPin} color="gray">
-          <div className="space-y-1">
-            <StatRow
-              label="Time Remaining"
-              value={`${timeRemaining}h`}
-              icon={Clock}
-              highlight={timeRemaining > 24}
-            />
-            <StatRow
-              label="Cities Investigated"
-              value={currentCase?.cities.length || 0}
-              icon={MapPin}
-            />
-          </div>
-        </ReportSection>
-
         {/* Career Stats */}
         <ReportSection title="CAREER RECORD" icon={TrendingUp} color="yellow">
           <div className="space-y-1">
@@ -164,7 +145,7 @@ export function Debrief({
             />
             <StatRow
               label="Current Rank"
-              value={currentRank.name}
+              value={currentRank.label}
             />
             <StatRow
               label="NPCs Helped"
@@ -202,15 +183,13 @@ export function Debrief({
                 {notoriety >= 5 && <span className="text-red-400 text-xs ml-1">Dangerous</span>}
               </div>
             </div>
-            <StatRow
-              label="Permanent Injuries"
-              value={
-                permanentInjuries?.length
-                  ? `${permanentInjuries.length} (${permanentInjuries.map(i => i.icon).join(' ')})`
-                  : 'None'
-              }
-              icon={AlertTriangle}
-            />
+{permanentInjuries?.length > 0 && (
+              <StatRow
+                label="Permanent Injuries"
+                value={`${permanentInjuries.length} (${permanentInjuries.map(i => i.icon).join(' ')})`}
+                icon={AlertTriangle}
+              />
+            )}
           </div>
         </ReportSection>
       </div>

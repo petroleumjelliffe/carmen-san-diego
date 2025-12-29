@@ -137,13 +137,24 @@ Consolidated henchman, good deed, and assassination into a unified encounter sys
 - [x] Briefing screen as manila folder case file (CLASSIFIED stamp, paper clip, lined paper, DocuSign)
 - [x] Trial screen courtroom aesthetic (wooden bench, verdict stamp, gavel animation)
 - [x] Debrief screen report cards (trophy, promotion banner, stat sections)
-- [ ] Background images for locations/cities
+- [x] Background images for locations/cities (Unsplash city photos with dark overlay)
 - [ ] Travel animation (plane flying on map)
 - [ ] Time advancement animation (clock ticking)
 - [ ] Investigation transitions with background changes
 - [ ] Sleep fade in/out animation
 - [ ] Assassination slow-motion visual effects (desaturation, shake)
 - [ ] Incremental "NOOOO..." speech bubble during timer
+
+### 2.5 UI Simplification (2025-12-27)
+- [x] Header spoiler removal - replaced numeric time with abstract urgency bar
+- [x] Removed rank display, current time, and sleep warnings from header
+- [x] LocationBanner - replaced "Stop X of Y" with dot indicators
+- [x] AirportTab - removed time remaining from header (kept travel time info)
+- [x] Created FadeIn transition component for smooth show/hide animations
+- [x] Applied transitions to InvestigateTab (encounters, results, apprehended)
+- [x] Flattened nested boxes in InvestigateTab results (single card with accent strips)
+- [x] Simplified EncounterCard structure (integrated timer bar, removed nested boxes)
+- [x] Unified encounter styling (consistent gray backgrounds, accent colors for type)
 
 ### 3. Evidence Board Enhancements
 - [x] Cork board aesthetic with wood grain background
@@ -267,6 +278,18 @@ FINAL CITY (city 4):
 4. **First-investigation-only triggers** - Encounters don't repeat on subsequent investigations in same city
 5. **Gadgets are one-use per case** - Track `usedGadgets` array, reset on new case
 6. **NO SPLASH PAGES** - ALWAYS use the main content area for messages, encounters, and transitions. Never create full-screen splash components. All interactive moments (apprehended, encounters, good deeds, results) render inline in InvestigateTab.
+7. **Hidden clue types** - Player should NOT know what type of clue (location vs suspect) they'll get at each investigation spot. Do NOT show clue type badges or indicators in the UI. Each spot secretly gives either a destination clue OR a suspect clue, but the player must discover this through exploration.
+8. **Hidden investigation duration** - Do NOT show time cost ahead of time. The duration is tied to investigation ORDER, not to the specific location:
+   - 1st investigation in a city: 2 hours
+   - 2nd investigation in a city: 4 hours
+   - 3rd investigation in a city: 8 hours
+   - Each subsequent investigation doubles in time cost
+9. **Rogue action exception** - The rogue cop action is special: it gives BOTH clue types (location + suspect) for a fixed 2-hour cost, but increases notoriety. This is the only way to get both clues from a single action.
+10. **Encounter priority order** - On first investigation in correct cities:
+    - **Henchman** (cities 2-3): Always triggers, confirms player is on right track
+    - **Assassination** (city 4): Always triggers, high stakes climax
+    - **Apprehension** (city 4, 2nd investigation): After assassination resolved
+    - **Good deed**: Can trigger on ANY investigation if no henchman/assassination, but only once per case (25% chance)
 
 ---
 
