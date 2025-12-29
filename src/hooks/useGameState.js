@@ -596,6 +596,7 @@ export function useGameState(gameData) {
     // Clear city-specific state
     setInvestigatedLocations([]);
     setLastFoundClue({ city: null, suspect: null });
+    setLastRogueAction(null); // Clear rogue action result
     setLastGoodDeedResult(null); // Clear good deed result
     setLastSleepResult(null); // Clear sleep result
     setLastEncounterResult(null); // Clear encounter result
