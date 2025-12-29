@@ -68,19 +68,37 @@ export function CityMapView({
 
   const scale = calculateOptimalScale();
 
-  // Convert lat/lon to SVG coordinates using city center as reference
+  // Calculate the center of the landmarks (not city center)
+  const getLandmarkCenter = () => {
+    const landmarkCoords = spots
+      .filter(s => s.spot.lat && s.spot.lon)
+      .map(s => ({ lat: s.spot.lat, lon: s.spot.lon }));
+
+    if (landmarkCoords.length === 0) {
+      return { lat: currentCity.lat, lon: currentCity.lon };
+    }
+
+    const lats = landmarkCoords.map(c => c.lat);
+    const lons = landmarkCoords.map(c => c.lon);
+
+    return {
+      lat: (Math.min(...lats) + Math.max(...lats)) / 2,
+      lon: (Math.min(...lons) + Math.max(...lons)) / 2,
+    };
+  };
+
+  const landmarkCenter = getLandmarkCenter();
+
+  // Convert lat/lon to SVG coordinates using landmark center as reference
   const latLonToCitySVG = (lat, lon) => {
     if (!currentCity || !currentCity.lat || !currentCity.lon) {
       return { x: width / 2, y: height / 2 };
     }
 
-    const centerLat = currentCity.lat;
-    const centerLon = currentCity.lon;
-
-    // Calculate offset from city center in meters, then apply scale
+    // Calculate offset from landmark center in meters, then apply scale
     // 1 degree latitude ≈ 111km = 111000m
-    const latDiffMeters = (centerLat - lat) * 111000;
-    const lonDiffMeters = (lon - centerLon) * 111000 * Math.cos(centerLat * Math.PI / 180);
+    const latDiffMeters = (landmarkCenter.lat - lat) * 111000;
+    const lonDiffMeters = (lon - landmarkCenter.lon) * 111000 * Math.cos(currentCity.lat * Math.PI / 180);
 
     // Apply scale (pixels per meter) and center in SVG viewport
     return {
