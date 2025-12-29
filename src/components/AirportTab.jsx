@@ -95,9 +95,9 @@ export function AirportTab({ destinations, timeRemaining, travelTime, onTravel, 
 
     // Calculate scale with padding
     const padding = 60;
-    // Account for option tray: on desktop it's on the right (256px), on mobile it's at bottom (192px)
-    const trayWidth = isDesktop ? 256 : 0;
-    const trayHeight = isDesktop ? 0 : 192;
+    // Account for option tray at bottom (192px)
+    const trayWidth = 0;
+    const trayHeight = 192;
     const availableWidth = width - trayWidth - 2 * padding;
     const availableHeight = height - trayHeight - 2 * padding;
 
@@ -137,9 +137,9 @@ export function AirportTab({ destinations, timeRemaining, travelTime, onTravel, 
     const latDiff = center.lat - lat;
     const lonDiff = lon - center.lon;
 
-    // Calculate the visual center accounting for the tray
-    const trayWidth = isDesktop ? 256 : 0;
-    const trayHeight = isDesktop ? 0 : 192;
+    // Calculate the visual center accounting for the tray at bottom
+    const trayWidth = 0;
+    const trayHeight = 192;
     const visualCenterX = (width - trayWidth) / 2;
     const visualCenterY = (height - trayHeight) / 2;
 
@@ -165,9 +165,9 @@ export function AirportTab({ destinations, timeRemaining, travelTime, onTravel, 
   // The world map uses equirectangular projection (800x400 = 360°x180°)
   // We need to scale and translate it to match the new centered coordinate system
   const worldMapTransform = (() => {
-    // Calculate the visual center accounting for the tray
-    const trayWidth = isDesktop ? 256 : 0;
-    const trayHeight = isDesktop ? 0 : 192;
+    // Calculate the visual center accounting for the tray at bottom
+    const trayWidth = 0;
+    const trayHeight = 192;
     const visualCenterX = (width - trayWidth) / 2;
     const visualCenterY = (height - trayHeight) / 2;
 
@@ -278,13 +278,9 @@ export function AirportTab({ destinations, timeRemaining, travelTime, onTravel, 
         </svg>
       </div>
 
-      {/* Option Tray - Responsive */}
-      <div className={`absolute ${
-        isDesktop
-          ? 'right-0 top-0 bottom-0 w-64 p-4'
-          : 'bottom-0 left-0 right-0 h-48 p-4'
-      } bg-gray-900/90 backdrop-blur-sm`}>
-        <OptionTray orientation={isDesktop ? 'vertical' : 'horizontal'}>
+      {/* Option Tray - Horizontal at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 h-48 p-4 bg-gray-900/90 backdrop-blur-sm">
+        <OptionTray orientation="horizontal">
           {destinations.map(dest => (
             <div key={dest.cityId} className="snap-start">
               <OptionCard
