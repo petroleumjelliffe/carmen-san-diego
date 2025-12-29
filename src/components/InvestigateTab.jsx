@@ -5,7 +5,6 @@ import { FadeIn } from './FadeIn';
 import { CityMapView } from './CityMapView';
 import { OptionCard } from './OptionCard';
 import { OptionTray } from './OptionTray';
-import { useIsDesktop } from '../hooks/useMediaQuery';
 
 export function InvestigateTab({
   isFinalCity,
@@ -40,7 +39,6 @@ export function InvestigateTab({
 }) {
   const [hoveredSpotId, setHoveredSpotId] = useState(null);
   const [investigatingSpotIndex, setInvestigatingSpotIndex] = useState(null);
-  const isDesktop = useIsDesktop();
 
   if (!cityClues) return null;
 
@@ -84,7 +82,7 @@ export function InvestigateTab({
     <div className="relative h-[600px]">
       {/* City Map Background */}
       {!hasBlockingOverlay && (
-        <div className="absolute inset-0 bg-gray-900/80 backdrop-blur-sm rounded-lg">
+        <div className="absolute inset-0">
           <CityMapView
             currentCity={currentCity}
             spots={cityClues}
@@ -179,14 +177,10 @@ export function InvestigateTab({
         </div>
       )}
 
-      {/* Option Tray - Responsive */}
+      {/* Option Tray - Always horizontal at bottom */}
       {!hasBlockingOverlay && (
-        <div className={`absolute ${
-          isDesktop
-            ? 'right-0 top-0 bottom-0 w-64 p-4'
-            : 'bottom-0 left-0 right-0 h-48 p-4'
-        } bg-gray-900/90 backdrop-blur-sm`}>
-          <OptionTray orientation={isDesktop ? 'vertical' : 'horizontal'}>
+        <div className="absolute bottom-0 left-0 right-0 h-48 p-4 bg-gray-900/90 backdrop-blur-sm">
+          <OptionTray orientation="horizontal">
             {/* Investigation Spots */}
             {cityClues.map((clue, i) => {
               const investigated = investigatedLocations.includes(clue.spot.id);

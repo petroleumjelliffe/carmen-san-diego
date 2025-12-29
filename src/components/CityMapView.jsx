@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { MapMarker } from './MapMarker';
+import { getFlightArcControlPoint } from '../utils/geoUtils';
 
 /**
- * Abstract city map for investigation screen
- * Shows investigation spots on a simplified grid layout
+ * Realistic city map for investigation screen
+ * Shows investigation spots on actual city map background
  */
 export function CityMapView({
   currentCity,
@@ -21,16 +22,47 @@ export function CityMapView({
   // Animation progress state (0 to 1)
   const [animationProgress, setAnimationProgress] = useState(0);
 
-  // Position investigation spots at different locations on the grid
-  // These are abstract positions - not actual geographic coordinates
-  const spotPositions = [
-    { x: width * 0.25, y: height * 0.35 },  // Upper left area
-    { x: width * 0.5, y: height * 0.5 },    // Center
-    { x: width * 0.75, y: height * 0.65 },  // Lower right area
-  ];
+  // Convert lat/lon to SVG coordinates using city center as reference
+  const latLonToCitySVG = (lat, lon) => {
+    if (!currentCity || !currentCity.lat || !currentCity.lon) {
+      return { x: width / 2, y: height / 2 };
+    }
 
-  // Center position (starting point for animation)
-  const centerPos = { x: width / 2, y: height / 2 };
+    // Simple mercator-like projection centered on the city
+    // Scale factor to zoom in on the city (smaller = more zoomed in)
+    const scale = 15000; // Adjust to fit landmarks within view
+
+    const centerLat = currentCity.lat;
+    const centerLon = currentCity.lon;
+
+    // Calculate offset from city center
+    const dx = (lon - centerLon) * scale * Math.cos(centerLat * Math.PI / 180);
+    const dy = (centerLat - lat) * scale; // Inverted Y axis
+
+    // Center in SVG viewport
+    return {
+      x: width / 2 + dx,
+      y: height / 2 + dy,
+    };
+  };
+
+  // Position investigation spots based on their lat/lon
+  const spotPositions = spots.map(spotData => {
+    if (spotData.spot.lat && spotData.spot.lon) {
+      return latLonToCitySVG(spotData.spot.lat, spotData.spot.lon);
+    }
+    // Fallback to default positions if no coordinates
+    const index = spots.indexOf(spotData);
+    const fallbackPositions = [
+      { x: width * 0.25, y: height * 0.35 },
+      { x: width * 0.5, y: height * 0.5 },
+      { x: width * 0.75, y: height * 0.65 },
+    ];
+    return fallbackPositions[index] || { x: width / 2, y: height / 2 };
+  });
+
+  // Player position (bottom center)
+  const playerPos = { x: width / 2, y: height * 0.85 };
 
   // Animate progress when investigating
   useEffect(() => {
@@ -55,37 +87,29 @@ export function CityMapView({
     }
   }, [isAnimating, investigatingSpotIndex]);
 
+  // Get city map background image
+  const mapImage = currentCity?.map_image;
+
   return (
     <div className="relative w-full h-full bg-gray-900 rounded-lg overflow-hidden">
+      {/* Background map image */}
+      {mapImage && (
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: `linear-gradient(to bottom, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.3)), url('${mapImage}')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+      )}
+
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        className="w-full h-full"
+        className="w-full h-full relative z-10"
         style={{ maxHeight: '600px' }}
       >
-        {/* Background gradient */}
         <defs>
-          <linearGradient id="cityGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#1e293b" stopOpacity="1" />
-            <stop offset="100%" stopColor="#0f172a" stopOpacity="1" />
-          </linearGradient>
-
-          {/* Grid pattern */}
-          <pattern
-            id="cityGrid"
-            x="0"
-            y="0"
-            width="50"
-            height="50"
-            patternUnits="userSpaceOnUse"
-          >
-            <path
-              d="M 50 0 L 0 0 0 50"
-              fill="none"
-              stroke="rgba(100, 116, 139, 0.1)"
-              strokeWidth="1"
-            />
-          </pattern>
-
           {/* Pulsing glow for available spots */}
           <filter id="spotGlow">
             <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
@@ -96,57 +120,15 @@ export function CityMapView({
           </filter>
         </defs>
 
-        {/* Background */}
-        <rect x="0" y="0" width={width} height={height} fill="url(#cityGradient)" />
-
-        {/* Grid overlay */}
-        <rect x="0" y="0" width={width} height={height} fill="url(#cityGrid)" />
-
-        {/* City silhouette shapes (abstract geometric buildings) */}
-        <g opacity="0.08" fill="#cbd5e1">
-          {/* Background buildings */}
-          <rect x={width * 0.15} y={height * 0.6} width="60" height="150" />
-          <rect x={width * 0.25} y={height * 0.5} width="40" height="200" />
-          <rect x={width * 0.35} y={height * 0.55} width="70" height="180" />
-          <rect x={width * 0.55} y={height * 0.52} width="50" height="190" />
-          <rect x={width * 0.65} y={height * 0.58} width="65" height="170" />
-          <rect x={width * 0.78} y={height * 0.62} width="45" height="150" />
-        </g>
-
-        {/* City name label */}
-        <text
-          x={width / 2}
-          y="30"
-          textAnchor="middle"
-          fill="#94a3b8"
-          fontSize="24"
-          fontWeight="bold"
-          fontFamily="monospace"
-          opacity="0.3"
-        >
-          {currentCity?.name?.toUpperCase()}
-        </text>
-
         {/* Investigation spot markers */}
         {spots?.map((spotData, index) => {
           const spot = spotData.spot;
-          const position = spotPositions[index] || spotPositions[0];
+          const position = spotPositions[index] || { x: width / 2, y: height / 2 };
           const isInvestigated = investigatedSpots.includes(spot.id);
           const isHovered = hoveredSpotId === spot.id;
 
           return (
             <g key={spot.id}>
-              {/* Connection lines to center (subtle) */}
-              <line
-                x1={position.x}
-                y1={position.y}
-                x2={width / 2}
-                y2={height / 2}
-                stroke="rgba(100, 116, 139, 0.1)"
-                strokeWidth="1"
-                strokeDasharray="4 4"
-              />
-
               {/* Marker */}
               <MapMarker
                 x={position.x}
@@ -179,55 +161,97 @@ export function CityMapView({
           );
         })}
 
-        {/* Investigation Animation - Moving icon along line */}
+        {/* Player marker (always at bottom center) */}
+        <MapMarker
+          x={playerPos.x}
+          y={playerPos.y}
+          label="YOU"
+          icon="🔍"
+          variant="current"
+          disabled={true}
+        />
+
+        {/* Investigation Animation - Arc from player to destination */}
         {isAnimating && investigatingSpotIndex !== null && spots[investigatingSpotIndex] && (
           <g className="investigation-animation">
             {(() => {
-              const targetPos = spotPositions[investigatingSpotIndex] || spotPositions[0];
+              const targetPos = spotPositions[investigatingSpotIndex] || { x: width / 2, y: height / 2 };
               const spot = spots[investigatingSpotIndex].spot;
 
-              // Calculate current position along the path
-              const currentX = centerPos.x + (targetPos.x - centerPos.x) * animationProgress;
-              const currentY = centerPos.y + (targetPos.y - centerPos.y) * animationProgress;
+              // Calculate arc control point (similar to flight path)
+              const controlPoint = getFlightArcControlPoint(playerPos, targetPos);
+
+              // Bezier curve function for position along the path
+              const getPointOnCurve = (t) => {
+                // Quadratic Bezier curve formula
+                const x = Math.pow(1 - t, 2) * playerPos.x +
+                         2 * (1 - t) * t * controlPoint.x +
+                         Math.pow(t, 2) * targetPos.x;
+                const y = Math.pow(1 - t, 2) * playerPos.y +
+                         2 * (1 - t) * t * controlPoint.y +
+                         Math.pow(t, 2) * targetPos.y;
+                return { x, y };
+              };
+
+              const currentPos = getPointOnCurve(animationProgress);
+              const pathD = `M ${playerPos.x} ${playerPos.y} Q ${controlPoint.x} ${controlPoint.y} ${targetPos.x} ${targetPos.y}`;
 
               return (
                 <>
-                  {/* Animated line from center to current position */}
-                  <line
-                    x1={centerPos.x}
-                    y1={centerPos.y}
-                    x2={currentX}
-                    y2={currentY}
-                    stroke="#fbbf24"
-                    strokeWidth="3"
+                  {/* Full path (faded) */}
+                  <path
+                    d={pathD}
+                    fill="none"
+                    stroke="rgba(251, 191, 36, 0.4)"
+                    strokeWidth="4"
+                    strokeDasharray="8 8"
+                  />
+
+                  {/* Animated line glow */}
+                  <path
+                    d={`M ${playerPos.x} ${playerPos.y} Q ${controlPoint.x} ${controlPoint.y} ${currentPos.x} ${currentPos.y}`}
+                    fill="none"
+                    stroke="rgba(251, 191, 36, 0.5)"
+                    strokeWidth="12"
                     strokeLinecap="round"
-                    opacity="0.8"
+                    filter="blur(4px)"
+                  />
+
+                  {/* Animated line from player to current position */}
+                  <path
+                    d={`M ${playerPos.x} ${playerPos.y} Q ${controlPoint.x} ${controlPoint.y} ${currentPos.x} ${currentPos.y}`}
+                    fill="none"
+                    stroke="#fbbf24"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                    opacity="1"
                   />
 
                   {/* Moving icon */}
-                  <g transform={`translate(${currentX}, ${currentY})`}>
+                  <g transform={`translate(${currentPos.x}, ${currentPos.y})`}>
                     {/* Glow effect */}
                     <circle
-                      r="20"
+                      r="30"
                       fill="#fbbf24"
-                      opacity="0.2"
+                      opacity="0.3"
                       className="animate-pulse"
                     />
 
                     {/* Icon background */}
                     <circle
-                      r="15"
+                      r="22"
                       fill="#1f2937"
                       stroke="#fbbf24"
-                      strokeWidth="2"
+                      strokeWidth="3"
                     />
 
                     {/* Icon emoji */}
                     <text
                       textAnchor="middle"
                       dominantBaseline="central"
-                      fontSize="16"
+                      fontSize="28"
                       className="pointer-events-none"
+                      filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))"
                     >
                       {spot.icon || '🔍'}
                     </text>

@@ -61,7 +61,11 @@ export function MapMarker({
           strokeWidth="2"
           opacity="0.4"
           className="animate-ping"
-          style={{ animationDuration: '2s' }}
+          style={{
+            animationDuration: '2s',
+            transformOrigin: `${x}px ${y}px`,
+            transformBox: 'fill-box',
+          }}
         />
       )}
 
@@ -105,13 +109,16 @@ export function MapMarker({
       {label && (
         <text
           x={x}
-          y={y - size - 8}
+          y={y - size - 12}
           textAnchor="middle"
           fill={style.textColor}
-          fontSize="10"
+          fontSize="20"
           fontWeight="bold"
           fontFamily="monospace"
           className="pointer-events-none select-none"
+          stroke="rgba(0, 0, 0, 0.8)"
+          strokeWidth="4"
+          paintOrder="stroke"
         >
           {label.toUpperCase()}
         </text>
@@ -121,10 +128,11 @@ export function MapMarker({
       {icon && (
         <text
           x={x}
-          y={y - size - 24}
+          y={y - size - 38}
           textAnchor="middle"
-          fontSize="16"
+          fontSize="32"
           className="pointer-events-none select-none"
+          filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))"
         >
           {icon}
         </text>

@@ -16,7 +16,7 @@ export function useGameState(gameData) {
   const [collectedClues, setCollectedClues] = useState({ city: [], suspect: [] });
   const [investigatedLocations, setInvestigatedLocations] = useState([]);
   const [selectedWarrant, setSelectedWarrant] = useState(null);
-  const [activeTab, setActiveTab] = useState('investigate');
+  const [activeTab, setActiveTab] = useState('home');
   const [solvedCases, setSolvedCases] = useState(0);
   const [message, setMessage] = useState(null);
   const [showCutscene, setShowCutscene] = useState(false);
