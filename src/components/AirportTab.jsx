@@ -48,6 +48,7 @@ export function AirportTab({ destinations, timeRemaining, travelTime, onTravel, 
   const isDesktop = useIsDesktop();
   const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 400 });
+  const [dimensionsMeasured, setDimensionsMeasured] = useState(false);
 
   // Measure container dimensions
   useEffect(() => {
@@ -58,6 +59,7 @@ export function AirportTab({ destinations, timeRemaining, travelTime, onTravel, 
           width: clientWidth || 800,
           height: clientHeight || 400,
         });
+        setDimensionsMeasured(true);
       }
     };
 
@@ -227,7 +229,7 @@ export function AirportTab({ destinations, timeRemaining, travelTime, onTravel, 
           </g>
 
           {/* Flight paths from current city to each destination */}
-          {currentPoint && destinationPoints.map(dest => {
+          {dimensionsMeasured && currentPoint && destinationPoints.map(dest => {
             const destination = destinations.find(d => d.cityId === dest.cityId);
             const isHovered = hoveredCity === dest.cityId;
             const controlPoint = getFlightArcControlPoint(currentPoint, dest.point);
@@ -247,7 +249,7 @@ export function AirportTab({ destinations, timeRemaining, travelTime, onTravel, 
           })}
 
           {/* Destination markers */}
-          {destinations.map((dest, index) => {
+          {dimensionsMeasured && destinations.map((dest, index) => {
             const destPoint = destinationPoints[index].point;
             return (
               <MapMarker
@@ -266,7 +268,7 @@ export function AirportTab({ destinations, timeRemaining, travelTime, onTravel, 
           })}
 
           {/* Current city marker (on top) */}
-          {currentPoint && (
+          {dimensionsMeasured && currentPoint && (
             <MapMarker
               x={currentPoint.x}
               y={currentPoint.y}

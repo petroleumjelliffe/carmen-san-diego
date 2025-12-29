@@ -41,6 +41,7 @@ export function InvestigateTab({
 }) {
   const [hoveredSpotId, setHoveredSpotId] = useState(null);
   const [investigatingSpotIndex, setInvestigatingSpotIndex] = useState(null);
+  const [isInvestigatingRogue, setIsInvestigatingRogue] = useState(false);
 
   // Track last investigated spot for animation starting point
   // Use second-to-last to avoid animating from the spot we just clicked to itself
@@ -52,6 +53,36 @@ export function InvestigateTab({
   const handleInvestigateClick = (index) => {
     setInvestigatingSpotIndex(index);
     onInvestigate(index);
+  };
+
+  // Clear investigating index after animation completes (1.5s)
+  useEffect(() => {
+    if (investigatingSpotIndex !== null) {
+      const timeout = setTimeout(() => {
+        setInvestigatingSpotIndex(null);
+      }, 1500); // Match animation duration in CityMapView
+
+      return () => clearTimeout(timeout);
+    }
+  }, [investigatingSpotIndex]);
+
+  // Clear rogue investigating flag after animation completes (1.5s)
+  useEffect(() => {
+    if (isInvestigatingRogue) {
+      const timeout = setTimeout(() => {
+        setIsInvestigatingRogue(false);
+      }, 1500);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [isInvestigatingRogue]);
+
+  // Handler for rogue action - sets animation flag and calls parent handler
+  const handleRogueClick = () => {
+    if (availableRogueAction && onRogueAction) {
+      setIsInvestigatingRogue(true);
+      onRogueAction(availableRogueAction);
+    }
   };
 
   if (!cityClues) return null;
@@ -105,6 +136,9 @@ export function InvestigateTab({
             hotel={hotel}
             rogueLocation={rogueLocation}
             lastInvestigatedSpotId={lastInvestigatedSpotId}
+            onRogueClick={availableRogueAction && onRogueAction ? handleRogueClick : null}
+            rogueUsed={rogueUsedInCity}
+            isInvestigatingRogue={isInvestigatingRogue}
           />
         </div>
       )}
@@ -224,7 +258,7 @@ export function InvestigateTab({
                   transfers={0}
                   disabled={rogueUsedInCity || timeRemaining < (rogueLocation.time_cost || ROGUE_TIME_COST) || isInvestigating || (actionPhase && actionPhase !== 'idle')}
                   selected={false}
-                  onClick={() => onRogueAction(availableRogueAction)}
+                  onClick={handleRogueClick}
                   variant="investigation"
                 />
               </div>

@@ -18,9 +18,13 @@ export function CityMapView({
   hotel = null,
   rogueLocation = null,
   lastInvestigatedSpotId = null,
+  onRogueClick = null,
+  rogueUsed = false,
+  isInvestigatingRogue = false,
 }) {
   const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 500 });
+  const [dimensionsMeasured, setDimensionsMeasured] = useState(false);
 
   // Measure container dimensions
   useEffect(() => {
@@ -31,6 +35,7 @@ export function CityMapView({
           width: clientWidth || 800,
           height: clientHeight || 500,
         });
+        setDimensionsMeasured(true);
       }
     };
 
@@ -198,7 +203,7 @@ export function CityMapView({
 
   // Animate progress when investigating
   useEffect(() => {
-    if (investigatingSpotIndex !== null) {
+    if (investigatingSpotIndex !== null || isInvestigatingRogue) {
       setAnimationProgress(0);
       const startTime = Date.now();
       const duration = 1500; // 1.5 second animation
@@ -217,7 +222,7 @@ export function CityMapView({
     } else {
       setAnimationProgress(0);
     }
-  }, [investigatingSpotIndex]);
+  }, [investigatingSpotIndex, isInvestigatingRogue]);
 
   // Get city map background image
   const mapImage = currentCity?.map_image;
@@ -264,7 +269,7 @@ export function CityMapView({
         <rect x="0" y="0" width={width} height={height} fill="url(#cityGrid)" />
 
         {/* Investigation spot markers */}
-        {spots?.map((spotData, index) => {
+        {dimensionsMeasured && spots?.map((spotData, index) => {
           const spot = spotData.spot;
           const position = spotPositions[index] || { x: width / 2, y: height / 2 };
           const isInvestigated = investigatedSpots.includes(spot.id);
@@ -305,25 +310,28 @@ export function CityMapView({
         })}
 
         {/* Player marker (at hotel) */}
-        <MapMarker
-          x={playerPos.x}
-          y={playerPos.y}
-          label={hotel?.name || "YOU"}
-          icon={hotel?.icon || "🔍"}
-          variant="current"
-          disabled={true}
-        />
+        {dimensionsMeasured && (
+          <MapMarker
+            x={playerPos.x}
+            y={playerPos.y}
+            label={hotel?.name || "YOU"}
+            icon={hotel?.icon || "🔍"}
+            variant="current"
+            disabled={true}
+          />
+        )}
 
         {/* Rogue location marker */}
-        {roguePos && (
+        {dimensionsMeasured && roguePos && (
           <MapMarker
             x={roguePos.x}
             y={roguePos.y}
             label={rogueLocation.name}
             icon={rogueLocation.icon}
             variant="destination"
-            pulsing={true}
-            disabled={false}
+            pulsing={!rogueUsed}
+            disabled={rogueUsed}
+            onClick={onRogueClick && !rogueUsed ? onRogueClick : undefined}
           />
         )}
 
@@ -438,6 +446,124 @@ export function CityMapView({
                       filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))"
                     >
                       {spot.icon || '🔍'}
+                    </text>
+                  </g>
+                </>
+              );
+            })()}
+          </g>
+        )}
+
+        {/* Rogue Action Animation - Orthogonal lines to rogue location */}
+        {isInvestigatingRogue && roguePos && (
+          <g className="rogue-animation">
+            {(() => {
+              const targetPos = roguePos;
+
+              // Orthogonal path - horizontal then vertical (street-like navigation)
+              const cornerX = targetPos.x;
+              const cornerY = animationStartPos.y;
+
+              // Calculate total path length
+              const horizontalDist = Math.abs(targetPos.x - animationStartPos.x);
+              const verticalDist = Math.abs(targetPos.y - animationStartPos.y);
+              const totalDist = horizontalDist + verticalDist;
+
+              // Calculate current position along orthogonal path
+              const getPointOnOrthogonalPath = (t) => {
+                const travelDist = t * totalDist;
+
+                if (travelDist <= horizontalDist) {
+                  // Moving horizontally
+                  const ratio = horizontalDist > 0 ? travelDist / horizontalDist : 0;
+                  return {
+                    x: animationStartPos.x + (cornerX - animationStartPos.x) * ratio,
+                    y: animationStartPos.y
+                  };
+                } else {
+                  // Moving vertically
+                  const verticalProgress = travelDist - horizontalDist;
+                  const ratio = verticalDist > 0 ? verticalProgress / verticalDist : 0;
+                  return {
+                    x: cornerX,
+                    y: cornerY + (targetPos.y - cornerY) * ratio
+                  };
+                }
+              };
+
+              const currentPos = getPointOnOrthogonalPath(animationProgress);
+              const pathD = `M ${animationStartPos.x} ${animationStartPos.y} L ${cornerX} ${cornerY} L ${targetPos.x} ${targetPos.y}`;
+
+              // Calculate path to current position
+              const getCurrentPathD = () => {
+                const travelDist = animationProgress * totalDist;
+                if (travelDist <= horizontalDist) {
+                  // Only horizontal movement so far
+                  return `M ${animationStartPos.x} ${animationStartPos.y} L ${currentPos.x} ${currentPos.y}`;
+                } else {
+                  // Horizontal complete, now vertical
+                  return `M ${animationStartPos.x} ${animationStartPos.y} L ${cornerX} ${cornerY} L ${currentPos.x} ${currentPos.y}`;
+                }
+              };
+
+              return (
+                <>
+                  {/* Full path (faded) - orange for rogue */}
+                  <path
+                    d={pathD}
+                    fill="none"
+                    stroke="rgba(249, 115, 22, 0.4)"
+                    strokeWidth="4"
+                    strokeDasharray="8 8"
+                  />
+
+                  {/* Animated line glow */}
+                  <path
+                    d={getCurrentPathD()}
+                    fill="none"
+                    stroke="rgba(249, 115, 22, 0.5)"
+                    strokeWidth="12"
+                    strokeLinecap="round"
+                    filter="blur(4px)"
+                  />
+
+                  {/* Animated line from start to current position */}
+                  <path
+                    d={getCurrentPathD()}
+                    fill="none"
+                    stroke="#f97316"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                    opacity="1"
+                  />
+
+                  {/* Moving icon */}
+                  <g transform={`translate(${currentPos.x}, ${currentPos.y})`}>
+                    {/* Glow effect */}
+                    <circle
+                      r="30"
+                      fill="#f97316"
+                      opacity="0.3"
+                      className="animate-pulse"
+                    />
+
+                    {/* Icon background */}
+                    <circle
+                      r="22"
+                      fill="#1f2937"
+                      stroke="#f97316"
+                      strokeWidth="3"
+                    />
+
+                    {/* Icon emoji */}
+                    <text
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      fontSize="28"
+                      className="pointer-events-none"
+                      filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))"
+                    >
+                      {rogueLocation.icon || '⚡'}
                     </text>
                   </g>
                 </>
