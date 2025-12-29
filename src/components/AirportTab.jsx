@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plane, Clock, MapPin } from 'lucide-react';
-import { latLonToSVG } from '../utils/geoUtils';
+import { latLonToSVG, getFlightArcControlPoint } from '../utils/geoUtils';
 
 // Simplified but recognizable world map continents
 function WorldMapOutlines() {
@@ -196,20 +196,22 @@ export function AirportTab({ destinations, timeRemaining, travelTime, onTravel, 
           {/* World map silhouette */}
           <WorldMapOutlines />
 
-          {/* Connection lines from current to destinations */}
-          {currentPoint && destinationPoints.map(dest => (
-            <line
-              key={`line-${dest.cityId}`}
-              x1={currentPoint.x}
-              y1={currentPoint.y}
-              x2={dest.point.x}
-              y2={dest.point.y}
-              stroke={hoveredCity === dest.cityId ? 'rgba(59, 130, 246, 0.5)' : 'rgba(100, 150, 255, 0.15)'}
-              strokeWidth={hoveredCity === dest.cityId ? 2 : 1}
-              strokeDasharray={hoveredCity === dest.cityId ? 'none' : '4 4'}
-              className="transition-all duration-150"
-            />
-          ))}
+          {/* Curved flight paths from current to destinations */}
+          {currentPoint && destinationPoints.map(dest => {
+            const controlPoint = getFlightArcControlPoint(currentPoint, dest.point);
+            const pathD = `M ${currentPoint.x} ${currentPoint.y} Q ${controlPoint.x} ${controlPoint.y} ${dest.point.x} ${dest.point.y}`;
+            return (
+              <path
+                key={`path-${dest.cityId}`}
+                d={pathD}
+                fill="none"
+                stroke={hoveredCity === dest.cityId ? 'rgba(59, 130, 246, 0.5)' : 'rgba(100, 150, 255, 0.15)'}
+                strokeWidth={hoveredCity === dest.cityId ? 2 : 1}
+                strokeDasharray={hoveredCity === dest.cityId ? 'none' : '4 4'}
+                className="transition-all duration-150"
+              />
+            );
+          })}
 
           {/* Destination city markers */}
           {destinationPoints.map(dest => (
