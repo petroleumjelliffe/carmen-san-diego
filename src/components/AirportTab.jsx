@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { latLonToSVG, getFlightArcControlPoint } from '../utils/geoUtils';
+import { getFlightArcControlPoint } from '../utils/geoUtils';
 import { MapMarker } from './MapMarker';
 import { OptionCard } from './OptionCard';
 import { OptionTray } from './OptionTray';
@@ -51,15 +51,90 @@ export function AirportTab({ destinations, timeRemaining, travelTime, onTravel, 
   const height = 400;
   const canTravel = timeRemaining >= travelTime;
 
+  // Get all cities (current + destinations)
+  const allCities = currentCity ? [currentCity, ...destinations] : destinations;
+
+  // Calculate optimal scale to fit all cities
+  const calculateOptimalScale = () => {
+    if (allCities.length === 0) return 0.5;
+
+    const cityCoords = allCities
+      .filter(c => c.lat && c.lon)
+      .map(c => ({ lat: c.lat, lon: c.lon }));
+
+    if (cityCoords.length === 0) return 0.5;
+
+    const lats = cityCoords.map(c => c.lat);
+    const lons = cityCoords.map(c => c.lon);
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
+    const minLon = Math.min(...lons);
+    const maxLon = Math.max(...lons);
+
+    const latRange = maxLat - minLat;
+    const lonRange = maxLon - minLon;
+
+    // Convert to meters
+    const latRangeMeters = latRange * 111000;
+    const avgLat = (minLat + maxLat) / 2;
+    const lonRangeMeters = lonRange * 111000 * Math.cos(avgLat * Math.PI / 180);
+
+    // Calculate scale with padding
+    const padding = 80;
+    const availableWidth = width - 2 * padding;
+    const availableHeight = height - 2 * padding;
+
+    const scaleByLat = latRangeMeters > 0 ? availableHeight / latRangeMeters : 0.5;
+    const scaleByLon = lonRangeMeters > 0 ? availableWidth / lonRangeMeters : 0.5;
+
+    // Min scale 0.005 (world view), max scale 0.1 (regional view)
+    return Math.max(0.005, Math.min(scaleByLat, scaleByLon, 0.1));
+  };
+
+  // Calculate center of all cities
+  const getCityCenter = () => {
+    const cityCoords = allCities
+      .filter(c => c.lat && c.lon)
+      .map(c => ({ lat: c.lat, lon: c.lon }));
+
+    if (cityCoords.length === 0) {
+      return { lat: 0, lon: 0 };
+    }
+
+    const lats = cityCoords.map(c => c.lat);
+    const lons = cityCoords.map(c => c.lon);
+
+    return {
+      lat: (Math.min(...lats) + Math.max(...lats)) / 2,
+      lon: (Math.min(...lons) + Math.max(...lons)) / 2,
+    };
+  };
+
+  const scale = calculateOptimalScale();
+  const center = getCityCenter();
+
+  // Convert lat/lon to SVG coordinates using city center as reference
+  const cityLatLonToSVG = (lat, lon) => {
+    // Calculate offset from center in meters
+    const latDiffMeters = (center.lat - lat) * 111000;
+    const lonDiffMeters = (lon - center.lon) * 111000 * Math.cos(center.lat * Math.PI / 180);
+
+    // Apply scale and center in viewport
+    return {
+      x: width / 2 + (lonDiffMeters * scale),
+      y: height / 2 + (latDiffMeters * scale),
+    };
+  };
+
   // Convert current city to SVG coordinates
   const currentPoint = currentCity?.lat && currentCity?.lon
-    ? latLonToSVG(currentCity.lat, currentCity.lon, width, height)
+    ? cityLatLonToSVG(currentCity.lat, currentCity.lon)
     : null;
 
   // Convert destinations to SVG coordinates
   const destinationPoints = destinations.map(dest => ({
     cityId: dest.cityId,
-    point: latLonToSVG(dest.lat, dest.lon, width, height),
+    point: cityLatLonToSVG(dest.lat, dest.lon),
   }));
 
   return (
