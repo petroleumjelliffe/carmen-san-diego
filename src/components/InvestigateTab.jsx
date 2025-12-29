@@ -42,6 +42,18 @@ export function InvestigateTab({
   const [hoveredSpotId, setHoveredSpotId] = useState(null);
   const [investigatingSpotIndex, setInvestigatingSpotIndex] = useState(null);
 
+  // Track last investigated spot for animation starting point
+  const lastInvestigatedSpotId = investigatedLocations.length > 0
+    ? investigatedLocations[investigatedLocations.length - 1]
+    : null;
+
+  // Handler for investigating - sets animation index and calls parent handler
+  const handleInvestigateClick = (index) => {
+    console.log('[InvestigateTab] handleInvestigateClick called with index:', index);
+    setInvestigatingSpotIndex(index);
+    onInvestigate(index);
+  };
+
   if (!cityClues) return null;
 
   const ROGUE_TIME_COST = 2;
@@ -73,12 +85,15 @@ export function InvestigateTab({
   // Determine if animation is in progress
   const isAnimating = actionPhase === 'ticking' || actionPhase === 'pending';
 
-  // Clear investigating spot index when action completes
-  useEffect(() => {
-    if (actionPhase === 'idle' || actionPhase === 'complete') {
-      setInvestigatingSpotIndex(null);
-    }
-  }, [actionPhase]);
+  // Note: We don't clear investigatingSpotIndex when action completes
+  // because the animation in CityMapView needs it to persist for the full 1.5s animation duration
+
+  console.log('[InvestigateTab] Render state:', {
+    investigatingSpotIndex,
+    isAnimating,
+    actionPhase,
+    hasBlockingOverlay
+  });
 
   return (
     <div className="relative h-[600px]">
@@ -89,15 +104,14 @@ export function InvestigateTab({
             currentCity={currentCity}
             spots={cityClues}
             investigatedSpots={investigatedLocations}
-            onSpotClick={(index) => {
-              setInvestigatingSpotIndex(index);
-              onInvestigate(index);
-            }}
+            onSpotClick={handleInvestigateClick}
             hoveredSpotId={hoveredSpotId}
             onSpotHover={setHoveredSpotId}
             investigatingSpotIndex={investigatingSpotIndex}
             isAnimating={isAnimating}
             hotel={hotel}
+            rogueLocation={rogueLocation}
+            lastInvestigatedSpotId={lastInvestigatedSpotId}
           />
         </div>
       )}
@@ -199,7 +213,7 @@ export function InvestigateTab({
                     transfers={0}
                     disabled={investigated || timeRemaining < nextInvestigationCost || isInvestigating || actionBusy}
                     selected={hoveredSpotId === clue.spot.id}
-                    onClick={() => !investigated && onInvestigate(i)}
+                    onClick={() => !investigated && handleInvestigateClick(i)}
                     variant="investigation"
                   />
                 </div>

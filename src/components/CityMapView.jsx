@@ -16,6 +16,8 @@ export function CityMapView({
   investigatingSpotIndex = null,
   isAnimating = false,
   hotel = null,
+  rogueLocation = null,
+  lastInvestigatedSpotId = null,
 }) {
   const containerRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 500 });
@@ -49,7 +51,7 @@ export function CityMapView({
       return 0.05;
     }
 
-    // Get all landmark coordinates (including hotel if available)
+    // Get all landmark coordinates (including hotel and rogue location if available)
     const landmarkCoords = spots
       .filter(s => s.spot.lat && s.spot.lon)
       .map(s => ({ lat: s.spot.lat, lon: s.spot.lon }));
@@ -57,6 +59,11 @@ export function CityMapView({
     // Include hotel in bounds calculation
     if (hotel?.lat && hotel?.lon) {
       landmarkCoords.push({ lat: hotel.lat, lon: hotel.lon });
+    }
+
+    // Include rogue location in bounds calculation
+    if (rogueLocation?.lat && rogueLocation?.lon) {
+      landmarkCoords.push({ lat: rogueLocation.lat, lon: rogueLocation.lon });
     }
 
     if (landmarkCoords.length === 0) return 0.05;
@@ -94,6 +101,7 @@ export function CityMapView({
   };
 
   const scale = calculateOptimalScale();
+  console.log('[CityMapView] Calculated scale:', scale);
 
   // Calculate the center of the landmarks (not city center)
   const getLandmarkCenter = () => {
@@ -104,6 +112,11 @@ export function CityMapView({
     // Include hotel in center calculation
     if (hotel?.lat && hotel?.lon) {
       landmarkCoords.push({ lat: hotel.lat, lon: hotel.lon });
+    }
+
+    // Include rogue location in center calculation
+    if (rogueLocation?.lat && rogueLocation?.lon) {
+      landmarkCoords.push({ lat: rogueLocation.lat, lon: rogueLocation.lon });
     }
 
     if (landmarkCoords.length === 0) {
@@ -120,9 +133,12 @@ export function CityMapView({
   };
 
   const landmarkCenter = getLandmarkCenter();
+  console.log('[CityMapView] Landmark center:', landmarkCenter);
+  console.log('[CityMapView] Hotel:', hotel);
+  console.log('[CityMapView] Spots:', spots.map(s => ({ name: s.spot.name, lat: s.spot.lat, lon: s.spot.lon })));
 
   // Convert lat/lon to SVG coordinates using landmark center as reference
-  const latLonToCitySVG = (lat, lon) => {
+  const latLonToCitySVG = (lat, lon, label = '') => {
     if (!currentCity || !currentCity.lat || !currentCity.lon) {
       return { x: width / 2, y: height / 2 };
     }
@@ -138,16 +154,26 @@ export function CityMapView({
     const visualCenterY = (height - trayHeight) / 2;
 
     // Apply scale (pixels per meter) and center in available space
-    return {
+    const result = {
       x: visualCenterX + (lonDiffMeters * scale),
       y: visualCenterY + (latDiffMeters * scale),
     };
+
+    console.log(`[CityMapView] latLonToCitySVG(${lat}, ${lon}) ${label}:`, {
+      latDiffMeters,
+      lonDiffMeters,
+      scale,
+      visualCenter: { x: visualCenterX, y: visualCenterY },
+      result
+    });
+
+    return result;
   };
 
   // Position investigation spots based on their lat/lon
   const spotPositions = spots.map(spotData => {
     if (spotData.spot.lat && spotData.spot.lon) {
-      return latLonToCitySVG(spotData.spot.lat, spotData.spot.lon);
+      return latLonToCitySVG(spotData.spot.lat, spotData.spot.lon, `spot:${spotData.spot.name}`);
     }
     // Fallback to default positions if no coordinates
     const index = spots.indexOf(spotData);
@@ -159,18 +185,35 @@ export function CityMapView({
     return fallbackPositions[index] || { x: width / 2, y: height / 2 };
   });
 
-  // Player position (at hotel if available, otherwise bottom center)
+  // Rogue location position
+  const roguePos = rogueLocation?.lat && rogueLocation?.lon
+    ? latLonToCitySVG(rogueLocation.lat, rogueLocation.lon, `rogue:${rogueLocation.name}`)
+    : null;
+
+  // Player starting position (hotel)
   const playerPos = hotel?.lat && hotel?.lon
-    ? latLonToCitySVG(hotel.lat, hotel.lon)
+    ? latLonToCitySVG(hotel.lat, hotel.lon, `hotel:${hotel.name}`)
     : (() => {
         const trayHeight = 192; // h-48 = 192px
         const availableHeight = height - trayHeight;
         return { x: width / 2, y: availableHeight * 0.85 };
       })();
 
+  // Animation starting position (last investigated spot, or hotel if none)
+  const animationStartPos = (() => {
+    if (lastInvestigatedSpotId) {
+      const lastSpotIndex = spots.findIndex(s => s.spot.id === lastInvestigatedSpotId);
+      if (lastSpotIndex >= 0 && spotPositions[lastSpotIndex]) {
+        return spotPositions[lastSpotIndex];
+      }
+    }
+    return playerPos;
+  })();
+
   // Animate progress when investigating
   useEffect(() => {
-    if (isAnimating && investigatingSpotIndex !== null) {
+    if (investigatingSpotIndex !== null) {
+      console.log('[CityMapView] Starting animation for spot index:', investigatingSpotIndex);
       setAnimationProgress(0);
       const startTime = Date.now();
       const duration = 1500; // 1.5 second animation
@@ -179,9 +222,12 @@ export function CityMapView({
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / duration, 1);
         setAnimationProgress(progress);
+        console.log('[CityMapView] Animation progress:', progress);
 
         if (progress < 1) {
           requestAnimationFrame(animate);
+        } else {
+          console.log('[CityMapView] Animation complete');
         }
       };
 
@@ -189,7 +235,7 @@ export function CityMapView({
     } else {
       setAnimationProgress(0);
     }
-  }, [isAnimating, investigatingSpotIndex]);
+  }, [investigatingSpotIndex]); // Removed isAnimating dependency - animate whenever index is set
 
   // Get city map background image
   const mapImage = currentCity?.map_image;
@@ -205,6 +251,23 @@ export function CityMapView({
         style={{ maxHeight: '600px' }}
       >
         <defs>
+          {/* City grid pattern */}
+          <pattern
+            id="cityGrid"
+            x="0"
+            y="0"
+            width="50"
+            height="50"
+            patternUnits="userSpaceOnUse"
+          >
+            <path
+              d="M 50 0 L 0 0 0 50"
+              fill="none"
+              stroke="rgba(100, 116, 139, 0.15)"
+              strokeWidth="1"
+            />
+          </pattern>
+
           {/* Pulsing glow for available spots */}
           <filter id="spotGlow">
             <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
@@ -214,6 +277,9 @@ export function CityMapView({
             </feMerge>
           </filter>
         </defs>
+
+        {/* Grid background */}
+        <rect x="0" y="0" width={width} height={height} fill="url(#cityGrid)" />
 
         {/* Investigation spot markers */}
         {spots?.map((spotData, index) => {
@@ -266,30 +332,79 @@ export function CityMapView({
           disabled={true}
         />
 
-        {/* Investigation Animation - Arc from player to destination */}
-        {isAnimating && investigatingSpotIndex !== null && spots[investigatingSpotIndex] && (
+        {/* Rogue location marker */}
+        {roguePos && (
+          <MapMarker
+            x={roguePos.x}
+            y={roguePos.y}
+            label={rogueLocation.name}
+            icon={rogueLocation.icon}
+            variant="destination"
+            pulsing={true}
+            disabled={false}
+          />
+        )}
+
+        {/* Investigation Animation - Orthogonal lines from last spot to destination */}
+        {investigatingSpotIndex !== null && spots[investigatingSpotIndex] && (
           <g className="investigation-animation">
             {(() => {
               const targetPos = spotPositions[investigatingSpotIndex] || { x: width / 2, y: height / 2 };
               const spot = spots[investigatingSpotIndex].spot;
 
-              // Calculate arc control point (similar to flight path)
-              const controlPoint = getFlightArcControlPoint(playerPos, targetPos);
+              console.log('[CityMapView] Drawing animation:', {
+                animationStartPos,
+                targetPos,
+                animationProgress
+              });
 
-              // Bezier curve function for position along the path
-              const getPointOnCurve = (t) => {
-                // Quadratic Bezier curve formula
-                const x = Math.pow(1 - t, 2) * playerPos.x +
-                         2 * (1 - t) * t * controlPoint.x +
-                         Math.pow(t, 2) * targetPos.x;
-                const y = Math.pow(1 - t, 2) * playerPos.y +
-                         2 * (1 - t) * t * controlPoint.y +
-                         Math.pow(t, 2) * targetPos.y;
-                return { x, y };
+              // Orthogonal path - horizontal then vertical (street-like navigation)
+              const cornerX = targetPos.x;
+              const cornerY = animationStartPos.y;
+
+              // Calculate total path length
+              const horizontalDist = Math.abs(targetPos.x - animationStartPos.x);
+              const verticalDist = Math.abs(targetPos.y - animationStartPos.y);
+              const totalDist = horizontalDist + verticalDist;
+
+              // Calculate current position along orthogonal path
+              const getPointOnOrthogonalPath = (t) => {
+                const travelDist = t * totalDist;
+
+                if (travelDist <= horizontalDist) {
+                  // Moving horizontally
+                  const ratio = horizontalDist > 0 ? travelDist / horizontalDist : 0;
+                  return {
+                    x: animationStartPos.x + (cornerX - animationStartPos.x) * ratio,
+                    y: animationStartPos.y
+                  };
+                } else {
+                  // Moving vertically
+                  const verticalProgress = travelDist - horizontalDist;
+                  const ratio = verticalDist > 0 ? verticalProgress / verticalDist : 0;
+                  return {
+                    x: cornerX,
+                    y: cornerY + (targetPos.y - cornerY) * ratio
+                  };
+                }
               };
 
-              const currentPos = getPointOnCurve(animationProgress);
-              const pathD = `M ${playerPos.x} ${playerPos.y} Q ${controlPoint.x} ${controlPoint.y} ${targetPos.x} ${targetPos.y}`;
+              const currentPos = getPointOnOrthogonalPath(animationProgress);
+              const pathD = `M ${animationStartPos.x} ${animationStartPos.y} L ${cornerX} ${cornerY} L ${targetPos.x} ${targetPos.y}`;
+
+              console.log('[CityMapView] Full path:', pathD);
+
+              // Calculate path to current position
+              const getCurrentPathD = () => {
+                const travelDist = animationProgress * totalDist;
+                if (travelDist <= horizontalDist) {
+                  // Only horizontal movement so far
+                  return `M ${animationStartPos.x} ${animationStartPos.y} L ${currentPos.x} ${currentPos.y}`;
+                } else {
+                  // Horizontal complete, now vertical
+                  return `M ${animationStartPos.x} ${animationStartPos.y} L ${cornerX} ${cornerY} L ${currentPos.x} ${currentPos.y}`;
+                }
+              };
 
               return (
                 <>
@@ -304,7 +419,7 @@ export function CityMapView({
 
                   {/* Animated line glow */}
                   <path
-                    d={`M ${playerPos.x} ${playerPos.y} Q ${controlPoint.x} ${controlPoint.y} ${currentPos.x} ${currentPos.y}`}
+                    d={getCurrentPathD()}
                     fill="none"
                     stroke="rgba(251, 191, 36, 0.5)"
                     strokeWidth="12"
@@ -312,9 +427,9 @@ export function CityMapView({
                     filter="blur(4px)"
                   />
 
-                  {/* Animated line from player to current position */}
+                  {/* Animated line from start to current position */}
                   <path
-                    d={`M ${playerPos.x} ${playerPos.y} Q ${controlPoint.x} ${controlPoint.y} ${currentPos.x} ${currentPos.y}`}
+                    d={getCurrentPathD()}
                     fill="none"
                     stroke="#fbbf24"
                     strokeWidth="6"
