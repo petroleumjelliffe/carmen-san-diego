@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MapMarker } from './MapMarker';
 import { getFlightArcControlPoint } from '../utils/geoUtils';
 
@@ -16,8 +16,28 @@ export function CityMapView({
   investigatingSpotIndex = null,
   isAnimating = false,
 }) {
-  const width = 800;
-  const height = 500;
+  const containerRef = useRef(null);
+  const [dimensions, setDimensions] = useState({ width: 800, height: 500 });
+
+  // Measure container dimensions
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const { clientWidth, clientHeight } = containerRef.current;
+        setDimensions({
+          width: clientWidth || 800,
+          height: clientHeight || 500,
+        });
+      }
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
+
+  const width = dimensions.width;
+  const height = dimensions.height;
 
   // Animation progress state (0 to 1)
   const [animationProgress, setAnimationProgress] = useState(0);
@@ -52,9 +72,10 @@ export function CityMapView({
     const lonRangeMeters = lonRange * 111000 * Math.cos(currentCity.lat * Math.PI / 180);
 
     // Calculate scale to fit with padding
-    const padding = 100; // pixels
+    const padding = 80; // pixels
+    const trayHeight = 192; // h-48 = 192px tray at bottom
     const availableWidth = width - 2 * padding;
-    const availableHeight = height - 2 * padding;
+    const availableHeight = height - trayHeight - 2 * padding;
 
     const scaleByLat = latRangeMeters > 0 ? availableHeight / latRangeMeters : 0.05;
     const scaleByLon = lonRangeMeters > 0 ? availableWidth / lonRangeMeters : 0.05;
@@ -100,10 +121,15 @@ export function CityMapView({
     const latDiffMeters = (landmarkCenter.lat - lat) * 111000;
     const lonDiffMeters = (lon - landmarkCenter.lon) * 111000 * Math.cos(currentCity.lat * Math.PI / 180);
 
-    // Apply scale (pixels per meter) and center in SVG viewport
+    // Calculate the visual center accounting for the tray at bottom
+    const trayHeight = 192; // h-48 = 192px
+    const visualCenterX = width / 2;
+    const visualCenterY = (height - trayHeight) / 2;
+
+    // Apply scale (pixels per meter) and center in available space
     return {
-      x: width / 2 + (lonDiffMeters * scale),
-      y: height / 2 + (latDiffMeters * scale),
+      x: visualCenterX + (lonDiffMeters * scale),
+      y: visualCenterY + (latDiffMeters * scale),
     };
   };
 
@@ -122,8 +148,10 @@ export function CityMapView({
     return fallbackPositions[index] || { x: width / 2, y: height / 2 };
   });
 
-  // Player position (bottom center)
-  const playerPos = { x: width / 2, y: height * 0.85 };
+  // Player position (bottom center of available space, above the tray)
+  const trayHeight = 192; // h-48 = 192px
+  const availableHeight = height - trayHeight;
+  const playerPos = { x: width / 2, y: availableHeight * 0.85 };
 
   // Animate progress when investigating
   useEffect(() => {
@@ -152,7 +180,7 @@ export function CityMapView({
   const mapImage = currentCity?.map_image;
 
   return (
-    <div className="relative w-full h-full bg-gray-900 rounded-lg overflow-hidden">
+    <div ref={containerRef} className="relative w-full h-full bg-gray-900 rounded-lg overflow-hidden">
       {/* Dark gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900" />
 

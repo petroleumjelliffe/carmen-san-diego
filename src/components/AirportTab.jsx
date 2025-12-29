@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { getFlightArcControlPoint } from '../utils/geoUtils';
 import { MapMarker } from './MapMarker';
 import { OptionCard } from './OptionCard';
@@ -46,9 +46,28 @@ function WorldMapOutlines() {
 export function AirportTab({ destinations, timeRemaining, travelTime, onTravel, currentCity }) {
   const [hoveredCity, setHoveredCity] = useState(null);
   const isDesktop = useIsDesktop();
+  const containerRef = useRef(null);
+  const [dimensions, setDimensions] = useState({ width: 800, height: 400 });
 
-  const width = 800;
-  const height = 400;
+  // Measure container dimensions
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const { clientWidth, clientHeight } = containerRef.current;
+        setDimensions({
+          width: clientWidth || 800,
+          height: clientHeight || 400,
+        });
+      }
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
+
+  const width = dimensions.width;
+  const height = dimensions.height;
   const canTravel = timeRemaining >= travelTime;
 
   // Get all cities (current + destinations)
@@ -56,13 +75,13 @@ export function AirportTab({ destinations, timeRemaining, travelTime, onTravel, 
 
   // Calculate optimal scale to fit all cities
   const calculateOptimalScale = () => {
-    if (allCities.length === 0) return 0.5;
+    if (allCities.length === 0) return 1;
 
     const cityCoords = allCities
       .filter(c => c.lat && c.lon)
       .map(c => ({ lat: c.lat, lon: c.lon }));
 
-    if (cityCoords.length === 0) return 0.5;
+    if (cityCoords.length === 0) return 1;
 
     const lats = cityCoords.map(c => c.lat);
     const lons = cityCoords.map(c => c.lon);
@@ -74,21 +93,20 @@ export function AirportTab({ destinations, timeRemaining, travelTime, onTravel, 
     const latRange = maxLat - minLat;
     const lonRange = maxLon - minLon;
 
-    // Convert to meters
-    const latRangeMeters = latRange * 111000;
-    const avgLat = (minLat + maxLat) / 2;
-    const lonRangeMeters = lonRange * 111000 * Math.cos(avgLat * Math.PI / 180);
-
     // Calculate scale with padding
-    const padding = 80;
-    const availableWidth = width - 2 * padding;
-    const availableHeight = height - 2 * padding;
+    const padding = 60;
+    // Account for option tray: on desktop it's on the right (256px), on mobile it's at bottom (192px)
+    const trayWidth = isDesktop ? 256 : 0;
+    const trayHeight = isDesktop ? 0 : 192;
+    const availableWidth = width - trayWidth - 2 * padding;
+    const availableHeight = height - trayHeight - 2 * padding;
 
-    const scaleByLat = latRangeMeters > 0 ? availableHeight / latRangeMeters : 0.5;
-    const scaleByLon = lonRangeMeters > 0 ? availableWidth / lonRangeMeters : 0.5;
+    // Calculate scale based on degree ranges (not meters)
+    const scaleByLat = latRange > 0 ? availableHeight / latRange : 1;
+    const scaleByLon = lonRange > 0 ? availableWidth / lonRange : 1;
 
-    // Min scale 0.005 (world view), max scale 0.1 (regional view)
-    return Math.max(0.005, Math.min(scaleByLat, scaleByLon, 0.1));
+    // Use the smaller scale to fit everything
+    return Math.min(scaleByLat, scaleByLon, availableHeight / 180); // Cap at full available height
   };
 
   // Calculate center of all cities
@@ -115,14 +133,20 @@ export function AirportTab({ destinations, timeRemaining, travelTime, onTravel, 
 
   // Convert lat/lon to SVG coordinates using city center as reference
   const cityLatLonToSVG = (lat, lon) => {
-    // Calculate offset from center in meters
-    const latDiffMeters = (center.lat - lat) * 111000;
-    const lonDiffMeters = (lon - center.lon) * 111000 * Math.cos(center.lat * Math.PI / 180);
+    // Calculate offset from center in degrees
+    const latDiff = center.lat - lat;
+    const lonDiff = lon - center.lon;
 
-    // Apply scale and center in viewport
+    // Calculate the visual center accounting for the tray
+    const trayWidth = isDesktop ? 256 : 0;
+    const trayHeight = isDesktop ? 0 : 192;
+    const visualCenterX = (width - trayWidth) / 2;
+    const visualCenterY = (height - trayHeight) / 2;
+
+    // Apply scale (pixels per degree) and center in available space
     return {
-      x: width / 2 + (lonDiffMeters * scale),
-      y: height / 2 + (latDiffMeters * scale),
+      x: visualCenterX + (lonDiff * scale),
+      y: visualCenterY + (latDiff * scale),
     };
   };
 
@@ -137,10 +161,32 @@ export function AirportTab({ destinations, timeRemaining, travelTime, onTravel, 
     point: cityLatLonToSVG(dest.lat, dest.lon),
   }));
 
+  // Calculate transform for world map to align with centered cities
+  // The world map uses equirectangular projection (800x400 = 360°x180°)
+  // We need to scale and translate it to match the new centered coordinate system
+  const worldMapTransform = (() => {
+    // Calculate the visual center accounting for the tray
+    const trayWidth = isDesktop ? 256 : 0;
+    const trayHeight = isDesktop ? 0 : 192;
+    const visualCenterX = (width - trayWidth) / 2;
+    const visualCenterY = (height - trayHeight) / 2;
+
+    // Scale: convert from pixels-per-360-degrees to pixels-per-degree
+    const scaleX = scale * (360 / width);
+    const scaleY = scale * (180 / height);
+
+    // Translation: align the world map's coordinate system with the centered view
+    // In old system: (0,0) = lon:-180, lat:90
+    const translateX = visualCenterX - scale * (180 + center.lon);
+    const translateY = visualCenterY + scale * (center.lat - 90);
+
+    return `translate(${translateX}, ${translateY}) scale(${scaleX}, ${scaleY})`;
+  })();
+
   return (
     <div className="relative h-[600px]">
       {/* World Map Background */}
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div ref={containerRef} className="absolute inset-0 flex items-center justify-center">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           className="w-full h-full"
@@ -175,8 +221,10 @@ export function AirportTab({ destinations, timeRemaining, travelTime, onTravel, 
           <rect x="0" y="0" width={width} height={height} fill="url(#worldGradient)" />
           <rect x="0" y="0" width={width} height={height} fill="url(#worldGrid)" />
 
-          {/* World map outlines */}
-          <WorldMapOutlines />
+          {/* World map outlines - transformed to align with centered cities */}
+          <g transform={worldMapTransform}>
+            <WorldMapOutlines />
+          </g>
 
           {/* Flight paths from current city to each destination */}
           {currentPoint && destinationPoints.map(dest => {
