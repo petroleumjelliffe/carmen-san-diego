@@ -101,7 +101,6 @@ export function CityMapView({
   };
 
   const scale = calculateOptimalScale();
-  console.log('[CityMapView] Calculated scale:', scale);
 
   // Calculate the center of the landmarks (not city center)
   const getLandmarkCenter = () => {
@@ -133,12 +132,9 @@ export function CityMapView({
   };
 
   const landmarkCenter = getLandmarkCenter();
-  console.log('[CityMapView] Landmark center:', landmarkCenter);
-  console.log('[CityMapView] Hotel:', hotel);
-  console.log('[CityMapView] Spots:', spots.map(s => ({ name: s.spot.name, lat: s.spot.lat, lon: s.spot.lon })));
 
   // Convert lat/lon to SVG coordinates using landmark center as reference
-  const latLonToCitySVG = (lat, lon, label = '') => {
+  const latLonToCitySVG = (lat, lon) => {
     if (!currentCity || !currentCity.lat || !currentCity.lon) {
       return { x: width / 2, y: height / 2 };
     }
@@ -154,26 +150,16 @@ export function CityMapView({
     const visualCenterY = (height - trayHeight) / 2;
 
     // Apply scale (pixels per meter) and center in available space
-    const result = {
+    return {
       x: visualCenterX + (lonDiffMeters * scale),
       y: visualCenterY + (latDiffMeters * scale),
     };
-
-    console.log(`[CityMapView] latLonToCitySVG(${lat}, ${lon}) ${label}:`, {
-      latDiffMeters,
-      lonDiffMeters,
-      scale,
-      visualCenter: { x: visualCenterX, y: visualCenterY },
-      result
-    });
-
-    return result;
   };
 
   // Position investigation spots based on their lat/lon
   const spotPositions = spots.map(spotData => {
     if (spotData.spot.lat && spotData.spot.lon) {
-      return latLonToCitySVG(spotData.spot.lat, spotData.spot.lon, `spot:${spotData.spot.name}`);
+      return latLonToCitySVG(spotData.spot.lat, spotData.spot.lon);
     }
     // Fallback to default positions if no coordinates
     const index = spots.indexOf(spotData);
@@ -187,12 +173,12 @@ export function CityMapView({
 
   // Rogue location position
   const roguePos = rogueLocation?.lat && rogueLocation?.lon
-    ? latLonToCitySVG(rogueLocation.lat, rogueLocation.lon, `rogue:${rogueLocation.name}`)
+    ? latLonToCitySVG(rogueLocation.lat, rogueLocation.lon)
     : null;
 
   // Player starting position (hotel)
   const playerPos = hotel?.lat && hotel?.lon
-    ? latLonToCitySVG(hotel.lat, hotel.lon, `hotel:${hotel.name}`)
+    ? latLonToCitySVG(hotel.lat, hotel.lon)
     : (() => {
         const trayHeight = 192; // h-48 = 192px
         const availableHeight = height - trayHeight;
@@ -213,7 +199,6 @@ export function CityMapView({
   // Animate progress when investigating
   useEffect(() => {
     if (investigatingSpotIndex !== null) {
-      console.log('[CityMapView] Starting animation for spot index:', investigatingSpotIndex);
       setAnimationProgress(0);
       const startTime = Date.now();
       const duration = 1500; // 1.5 second animation
@@ -222,12 +207,9 @@ export function CityMapView({
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / duration, 1);
         setAnimationProgress(progress);
-        console.log('[CityMapView] Animation progress:', progress);
 
         if (progress < 1) {
           requestAnimationFrame(animate);
-        } else {
-          console.log('[CityMapView] Animation complete');
         }
       };
 
@@ -235,7 +217,7 @@ export function CityMapView({
     } else {
       setAnimationProgress(0);
     }
-  }, [investigatingSpotIndex]); // Removed isAnimating dependency - animate whenever index is set
+  }, [investigatingSpotIndex]);
 
   // Get city map background image
   const mapImage = currentCity?.map_image;
@@ -352,12 +334,6 @@ export function CityMapView({
               const targetPos = spotPositions[investigatingSpotIndex] || { x: width / 2, y: height / 2 };
               const spot = spots[investigatingSpotIndex].spot;
 
-              console.log('[CityMapView] Drawing animation:', {
-                animationStartPos,
-                targetPos,
-                animationProgress
-              });
-
               // Orthogonal path - horizontal then vertical (street-like navigation)
               const cornerX = targetPos.x;
               const cornerY = animationStartPos.y;
@@ -391,8 +367,6 @@ export function CityMapView({
 
               const currentPos = getPointOnOrthogonalPath(animationProgress);
               const pathD = `M ${animationStartPos.x} ${animationStartPos.y} L ${cornerX} ${cornerY} L ${targetPos.x} ${targetPos.y}`;
-
-              console.log('[CityMapView] Full path:', pathD);
 
               // Calculate path to current position
               const getCurrentPathD = () => {

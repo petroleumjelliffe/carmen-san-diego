@@ -43,13 +43,13 @@ export function InvestigateTab({
   const [investigatingSpotIndex, setInvestigatingSpotIndex] = useState(null);
 
   // Track last investigated spot for animation starting point
-  const lastInvestigatedSpotId = investigatedLocations.length > 0
-    ? investigatedLocations[investigatedLocations.length - 1]
+  // Use second-to-last to avoid animating from the spot we just clicked to itself
+  const lastInvestigatedSpotId = investigatedLocations.length > 1
+    ? investigatedLocations[investigatedLocations.length - 2]
     : null;
 
   // Handler for investigating - sets animation index and calls parent handler
   const handleInvestigateClick = (index) => {
-    console.log('[InvestigateTab] handleInvestigateClick called with index:', index);
     setInvestigatingSpotIndex(index);
     onInvestigate(index);
   };
@@ -87,13 +87,6 @@ export function InvestigateTab({
 
   // Note: We don't clear investigatingSpotIndex when action completes
   // because the animation in CityMapView needs it to persist for the full 1.5s animation duration
-
-  console.log('[InvestigateTab] Render state:', {
-    investigatingSpotIndex,
-    isAnimating,
-    actionPhase,
-    hasBlockingOverlay
-  });
 
   return (
     <div className="relative h-[600px]">
