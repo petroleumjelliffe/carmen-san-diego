@@ -54,15 +54,37 @@ Consolidate all message/encounter display components into a unified system that 
 - Continue button
 ```
 
+## Key Differences: Henchman vs Assassination
+
+**Henchman Encounters** (mid-game, correct cities):
+- Timer: 10 seconds
+- Penalties: 4h (wrong), 6h (timeout)
+- Lower stakes, mid-game obstacles
+
+**Assassination Attempts** (final city only):
+- Timer: 5-7 seconds (more urgent)
+- Penalties: 6h (wrong), 8h (timeout)
+- Higher stakes, dramatic scenarios
+- Has specific timeout text
+
 ## Unified Component Design: `MessageDisplay`
 
 ### Core Concept
 A single component that handles all message types through a unified interface with:
-1. **Witness Section**: Person emoji + quote (always present)
-2. **Setup Section**: Expositional text (encounters only)
-3. **Timer Section**: Countdown visualization (interactive encounters only)
-4. **Choice Section**: Buttons/options (interactive encounters only)
-5. **Result Section**: Outcome display (after interaction)
+1. **Header Section**: Icon + title (encounters and special events only)
+2. **Witness Section**: Person emoji + quote (always present)
+3. **Setup Section**: Expositional text (encounters only)
+4. **Timer Section**: Countdown visualization (interactive encounters only)
+5. **Choice Section**: Buttons/options (interactive encounters only)
+6. **Result Section**: Outcome display (after interaction)
+
+### Header Icons by Type
+- **Witness Clue**: 🔍 (magnifying glass) - NO HEADER, just shows witness
+- **Good Deed**: 😰 or 🆘 (distress/surprise)
+- **Henchman**: ⚡ or 👊 (lightning/fist)
+- **Assassination**: 💣 or 💀 (bomb/skull)
+- **Rogue Action**: 🎭 or ⚡ (mask/lightning) - Shows action name as header
+- **Apprehension**: 🚔 (police car) - "SUSPECT APPREHENDED"
 
 ### Component Props
 
@@ -70,76 +92,86 @@ A single component that handles all message types through a unified interface wi
 interface MessageDisplayProps {
   // Message type
   type: 'witness' | 'encounter_henchman' | 'encounter_assassination' |
-        'encounter_good_deed' | 'rogue_action'
+        'encounter_good_deed' | 'rogue_action' | 'apprehension'
 
   // Witness/person display
   personEmoji?: string // Auto-generated if not provided
   quote: string // Main message - streams word by word
-  quoteColor?: 'yellow' | 'green' | 'orange' | 'red' // Border accent
 
-  // Optional setup (encounters)
-  setupText?: string // Expositional text shown before quote
-  setupTitle?: string // e.g., "ASSASSINATION ATTEMPT"
-  setupIcon?: React.ReactNode
+  // Optional header (encounters/events only)
+  headerTitle?: string // e.g., "ASSASSINATION ATTEMPT", "SUSPECT APPREHENDED"
+  headerIcon?: React.ReactNode
 
-  // Optional timer (interactive encounters)
+  // Optional setup (encounters only)
+  setupText?: string // Expositional text shown above witness section
+
+  // Optional timer (interactive encounters only)
   timerDuration?: number // Seconds
   onTimeout?: () => void
 
-  // Optional choices (interactive encounters)
+  // Optional choices (interactive encounters only)
   choices?: Array<{
     id: string
     label: string
     icon?: string
     disabled?: boolean
-    type: 'gadget' | 'action' | 'trivia'
+    type: 'gadget' | 'continue' // 'continue' for good deeds
   }>
   onChoice?: (choiceId: string) => void
 
   // Optional warning
   warningText?: string
 
-  // Result handling
+  // Result handling (encounters)
   result?: {
     message: string
     type: 'success' | 'failure' | 'neutral'
-    timeLost?: number
-    clue?: string // Revealed after good deed or rogue action
+    // NO timeLost - all time passes in clock, not shown in message
   }
+
+  // Clue reveal (same for all: investigation, good deed, rogue)
+  revealedClue?: string
+
+  // Continue handler
   onContinue?: () => void
 
   // Behavioral flags
   autoStream?: boolean // Default true
-  dismissible?: boolean
 }
 ```
 
 ### Visual Structure
 
 ```
+SIMPLE WITNESS (no header, just witness):
 ┌─────────────────────────────────────────────┐
-│ [Setup Section - Encounters Only]           │
-│                                             │
-│ [Icon] TITLE                                │
-│ ════════════════ Timer ═════════════════   │ <- Fuse animation
-│                                             │
-│ Setup/expositional text here...            │
-│                                             │
-│ [Warning text if applicable]               │
-└─────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────┐
-│ [Witness/Person Section - Always Present]   │
+│ [Witness Section - Always Present]          │
 │                                             │
 │   👨‍⚕️    "The streaming quote text        │
 │  7xl     appears here word by word with    │
 │  emoji   a cursor at the end|"             │
 │                                             │
-│  └─ Border accent color based on type      │
+│  └─ Single border color for all (yellow)   │
 └─────────────────────────────────────────────┘
 
+ENCOUNTER/EVENT (with header):
 ┌─────────────────────────────────────────────┐
-│ [Choice Section - Interactive Only]         │
+│ [Header Section]                            │
+│                                             │
+│ 💣 ASSASSINATION ATTEMPT                    │
+│ ════════════════ Timer ═════════════════   │ <- Fuse animation
+│                                             │
+│ Setup/expositional text here...            │
+│ [Warning text if applicable]               │
+└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│ [Witness Section]                           │
+│                                             │
+│   👨‍⚕️    "The streaming quote text        │
+│          appears here..."                  │
+└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│ [Choice Section - Gadget Encounters]        │
 │                                             │
 │ ┌─────┐ ┌─────┐ ┌─────┐                   │
 │ │ 🔬  │ │ 📡  │ │ 🔪  │                   │
@@ -147,23 +179,43 @@ interface MessageDisplayProps {
 │ └─────┘ └─────┘ └─────┘                   │
 └─────────────────────────────────────────────┘
 
-OR (after choice/timeout)
+OR
 
 ┌─────────────────────────────────────────────┐
-│ [Result Section]                            │
+│ [Choice Section - Good Deed]                │
 │                                             │
-│ "Success/failure message here"              │
-│ [-4h] <- Time penalty if applicable         │
-│                                             │
-│ [CONTINUE] button                           │
+│         [CONTINUE] button                   │
+│    (player chooses to help or not)         │
 └─────────────────────────────────────────────┘
 
+AFTER CHOICE/TIMEOUT:
 ┌─────────────────────────────────────────────┐
-│ [Clue Reveal - Good Deeds Only]             │
+│ [Header - Same as Active]                   │
+│ 💣 ASSASSINATION ATTEMPT                    │
+└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│ [Result in Quote Style]                     │
+│                                             │
+│   👨‍⚕️    "Success or failure message      │
+│          shown here..."                    │
+│                                             │
+│  NO TIME PENALTY SHOWN - passes in clock   │
+└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│ [Continue Button]                           │
+│                                             │
+│         [CONTINUE]                          │
+└─────────────────────────────────────────────┘
+
+CLUE REVEAL (same for all types):
+┌─────────────────────────────────────────────┐
+│ [Revealed Clue - Same Display as Witness]   │
 │                                             │
 │   👨‍🎨    "Revealed clue text streams       │
-│          here after helping..."            │
+│          here after action completes..."   │
 │                                             │
+│  Same format whether from investigation,   │
+│  good deed, or rogue action                │
 └─────────────────────────────────────────────┘
 ```
 
@@ -198,14 +250,14 @@ All message displays use the same positioning system:
 
 ### Type-Specific Configurations
 
-#### Witness Clue
+#### Witness Clue (Simple)
 ```javascript
 {
   type: 'witness',
   quote: clueText,
-  quoteColor: 'yellow',
   personEmoji: <auto-generated>,
   autoStream: true
+  // No header, no border color variation - obvious from context
 }
 ```
 
@@ -213,14 +265,17 @@ All message displays use the same positioning system:
 ```javascript
 {
   type: 'rogue_action',
+  headerTitle: rogueAction.name, // e.g., "Bribe Official"
+  headerIcon: '🎭',
   setupText: rogueAction.description,
   quote: rogueAction.success_text,
-  quoteColor: 'orange',
+  revealedClue: foundClue, // Shows as normal clue after result
   result: {
     message: rogueAction.success_text,
-    type: 'success',
-    clue: foundClue
-  }
+    type: 'success'
+    // Time passes in clock, not shown
+  },
+  onContinue: completeRogueAction
 }
 ```
 
@@ -228,23 +283,27 @@ All message displays use the same positioning system:
 ```javascript
 {
   type: 'encounter_good_deed',
-  setupTitle: 'SOMEONE NEEDS HELP',
-  setupIcon: <Heart />,
+  headerTitle: 'SOMEONE NEEDS HELP',
+  headerIcon: '😰',
   setupText: encounter.description,
   quote: encounter.plea,
-  quoteColor: 'yellow',
   timerDuration: 8,
   choices: [
-    { id: 'help', label: 'HELP', icon: '❤️', type: 'action' },
-    { id: 'skip', label: 'SKIP', icon: '🚶', type: 'action' }
+    {
+      id: 'continue',
+      label: 'CONTINUE',
+      type: 'continue'
+      // Player clicks to help - single choice
+    }
   ],
   warningText: karma > 0 ? 'Could be a trap...' : undefined,
   result: {
     message: outcome.message,
-    type: outcome.helped ? 'success' : 'neutral',
-    timeLost: outcome.timeLost,
-    clue: outcome.helped && !isTrap ? revealedClue : undefined
-  }
+    type: outcome.helped ? 'success' : 'neutral'
+    // Time passes in clock
+  },
+  revealedClue: outcome.helped && !isTrap ? clue : undefined,
+  onContinue: resolveGoodDeed
 }
 ```
 
@@ -252,11 +311,10 @@ All message displays use the same positioning system:
 ```javascript
 {
   type: 'encounter_henchman',
-  setupTitle: 'HENCHMAN ENCOUNTER',
-  setupIcon: <Zap />,
+  headerTitle: 'HENCHMAN ENCOUNTER',
+  headerIcon: '👊',
   setupText: encounter.description,
   quote: encounter.description, // Or separate taunt
-  quoteColor: 'orange',
   timerDuration: 10,
   choices: availableGadgets.map(g => ({
     id: g.id,
@@ -267,9 +325,10 @@ All message displays use the same positioning system:
   })),
   result: {
     message: outcome.message,
-    type: outcome.success ? 'success' : 'failure',
-    timeLost: outcome.timeLost
-  }
+    type: outcome.success ? 'success' : 'failure'
+    // Time passes in clock - penalties: 4h wrong, 6h timeout
+  },
+  onContinue: resolveHenchman
 }
 ```
 
@@ -277,11 +336,10 @@ All message displays use the same positioning system:
 ```javascript
 {
   type: 'encounter_assassination',
-  setupTitle: 'ASSASSINATION ATTEMPT',
-  setupIcon: <Skull />,
+  headerTitle: 'ASSASSINATION ATTEMPT',
+  headerIcon: '💣',
   setupText: encounter.description,
-  quote: "NOOOO!", // Special case when timer < 3s
-  quoteColor: 'red',
+  quote: timeLeft < 3 ? "NOOOO!" : encounter.description,
   timerDuration: encounter.timer_duration || 5,
   choices: availableGadgets.map(g => ({
     id: g.id,
@@ -292,9 +350,28 @@ All message displays use the same positioning system:
   })),
   result: {
     message: outcome.message,
-    type: outcome.success ? 'success' : 'failure',
-    timeLost: outcome.timeLost
-  }
+    type: outcome.success ? 'success' : 'failure'
+    // Time passes in clock - penalties: 6h wrong, 8h timeout
+  },
+  onContinue: resolveAssassination
+}
+```
+
+#### Apprehension
+```javascript
+{
+  type: 'apprehension',
+  headerTitle: 'SUSPECT APPREHENDED',
+  headerIcon: '🚔',
+  quote: `${selectedWarrant.name} is now in custody.`,
+  choices: [
+    {
+      id: 'trial',
+      label: 'CONTINUE TO TRIAL',
+      type: 'continue'
+    }
+  ],
+  onContinue: proceedToTrial
 }
 ```
 
