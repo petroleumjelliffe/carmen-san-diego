@@ -1,0 +1,41 @@
+/* Custom Leaflet marker styles for Carmen San Diego game */
+
+.leaflet-custom-icon {
+  background: transparent;
+  border: none;
+}
+
+.custom-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid;
+  background: rgba(31, 41, 55, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.custom-marker:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.custom-marker.current {
+  border-color: #22c55e;  /* Green */
+}
+
+.custom-marker.destination {
+  border-color: #3b82f6;  /* Blue */
+}
+
+.custom-marker.disabled {
+  border-color: #6b7280;  /* Gray */
+  opacity: 0.5;
+}
+
+.custom-marker .emoji {
+  font-size: 20px;
+}

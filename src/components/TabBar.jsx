@@ -1,6 +1,7 @@
-import { Search, Plane, FileText } from 'lucide-react';
+import { Home, Search, Plane, FileText } from 'lucide-react';
 
 const TABS = [
+  { id: 'home', icon: Home, label: 'Home' },
   { id: 'investigate', icon: Search, label: 'Investigate' },
   { id: 'airport', icon: Plane, label: 'Airport' },
   { id: 'dossier', icon: FileText, label: 'Dossier' },

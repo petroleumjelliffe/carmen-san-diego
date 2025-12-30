@@ -1,3 +1,6 @@
+# Special backgrounds
+backgrounds:
+  traveling: "https://images.unsplash.com/photo-1697799756493-1370f248d51e?w=1920&q=80"  # Airplane window view
 cities:
   - id: paris
     name: Paris
@@ -5,7 +8,49 @@ cities:
     region: europe
     lat: 48.8566
     lon: 2.3522
+    icon: 🗼
     fact: "The Eiffel Tower was originally intended to be a temporary structure, built for the 1889 World's Fair."
+    background_image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1920&q=80"  # Eiffel Tower at dusk
+    landmarks:
+      - id: plaza_athenee
+        name: Plaza Athénée
+        type: hotel
+        neighborhood: 8th Arrondissement
+        icon: 🏨
+        lat: 48.8664
+        lon: 2.3045
+      - id: catacombs
+        name: Paris Catacombs
+        type: rogue
+        neighborhood: 14th Arrondissement
+        icon: 💀
+        lat: 48.8338
+        lon: 2.3324
+        time_cost: 2
+      - id: eiffel_tower
+        name: Eiffel Tower
+        type: investigation
+        neighborhood: 7th Arrondissement
+        icon: 🗼
+        lat: 48.8584
+        lon: 2.2945
+        time_cost: 3
+      - id: louvre
+        name: The Louvre
+        type: investigation
+        neighborhood: 1st Arrondissement
+        icon: 🎨
+        lat: 48.8606
+        lon: 2.3376
+        time_cost: 3
+      - id: notre_dame
+        name: Notre-Dame
+        type: investigation
+        neighborhood: Île de la Cité
+        icon: ⛪
+        lat: 48.8530
+        lon: 2.3499
+        time_cost: 3
 
   - id: tokyo
     name: Tokyo
@@ -13,7 +58,49 @@ cities:
     region: asia
     lat: 35.6762
     lon: 139.6503
+    icon: 🗾
     fact: "Tokyo's Shibuya Crossing is the busiest pedestrian intersection in the world, with up to 3,000 people crossing at once."
+    background_image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1920&q=80"  # Tokyo night
+    landmarks:
+      - id: park_hyatt_tokyo
+        name: Park Hyatt Tokyo
+        type: hotel
+        neighborhood: Shinjuku
+        icon: 🏨
+        lat: 35.6850
+        lon: 139.6917
+      - id: akihabara
+        name: Akihabara District
+        type: rogue
+        neighborhood: Chiyoda
+        icon: 🎮
+        lat: 35.6982
+        lon: 139.7731
+        time_cost: 2
+      - id: shibuya_crossing
+        name: Shibuya Crossing
+        type: investigation
+        neighborhood: Shibuya
+        icon: 🚶
+        lat: 35.6595
+        lon: 139.7004
+        time_cost: 3
+      - id: sensoji_temple
+        name: Senso-ji Temple
+        type: investigation
+        neighborhood: Asakusa
+        icon: ⛩️
+        lat: 35.7148
+        lon: 139.7967
+        time_cost: 3
+      - id: tokyo_tower
+        name: Tokyo Tower
+        type: investigation
+        neighborhood: Minato
+        icon: 🗼
+        lat: 35.6586
+        lon: 139.7454
+        time_cost: 3
 
   - id: cairo
     name: Cairo
@@ -21,7 +108,49 @@ cities:
     region: africa
     lat: 30.0444
     lon: 31.2357
+    icon: 🔺
     fact: "The Great Pyramid of Giza was the tallest man-made structure in the world for over 3,800 years."
+    background_image: "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?w=1920&q=80"  # Pyramids
+    landmarks:
+      - id: mena_house
+        name: Marriott Mena House
+        type: hotel
+        neighborhood: Giza
+        icon: 🏨
+        lat: 29.9954
+        lon: 31.1318
+      - id: sultan_hassan
+        name: Sultan Hassan Mosque
+        type: rogue
+        neighborhood: Old Cairo
+        icon: 🕌
+        lat: 30.0323
+        lon: 31.2597
+        time_cost: 2
+      - id: great_pyramid
+        name: Great Pyramid
+        type: investigation
+        neighborhood: Giza
+        icon: 🔺
+        lat: 29.9792
+        lon: 31.1342
+        time_cost: 3
+      - id: khan_el_khalili
+        name: Khan el-Khalili
+        type: investigation
+        neighborhood: Islamic Cairo
+        icon: 🏺
+        lat: 30.0472
+        lon: 31.2620
+        time_cost: 3
+      - id: nile_corniche
+        name: Nile Corniche
+        type: investigation
+        neighborhood: Downtown
+        icon: 🌊
+        lat: 30.0444
+        lon: 31.2357
+        time_cost: 3
 
   - id: london
     name: London
@@ -29,7 +158,49 @@ cities:
     region: europe
     lat: 51.5074
     lon: -0.1278
+    icon: 🏰
     fact: "Big Ben is actually the name of the bell inside the tower, not the tower itself."
+    background_image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1920&q=80"  # London skyline
+    landmarks:
+      - id: the_savoy
+        name: The Savoy
+        type: hotel
+        neighborhood: Strand
+        icon: 🏨
+        lat: 51.5105
+        lon: -0.1203
+      - id: camden_market
+        name: Camden Market
+        type: rogue
+        neighborhood: Camden
+        icon: 🎭
+        lat: 51.5419
+        lon: -0.1435
+        time_cost: 2
+      - id: big_ben
+        name: Big Ben
+        type: investigation
+        neighborhood: Westminster
+        icon: 🕰️
+        lat: 51.5007
+        lon: -0.1246
+        time_cost: 3
+      - id: tower_bridge
+        name: Tower Bridge
+        type: investigation
+        neighborhood: Tower Hamlets
+        icon: 🌉
+        lat: 51.5055
+        lon: -0.0754
+        time_cost: 3
+      - id: piccadilly_circus
+        name: Piccadilly Circus
+        type: investigation
+        neighborhood: West End
+        icon: 🎪
+        lat: 51.5100
+        lon: -0.1341
+        time_cost: 3
 
   - id: rome
     name: Rome
@@ -37,7 +208,49 @@ cities:
     region: europe
     lat: 41.9028
     lon: 12.4964
+    icon: 🏛️
     fact: "The Trevi Fountain collects roughly 3,000 euros in coins every day, which goes to charity."
+    background_image: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1920&q=80"  # Colosseum
+    landmarks:
+      - id: hotel_hassler
+        name: Hotel Hassler
+        type: hotel
+        neighborhood: Spanish Steps
+        icon: 🏨
+        lat: 41.9063
+        lon: 12.4825
+      - id: bocca_verita
+        name: Bocca della Verità
+        type: rogue
+        neighborhood: Forum Boarium
+        icon: 🗿
+        lat: 41.8882
+        lon: 12.4815
+        time_cost: 2
+      - id: colosseum
+        name: Colosseum
+        type: investigation
+        neighborhood: Palatino
+        icon: 🏛️
+        lat: 41.8902
+        lon: 12.4922
+        time_cost: 3
+      - id: trevi_fountain
+        name: Trevi Fountain
+        type: investigation
+        neighborhood: Trevi
+        icon: ⛲
+        lat: 41.9009
+        lon: 12.4833
+        time_cost: 3
+      - id: vatican
+        name: Vatican
+        type: investigation
+        neighborhood: Vatican City
+        icon: ⛪
+        lat: 41.9029
+        lon: 12.4534
+        time_cost: 3
 
   - id: berlin
     name: Berlin
@@ -45,7 +258,49 @@ cities:
     region: europe
     lat: 52.5200
     lon: 13.4050
+    icon: 🚪
     fact: "Berlin has more bridges than Venice — over 1,700 compared to Venice's 400."
+    background_image: "https://images.unsplash.com/photo-1560969184-10fe8719e047?w=1920&q=80"  # Brandenburg Gate
+    landmarks:
+      - id: hotel_adlon
+        name: Hotel Adlon Kempinski
+        type: hotel
+        neighborhood: Mitte
+        icon: 🏨
+        lat: 52.5159
+        lon: 13.3805
+      - id: teufelsberg
+        name: Teufelsberg
+        type: rogue
+        neighborhood: Grunewald
+        icon: 📡
+        lat: 52.4972
+        lon: 13.2407
+        time_cost: 2
+      - id: brandenburg_gate
+        name: Brandenburg Gate
+        type: investigation
+        neighborhood: Mitte
+        icon: 🚪
+        lat: 52.5163
+        lon: 13.3777
+        time_cost: 3
+      - id: east_side_gallery
+        name: East Side Gallery
+        type: investigation
+        neighborhood: Friedrichshain
+        icon: 🎨
+        lat: 52.5053
+        lon: 13.4396
+        time_cost: 3
+      - id: alexanderplatz
+        name: Alexanderplatz
+        type: investigation
+        neighborhood: Mitte
+        icon: 🏙️
+        lat: 52.5219
+        lon: 13.4132
+        time_cost: 3
 
   - id: sydney
     name: Sydney
@@ -53,7 +308,49 @@ cities:
     region: oceania
     lat: -33.8688
     lon: 151.2093
+    icon: 🎭
     fact: "The Sydney Opera House's roof is covered with over 1 million tiles that were made in Sweden."
+    background_image: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=1920&q=80"  # Opera House
+    landmarks:
+      - id: park_hyatt_sydney
+        name: Park Hyatt Sydney
+        type: hotel
+        neighborhood: The Rocks
+        icon: 🏨
+        lat: -33.8590
+        lon: 151.2103
+      - id: rocks_market
+        name: The Rocks Market
+        type: rogue
+        neighborhood: The Rocks
+        icon: 🎪
+        lat: -33.8595
+        lon: 151.2087
+        time_cost: 2
+      - id: opera_house
+        name: Opera House
+        type: investigation
+        neighborhood: Circular Quay
+        icon: 🎭
+        lat: -33.8568
+        lon: 151.2153
+        time_cost: 3
+      - id: bondi_beach
+        name: Bondi Beach
+        type: investigation
+        neighborhood: Bondi
+        icon: 🏖️
+        lat: -33.8908
+        lon: 151.2743
+        time_cost: 3
+      - id: harbour_bridge
+        name: Harbour Bridge
+        type: investigation
+        neighborhood: The Rocks
+        icon: 🌉
+        lat: -33.8523
+        lon: 151.2108
+        time_cost: 3
 
   - id: moscow
     name: Moscow
@@ -61,4 +358,46 @@ cities:
     region: europe
     lat: 55.7558
     lon: 37.6173
+    icon: 🏰
     fact: "Moscow's metro system is so deep that some stations double as nuclear bunkers."
+    background_image: "https://images.unsplash.com/photo-1513326738677-b964603b136d?w=1920&q=80"  # Red Square
+    landmarks:
+      - id: hotel_national
+        name: Hotel National
+        type: hotel
+        neighborhood: Tverskoy
+        icon: 🏨
+        lat: 55.7575
+        lon: 37.6145
+      - id: izmailovsky_market
+        name: Izmailovsky Market
+        type: rogue
+        neighborhood: Izmailovo
+        icon: 🏪
+        lat: 55.7962
+        lon: 37.7517
+        time_cost: 2
+      - id: red_square
+        name: Red Square
+        type: investigation
+        neighborhood: Kitay-gorod
+        icon: 🏛️
+        lat: 55.7539
+        lon: 37.6208
+        time_cost: 3
+      - id: kremlin
+        name: The Kremlin
+        type: investigation
+        neighborhood: Tverskoy
+        icon: 🏰
+        lat: 55.7520
+        lon: 37.6175
+        time_cost: 3
+      - id: arbat_street
+        name: Arbat Street
+        type: investigation
+        neighborhood: Arbat
+        icon: 🛍️
+        lat: 55.7507
+        lon: 37.5878
+        time_cost: 3

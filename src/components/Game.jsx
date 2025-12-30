@@ -1,10 +1,11 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useGameState } from '../hooks/useGameState';
 import { useTravelAnimation } from '../hooks/useTravelAnimation';
 import { useActionQueue } from '../hooks/useActionQueue';
 import { Menu } from './Menu';
 import { Header } from './Header';
 import { TabBar } from './TabBar';
+import { HomeTab } from './HomeTab';
 import { InvestigateTab } from './InvestigateTab';
 import { AirportTab } from './AirportTab';
 import { DossierTab } from './DossierTab';
@@ -13,19 +14,6 @@ import { Briefing } from './Briefing';
 import { Trial } from './Trial';
 import { Debrief } from './Debrief';
 import { Loader } from 'lucide-react';
-
-// City background images - moody noir-inspired shots from Unsplash
-const CITY_BACKGROUNDS = {
-  paris: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1920&q=80', // Eiffel Tower at dusk
-  tokyo: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1920&q=80', // Tokyo night
-  cairo: 'https://images.unsplash.com/photo-1572252009286-268acec5ca0a?w=1920&q=80', // Pyramids
-  london: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1920&q=80', // London skyline
-  rome: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1920&q=80', // Colosseum
-  berlin: 'https://images.unsplash.com/photo-1560969184-10fe8719e047?w=1920&q=80', // Brandenburg Gate
-  sydney: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=1920&q=80', // Opera House
-  moscow: 'https://images.unsplash.com/photo-1513326738677-b964603b136d?w=1920&q=80', // Red Square
-  default: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1920&q=80', // Generic city night
-};
 
 export function Game({ gameData }) {
   const {
@@ -50,6 +38,9 @@ export function Game({ gameData }) {
     isFinalCity,
     destinations,
     nextInvestigationCost,
+    hotel,
+    rogueLocation,
+    cityRogueAction,
     karma,
     notoriety,
     savedNPCs,
@@ -84,7 +75,7 @@ export function Game({ gameData }) {
     setSelectedWarrant,
   } = useGameState(gameData);
 
-  const { ranks, suspects, settings, rogueActions, encounterTimers, citiesById } = gameData;
+  const { ranks, suspects, settings, rogueActions, encounterTimers, citiesById, backgrounds } = gameData;
 
   // Action queue for staged time advancement
   const {
@@ -150,15 +141,38 @@ export function Game({ gameData }) {
     handleFlightAnimationComplete
   );
 
+  // Keep last travel data for showing car at destination
+  const [lastTravelData, setLastTravelData] = useState(null);
+  const [showMap, setShowMap] = useState(false);
+
   // Start travel animation when isTraveling becomes true
   useEffect(() => {
     if (isTraveling && travelOrigin && travelDestination) {
       const destCity = citiesById[travelDestination.cityId];
       if (destCity) {
         startAnimation(travelOrigin, destCity);
+        setShowMap(true);
       }
     }
   }, [isTraveling, travelOrigin, travelDestination, citiesById, startAnimation]);
+
+  // Update last travel data when animation is running
+  useEffect(() => {
+    if (travelData) {
+      setLastTravelData(travelData);
+    }
+  }, [travelData]);
+
+  // Hide map when travel completes
+  useEffect(() => {
+    if (!isTraveling && !isAnimating && showMap) {
+      // Wait a brief moment after animation completes before hiding
+      const timeout = setTimeout(() => {
+        setShowMap(false);
+      }, 500);
+      return () => clearTimeout(timeout);
+    }
+  }, [isTraveling, isAnimating, showMap]);
 
   // Menu screen
   if (gameState === 'menu') {
@@ -217,8 +231,12 @@ export function Game({ gameData }) {
   }
 
   // Get background image for current city
+  // Use generic background during travel animation
+  const travelingBackground = backgrounds?.traveling || '';
   const currentCityId = wrongCity && wrongCityData ? wrongCityData.id : currentCity?.id;
-  const backgroundUrl = CITY_BACKGROUNDS[currentCityId] || CITY_BACKGROUNDS.default;
+  const cityData = currentCityId ? citiesById[currentCityId] : null;
+  const currentCityBackground = cityData?.background_image || travelingBackground;
+  const backgroundUrl = (isAnimating || isTraveling) ? travelingBackground : currentCityBackground;
 
   // Main game UI with city background
   return (
@@ -226,7 +244,7 @@ export function Game({ gameData }) {
       className="h-screen flex flex-col overflow-hidden bg-gray-900"
       style={{
         backgroundImage: `
-          linear-gradient(to bottom, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.85)),
+          linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.4)),
           url('${backgroundUrl}')
         `,
         backgroundSize: 'cover',
@@ -260,24 +278,28 @@ export function Game({ gameData }) {
             style={{ alignItems: isAnimating || (actionPhase === 'ticking' && pendingAction?.type === 'travel') ? 'center' : 'end' }}
           >
           <div>
-            {/* Travel Animation - shown during flight */}
-            {isAnimating && travelData ? (
+            {/* Travel Animation - shown during flight, time ticking, and car at destination */}
+            {showMap && lastTravelData ? (
               <TravelAnimation
-                travelData={travelData}
-                progress={progress}
+                travelData={lastTravelData}
+                progress={isAnimating || (actionPhase === 'ticking' && pendingAction?.type === 'travel') ? progress : 1.0}
+                backgroundImage={backgrounds?.traveling}
               />
-            ) : actionPhase === 'ticking' && pendingAction?.type === 'travel' ? (
-              /* Travel time ticking - spinner while clock in header shows time */
-              <div className="bg-gray-900/80 rounded-lg p-8 flex flex-col items-center justify-center gap-4">
-                <Loader className="animate-spin text-yellow-400" size={48} />
-                <p className="text-yellow-100 font-medium text-lg">Arriving at destination...</p>
-              </div>
-            ) : (
-              <>
+            ) : null}
+
+            {/* Main content - shown when not traveling */}
+            {!showMap || !(isAnimating || (actionPhase === 'ticking' && pendingAction?.type === 'travel')) ? <>
                 {message && (
                   <div className="bg-yellow-400/20 border border-yellow-400 text-yellow-100 px-4 py-2 rounded mb-4">
                     {message}
                   </div>
+                )}
+
+                {activeTab === 'home' && (
+                  <HomeTab
+                    currentCity={wrongCity && wrongCityData ? wrongCityData : currentCity}
+                    cityFact={wrongCity && wrongCityData ? wrongCityData.fact : currentCity?.fact}
+                  />
                 )}
 
                 {activeTab === 'investigate' && (
@@ -295,7 +317,7 @@ export function Game({ gameData }) {
                     currentGoodDeed={currentGoodDeed}
                     karma={karma}
                     onInvestigate={handleInvestigate}
-                    rogueActions={rogueActions}
+                    cityRogueAction={cityRogueAction}
                     onRogueAction={handleRogueAction}
                     notoriety={notoriety}
                     currentEncounter={currentEncounter}
@@ -306,10 +328,13 @@ export function Game({ gameData }) {
                     onProceedToTrial={proceedToTrial}
                     encounterTimers={encounterTimers}
                     isInvestigating={isInvestigating}
-                    cityFact={currentCity?.fact}
+                    cityFact={wrongCity && wrongCityData ? wrongCityData.fact : currentCity?.fact}
                     actionPhase={actionPhase}
                     actionLabel={pendingAction?.label}
                     actionHoursRemaining={actionHoursRemaining}
+                    currentCity={wrongCity && wrongCityData ? wrongCityData : currentCity}
+                    hotel={hotel}
+                    rogueLocation={rogueLocation}
                   />
                 )}
 
@@ -336,8 +361,7 @@ export function Game({ gameData }) {
                     onResetTraits={resetSelectedTraits}
                   />
                 )}
-              </>
-            )}
+              </> : null}
           </div>
         </div>
         </div>

@@ -36,3 +36,18 @@ npm run build
 - [ ] Henchmen encounters
 - [ ] Assassination attempts
 - [ ] Final showdown mechanics
+
+### Polish & UX Enhancements
+- [ ] Cinematic city arrival animation
+  - Fade in background image
+  - Type city name and time of day character-by-character (upper left, large text)
+  - Spy movie aesthetic callback
+- [ ] Rename "Dossier" tab to "Evidence"
+- [ ] Split Evidence page into two tabs
+  - **Suspect tab**: Interactive filtering form with collected clues at top
+  - **Trail tab**: Collected clues at top, possible options below (no filtering)
+- [ ] Trivia mini-game for good deeds and rogue activities
+  - Rearrange sequences to succeed (e.g., rivers shortest→longest)
+  - World wonders oldest→newest
+  - Mountains shortest→tallest
+  - Other geography/landmark trivia challenges

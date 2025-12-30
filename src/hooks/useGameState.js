@@ -16,7 +16,7 @@ export function useGameState(gameData) {
   const [collectedClues, setCollectedClues] = useState({ city: [], suspect: [] });
   const [investigatedLocations, setInvestigatedLocations] = useState([]);
   const [selectedWarrant, setSelectedWarrant] = useState(null);
-  const [activeTab, setActiveTab] = useState('investigate');
+  const [activeTab, setActiveTab] = useState('home');
   const [solvedCases, setSolvedCases] = useState(0);
   const [message, setMessage] = useState(null);
   const [showCutscene, setShowCutscene] = useState(false);
@@ -40,6 +40,7 @@ export function useGameState(gameData) {
   const [showRogueActionModal, setShowRogueActionModal] = useState(false);
   const [currentRogueAction, setCurrentRogueAction] = useState(null);
   const [lastRogueAction, setLastRogueAction] = useState(null); // Track last rogue action used
+  const [lastVisitedLocation, setLastVisitedLocation] = useState(null); // Track last visited spot/location for travel animation
 
   // Phase 4: Gadget Encounters (henchman & assassination)
   const [currentEncounter, setCurrentEncounter] = useState(null); // Current henchman/assassination encounter
@@ -76,7 +77,7 @@ export function useGameState(gameData) {
   const [travelOrigin, setTravelOrigin] = useState(null);
   const [travelDestination, setTravelDestination] = useState(null);
 
-  const { settings, citiesById, investigationSpots, assassinationAttempts, goodDeeds, fakeGoodDeeds, rogueActions, encounters, gadgets } = gameData;
+  const { settings, citiesById, investigationSpots, assassinationAttempts, goodDeeds, fakeGoodDeeds, rogueActions, encounters } = gameData;
 
   // Get tick speed from settings (for syncing clue reveal with clock animation)
   const timeTickSpeed = settings.time_tick_speed || 0.5;
@@ -173,6 +174,7 @@ export function useGameState(gameData) {
   // Accept briefing and start playing
   const acceptBriefing = useCallback(() => {
     setGameState('playing');
+    setActiveTab('home'); // Start at home tab to show city fact
   }, []);
 
   // Helper function to advance time and check for auto-sleep
@@ -345,6 +347,9 @@ export function useGameState(gameData) {
     setIsInvestigating(false);
     setPendingInvestigation(null);
 
+    // Track this spot as the last visited location for travel animation
+    setLastVisitedLocation(spot);
+
     // Check for injury-based clue missing
     const missedClue = shouldMissClue();
 
@@ -383,22 +388,19 @@ export function useGameState(gameData) {
       }
     }
 
-    // ENCOUNTER TRIGGER: Henchman/assassination ALWAYS happen on first investigation in correct cities
+    // ENCOUNTER TRIGGER: Use pre-generated encounter from cityData
     // These take priority over good deeds
-    if (!wrongCity && !hadEncounterInCity && encounters) {
+    if (!wrongCity && !hadEncounterInCity) {
       setHadEncounterInCity(true); // Mark that encounter happened
 
-      if (isFinalCity && encounters.assassination_attempts) {
-        // CORRECT FINAL CITY: Trigger assassination attempt (high stakes!)
-        const assassinationEncounter = pickRandom(encounters.assassination_attempts);
-        setCurrentEncounter({ ...assassinationEncounter, type: 'assassination' });
-        return; // Wait for assassination to be resolved before allowing apprehension
-      } else if (!isFinalCity && currentCityIndex > 0 && encounters.henchman_encounters) {
-        // MIDDLE CITIES (not first, not last): Trigger henchman encounter
-        // "You're on the right track!" - signals player is on correct path
-        const henchmanEncounter = pickRandom(encounters.henchman_encounters);
-        setCurrentEncounter({ ...henchmanEncounter, type: 'henchman' });
-        return; // Show henchman encounter
+      // Get pre-assigned encounter for this city
+      const cityData = currentCase?.cityData?.[currentCityIndex];
+      const preAssignedEncounter = cityData?.encounter;
+
+      if (preAssignedEncounter) {
+        const encounterType = isFinalCity ? 'assassination' : 'henchman';
+        setCurrentEncounter({ ...preAssignedEncounter, type: encounterType });
+        return; // Show encounter
       }
     }
 
@@ -434,7 +436,7 @@ export function useGameState(gameData) {
         return;
       }
     }
-  }, [wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant, currentCity, currentHour, currentCityIndex, hadGoodDeedInCase]);
+  }, [wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant, currentCity, currentHour, currentCityIndex, hadGoodDeedInCase, currentCase]);
 
   // Rogue investigate - returns action config or null if invalid
   // Fast but increases notoriety, gets BOTH clues
@@ -486,6 +488,12 @@ export function useGameState(gameData) {
     setIsInvestigating(false);
     setPendingRogueAction(null);
 
+    // Track rogue location as the last visited location for travel animation
+    const rogueLocation = currentCase?.cityData?.[currentCityIndex]?.rogueLocation || null;
+    if (rogueLocation) {
+      setLastVisitedLocation(rogueLocation);
+    }
+
     // Rogue actions always get BOTH clues (if available)
     setLastFoundClue({ city: locationClue, suspect: suspectClue });
     setLastRogueAction(rogueAction);
@@ -523,7 +531,7 @@ export function useGameState(gameData) {
     setNotoriety(prev => prev + rogueAction.notoriety_gain);
 
     // No good deed encounters after rogue actions (you're being ruthless)
-  }, [currentCity, currentHour]);
+  }, [currentCity, currentHour, currentCase, currentCityIndex]);
 
   // Get available destinations
   const destinations = useMemo(() => {
@@ -531,14 +539,14 @@ export function useGameState(gameData) {
     return getDestinations(gameData, currentCase, currentCityIndex);
   }, [gameData, currentCase, currentCityIndex, gameState]);
 
-  // Get available gadgets with used status
+  // Get available gadgets with used status (only the 3 pre-selected for this case)
   const availableGadgets = useMemo(() => {
-    if (!gadgets) return [];
-    return gadgets.map(gadget => ({
+    const caseGadgets = currentCase?.gadgets || [];
+    return caseGadgets.map(gadget => ({
       ...gadget,
       used: usedGadgets.includes(gadget.id)
     }));
-  }, [gadgets, usedGadgets]);
+  }, [currentCase?.gadgets, usedGadgets]);
 
   // Travel to a destination - starts animation, returns travel time
   const travel = useCallback((destination) => {
@@ -553,9 +561,21 @@ export function useGameState(gameData) {
 
     // Use wrongCityData if in wrong city, otherwise use currentCity
     // This ensures the animation shows where you actually ARE, not the trail city
-    const actualOrigin = wrongCity && wrongCityData
+    let actualOrigin = wrongCity && wrongCityData
       ? citiesById[wrongCityData.id] || wrongCityData
       : currentCity;
+
+    // If we have a last visited location (from investigation or rogue action),
+    // use that as the origin for a more accurate animation
+    if (lastVisitedLocation && lastVisitedLocation.lat && lastVisitedLocation.lon) {
+      // Create a location object compatible with city data structure
+      actualOrigin = {
+        ...actualOrigin,
+        lat: lastVisitedLocation.lat,
+        lon: lastVisitedLocation.lon,
+        name: lastVisitedLocation.name || actualOrigin.name,
+      };
+    }
 
     // Store origin and destination for animation
     setTravelOrigin(actualOrigin);
@@ -564,7 +584,7 @@ export function useGameState(gameData) {
 
     // Return travel time so caller can queue time ticking
     return travelTime;
-  }, [timeRemaining, settings.travel_time, getInjuryTimePenalty, currentCity, wrongCity, wrongCityData, citiesById]);
+  }, [timeRemaining, settings.travel_time, getInjuryTimePenalty, currentCity, wrongCity, wrongCityData, citiesById, lastVisitedLocation]);
 
   // Called after flight animation completes - returns action config for time ticking
   const getTravelTimeConfig = useCallback(() => {
@@ -603,17 +623,19 @@ export function useGameState(gameData) {
     setRogueUsedInCity(false); // Reset rogue action for new city
     setHadEncounterInCity(false); // Reset encounter flag for new city
     setIsInvestigating(false); // Cancel any pending investigation
+    setLastVisitedLocation(null); // Clear last visited location for new city
 
     if (destination.isCorrect) {
       // Advance to next city (no cutscene - assassination only happens when issuing warrant in final city)
       setWrongCity(false);
       setWrongCityData(null);
       setCurrentCityIndex(prev => prev + 1);
-      setActiveTab('investigate');
+      setActiveTab('home');
     } else {
       setWrongCity(true);
       setWrongCityData({ name: destination.name, country: destination.country, id: destination.cityId });
       setMessage(`You've arrived in ${destination.name}, but something feels off...`);
+      setActiveTab('home');
     }
 
     // Time was already ticked by the action queue, no need to advance here
@@ -731,6 +753,11 @@ export function useGameState(gameData) {
     setGameState('menu');
   }, []);
 
+  // Current city's hotel, rogue location, and rogue action
+  const hotel = currentCase?.cityData?.[currentCityIndex]?.hotel || null;
+  const rogueLocation = currentCase?.cityData?.[currentCityIndex]?.rogueLocation || null;
+  const cityRogueAction = currentCase?.cityData?.[currentCityIndex]?.rogueAction || null;
+
   return {
     // State
     gameState,
@@ -758,6 +785,9 @@ export function useGameState(gameData) {
     isFinalCity,
     destinations,
     nextInvestigationCost,
+    hotel,
+    rogueLocation,
+    cityRogueAction,  // Randomized rogue action for current city
 
     // Phase 3: Karma & Notoriety
     karma,
