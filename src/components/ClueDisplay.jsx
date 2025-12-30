@@ -67,16 +67,17 @@ const SKIN_TONES = [
 ];
 
 /**
- * Get a deterministic profession emoji based on text with random skin tone
- * Same text will always return the same emoji, but with a random skin tone
+ * Get a deterministic profession emoji based on text with deterministic skin tone
+ * Same text will always return the same emoji with the same skin tone
  */
 function getProfessionEmojiForText(text) {
   const hash = hashString(text);
   const professionIndex = hash % PROFESSION_EMOJIS.length;
   const baseEmoji = PROFESSION_EMOJIS[professionIndex];
 
-  // Randomly select a skin tone
-  const skinTone = SKIN_TONES[Math.floor(Math.random() * SKIN_TONES.length)];
+  // Deterministically select a skin tone based on hash
+  const skinToneIndex = Math.floor(hash / PROFESSION_EMOJIS.length) % SKIN_TONES.length;
+  const skinTone = SKIN_TONES[skinToneIndex];
 
   // Apply skin tone to the emoji
   // For emojis with gender markers, we need to insert the skin tone after the base emoji
