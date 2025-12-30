@@ -64,7 +64,7 @@ export function TravelAnimation({ travelData, progress, vehicleType = 'plane', b
   const VehicleIcon = isPlane ? Plane : Car;
 
   return (
-    <div className="w-full h-full flex flex-col gap-3">
+    <div className="w-full h-[600px] flex flex-col gap-3">
       {/* Travel info header */}
       <div className="text-center flex-shrink-0">
         <div className="text-blue-300 text-xs font-mono uppercase tracking-wider mb-1">

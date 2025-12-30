@@ -192,7 +192,7 @@ export function AirportTab({ destinations, timeRemaining, travelTime, onTravel, 
         <svg
           viewBox={`0 0 ${width} ${height}`}
           className="w-full h-full"
-          style={{ maxHeight: '500px' }}
+          style={{ maxHeight: '600px' }}
         >
           {/* Background gradient */}
           <defs>
