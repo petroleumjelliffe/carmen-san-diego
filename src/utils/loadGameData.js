@@ -22,6 +22,7 @@ import { validateGameData } from './validation';
  */
 export function loadGameData() {
   const citiesList = cities.cities;
+  const backgroundsData = cities.backgrounds;
   const suspectsList = suspects.suspects;
   const ranksList = ranks.ranks;
   const spotsList = investigationSpots.investigation_spots;
@@ -43,6 +44,7 @@ export function loadGameData() {
     settings: gameSettings,
     difficulty: difficultySettings,
     encounterTimers: encounterTimers,
+    backgrounds: backgroundsData,
 
     // Raw arrays
     cities: citiesList,

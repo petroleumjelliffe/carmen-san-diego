@@ -15,19 +15,6 @@ import { Trial } from './Trial';
 import { Debrief } from './Debrief';
 import { Loader } from 'lucide-react';
 
-// City background images - moody noir-inspired shots from Unsplash
-const CITY_BACKGROUNDS = {
-  paris: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1920&q=80', // Eiffel Tower at dusk
-  tokyo: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1920&q=80', // Tokyo night
-  cairo: 'https://images.unsplash.com/photo-1572252009286-268acec5ca0a?w=1920&q=80', // Pyramids
-  london: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1920&q=80', // London skyline
-  rome: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1920&q=80', // Colosseum
-  berlin: 'https://images.unsplash.com/photo-1560969184-10fe8719e047?w=1920&q=80', // Brandenburg Gate
-  sydney: 'https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=1920&q=80', // Opera House
-  moscow: 'https://images.unsplash.com/photo-1513326738677-b964603b136d?w=1920&q=80', // Red Square
-  default: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1920&q=80', // Generic city night
-};
-
 export function Game({ gameData }) {
   const {
     gameState,
@@ -88,7 +75,7 @@ export function Game({ gameData }) {
     setSelectedWarrant,
   } = useGameState(gameData);
 
-  const { ranks, suspects, settings, rogueActions, encounterTimers, citiesById } = gameData;
+  const { ranks, suspects, settings, rogueActions, encounterTimers, citiesById, backgrounds } = gameData;
 
   // Action queue for staged time advancement
   const {
@@ -221,8 +208,12 @@ export function Game({ gameData }) {
   }
 
   // Get background image for current city
+  // Use generic background during travel animation
+  const travelingBackground = backgrounds?.traveling || '';
   const currentCityId = wrongCity && wrongCityData ? wrongCityData.id : currentCity?.id;
-  const backgroundUrl = CITY_BACKGROUNDS[currentCityId] || CITY_BACKGROUNDS.default;
+  const cityData = currentCityId ? citiesById[currentCityId] : null;
+  const currentCityBackground = cityData?.background_image || travelingBackground;
+  const backgroundUrl = (isAnimating || isTraveling) ? travelingBackground : currentCityBackground;
 
   // Main game UI with city background
   return (
@@ -264,18 +255,12 @@ export function Game({ gameData }) {
             style={{ alignItems: isAnimating || (actionPhase === 'ticking' && pendingAction?.type === 'travel') ? 'center' : 'end' }}
           >
           <div>
-            {/* Travel Animation - shown during flight */}
-            {isAnimating && travelData ? (
+            {/* Travel Animation - shown during flight and time ticking */}
+            {(isAnimating && travelData) || (actionPhase === 'ticking' && pendingAction?.type === 'travel') ? (
               <TravelAnimation
                 travelData={travelData}
                 progress={progress}
               />
-            ) : actionPhase === 'ticking' && pendingAction?.type === 'travel' ? (
-              /* Travel time ticking - spinner while clock in header shows time */
-              <div className="bg-gray-900/80 rounded-lg p-8 flex flex-col items-center justify-center gap-4">
-                <Loader className="animate-spin text-yellow-400" size={48} />
-                <p className="text-yellow-100 font-medium text-lg">Arriving at destination...</p>
-              </div>
             ) : (
               <>
                 {message && (
