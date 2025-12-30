@@ -1,11 +1,85 @@
-import { useState, useEffect } from 'react';
-import { MapMarker } from './MapMarker';
+import { useState, useEffect, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import { createCustomIcon } from '../utils/leafletIcons';
 import { PathAnimation } from './PathAnimation';
-import { MapContainer } from './MapContainer';
 
 /**
- * Realistic city map for investigation screen
- * Shows investigation spots on actual city map background
+ * Component to handle auto-fitting map bounds when selecting destinations
+ */
+function FitBoundsOnSelect({ playerPos, destination }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (destination && playerPos) {
+      const bounds = L.latLngBounds([
+        [playerPos.lat, playerPos.lon],
+        [destination.lat, destination.lon]
+      ]);
+
+      map.fitBounds(bounds, {
+        padding: [80, 80],
+        maxZoom: 16,
+        animate: true,
+        duration: 0.5
+      });
+    }
+  }, [destination, playerPos, map]);
+
+  return null;
+}
+
+/**
+ * Component to render SVG overlay for PathAnimation on Leaflet map
+ */
+function PathAnimationOverlay({ startPos, endPos, progress, pathType, icon, color, glowColor, dashColor, size }) {
+  const map = useMap();
+  const [positions, setPositions] = useState({ start: null, end: null });
+
+  useEffect(() => {
+    if (startPos && endPos) {
+      // Convert lat/lon to pixel coordinates
+      const startPoint = map.latLngToContainerPoint([startPos.lat, startPos.lon]);
+      const endPoint = map.latLngToContainerPoint([endPos.lat, endPos.lon]);
+      setPositions({ start: startPoint, end: endPoint });
+    }
+  }, [startPos, endPos, map]);
+
+  if (!positions.start || !positions.end) return null;
+
+  const mapSize = map.getSize();
+
+  return (
+    <svg
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        zIndex: 1000
+      }}
+      viewBox={`0 0 ${mapSize.x} ${mapSize.y}`}
+    >
+      <PathAnimation
+        startPos={positions.start}
+        endPos={positions.end}
+        progress={progress}
+        pathType={pathType}
+        icon={icon}
+        color={color}
+        glowColor={glowColor}
+        dashColor={dashColor}
+        size={size}
+      />
+    </svg>
+  );
+}
+
+/**
+ * Interactive city map for investigation screen using Leaflet
+ * Shows investigation spots on actual city street map
  */
 export function CityMapView({
   currentCity,
@@ -15,7 +89,6 @@ export function CityMapView({
   hoveredSpotId,
   onSpotHover,
   investigatingSpotIndex = null,
-  isAnimating = false,
   hotel = null,
   rogueLocation = null,
   lastInvestigatedSpotId = null,
@@ -23,116 +96,35 @@ export function CityMapView({
   rogueUsed = false,
   isInvestigatingRogue = false,
 }) {
-
-  // Animation progress state (0 to 1)
+  const mapRef = useRef(null);
   const [animationProgress, setAnimationProgress] = useState(0);
 
-  // Calculate optimal scale to fit all landmarks
-  const calculateOptimalScale = (width, height) => {
-    if (!currentCity || !currentCity.lat || !currentCity.lon || !spots || spots.length === 0) {
-      return 0.05;
-    }
+  // Calculate center and bounds for initial map view
+  const getInitialBounds = () => {
+    const landmarkCoords = [];
 
-    // Get all landmark coordinates (including hotel and rogue location if available)
-    const landmarkCoords = spots
-      .filter(s => s.spot.lat && s.spot.lon)
-      .map(s => ({ lat: s.spot.lat, lon: s.spot.lon }));
+    // Add all spots
+    spots.forEach(s => {
+      if (s.spot.lat && s.spot.lon) {
+        landmarkCoords.push([s.spot.lat, s.spot.lon]);
+      }
+    });
 
-    // Include hotel in bounds calculation
+    // Add hotel
     if (hotel?.lat && hotel?.lon) {
-      landmarkCoords.push({ lat: hotel.lat, lon: hotel.lon });
+      landmarkCoords.push([hotel.lat, hotel.lon]);
     }
 
-    // Include rogue location in bounds calculation
+    // Add rogue location
     if (rogueLocation?.lat && rogueLocation?.lon) {
-      landmarkCoords.push({ lat: rogueLocation.lat, lon: rogueLocation.lon });
-    }
-
-    if (landmarkCoords.length === 0) return 0.05;
-
-    // Calculate bounds
-    const lats = landmarkCoords.map(c => c.lat);
-    const lons = landmarkCoords.map(c => c.lon);
-    const minLat = Math.min(...lats);
-    const maxLat = Math.max(...lats);
-    const minLon = Math.min(...lons);
-    const maxLon = Math.max(...lons);
-
-    // Calculate range in degrees
-    const latRange = maxLat - minLat;
-    const lonRange = maxLon - minLon;
-
-    // Convert to meters (approximate)
-    const latRangeMeters = latRange * 111000; // 1 degree lat ≈ 111km
-    const lonRangeMeters = lonRange * 111000 * Math.cos(currentCity.lat * Math.PI / 180);
-
-    // Calculate scale to fit with padding
-    const padding = 80; // pixels
-    const trayHeight = 192; // h-48 = 192px tray at bottom
-    const availableWidth = width - 2 * padding;
-    const availableHeight = height - trayHeight - 2 * padding;
-
-    const scaleByLat = latRangeMeters > 0 ? availableHeight / latRangeMeters : 0.05;
-    const scaleByLon = lonRangeMeters > 0 ? availableWidth / lonRangeMeters : 0.05;
-
-    // Use the smaller scale to ensure everything fits, with min/max bounds
-    // Min scale of 0.01 (zoomed out), max scale of 0.2 (zoomed in)
-    const optimalScale = Math.max(0.01, Math.min(scaleByLat, scaleByLon, 0.2));
-
-    return optimalScale;
-  };
-
-  // Calculate the center of the landmarks (not city center)
-  const getLandmarkCenter = () => {
-    const landmarkCoords = spots
-      .filter(s => s.spot.lat && s.spot.lon)
-      .map(s => ({ lat: s.spot.lat, lon: s.spot.lon }));
-
-    // Include hotel in center calculation
-    if (hotel?.lat && hotel?.lon) {
-      landmarkCoords.push({ lat: hotel.lat, lon: hotel.lon });
-    }
-
-    // Include rogue location in center calculation
-    if (rogueLocation?.lat && rogueLocation?.lon) {
-      landmarkCoords.push({ lat: rogueLocation.lat, lon: rogueLocation.lon });
+      landmarkCoords.push([rogueLocation.lat, rogueLocation.lon]);
     }
 
     if (landmarkCoords.length === 0) {
-      return { lat: currentCity.lat, lon: currentCity.lon };
+      return [[currentCity.lat, currentCity.lon]];
     }
 
-    const lats = landmarkCoords.map(c => c.lat);
-    const lons = landmarkCoords.map(c => c.lon);
-
-    return {
-      lat: (Math.min(...lats) + Math.max(...lats)) / 2,
-      lon: (Math.min(...lons) + Math.max(...lons)) / 2,
-    };
-  };
-
-  // Convert lat/lon to SVG coordinates using landmark center as reference
-  const latLonToCitySVG = (lat, lon, width, height, scale) => {
-    const landmarkCenter = getLandmarkCenter();
-    if (!currentCity || !currentCity.lat || !currentCity.lon) {
-      return { x: width / 2, y: height / 2 };
-    }
-
-    // Calculate offset from landmark center in meters, then apply scale
-    // 1 degree latitude ≈ 111km = 111000m
-    const latDiffMeters = (landmarkCenter.lat - lat) * 111000;
-    const lonDiffMeters = (lon - landmarkCenter.lon) * 111000 * Math.cos(currentCity.lat * Math.PI / 180);
-
-    // Calculate the visual center accounting for the tray at bottom
-    const trayHeight = 192; // h-48 = 192px
-    const visualCenterX = width / 2;
-    const visualCenterY = (height - trayHeight) / 2;
-
-    // Apply scale (pixels per meter) and center in available space
-    return {
-      x: visualCenterX + (lonDiffMeters * scale),
-      y: visualCenterY + (latDiffMeters * scale),
-    };
+    return landmarkCoords;
   };
 
   // Animate progress when investigating
@@ -158,187 +150,137 @@ export function CityMapView({
     }
   }, [investigatingSpotIndex, isInvestigatingRogue]);
 
+  // Get selected destination for fit bounds (when clicking a spot)
+  const selectedSpot = investigatingSpotIndex !== null
+    ? spots[investigatingSpotIndex]?.spot
+    : (isInvestigatingRogue ? rogueLocation : null);
+
+  // Get animation positions
+  const getAnimationStartPos = () => {
+    if (lastInvestigatedSpotId) {
+      const lastSpot = spots.find(s => s.spot.id === lastInvestigatedSpotId)?.spot;
+      if (lastSpot?.lat && lastSpot?.lon) {
+        return { lat: lastSpot.lat, lon: lastSpot.lon };
+      }
+    }
+    return hotel ? { lat: hotel.lat, lon: hotel.lon } : null;
+  };
+
+  const getAnimationEndPos = () => {
+    if (isInvestigatingRogue && rogueLocation?.lat && rogueLocation?.lon) {
+      return { lat: rogueLocation.lat, lon: rogueLocation.lon };
+    }
+    if (investigatingSpotIndex !== null) {
+      const spot = spots[investigatingSpotIndex]?.spot;
+      if (spot?.lat && spot?.lon) {
+        return { lat: spot.lat, lon: spot.lon };
+      }
+    }
+    return null;
+  };
+
+  const animationStartPos = getAnimationStartPos();
+  const animationEndPos = getAnimationEndPos();
+
   return (
-    <MapContainer>
-      {({ width, height }) => {
-        const scale = calculateOptimalScale(width, height);
+    <div style={{ width: '100%', height: '100%' }}>
+      <MapContainer
+        ref={mapRef}
+        bounds={getInitialBounds()}
+        style={{ width: '100%', height: '100%' }}
+        zoomControl={true}
+        touchZoom={true}
+        doubleClickZoom={true}
+        scrollWheelZoom={true}
+        dragging={true}
+        minZoom={12}
+        maxZoom={18}
+        boundsOptions={{ padding: [80, 80] }}
+      >
+        {/* OpenStreetMap tiles */}
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        />
 
-        // Position investigation spots based on their lat/lon
-        const spotPositions = spots.map(spotData => {
-          if (spotData.spot.lat && spotData.spot.lon) {
-            return latLonToCitySVG(spotData.spot.lat, spotData.spot.lon, width, height, scale);
-          }
-          // Fallback to default positions if no coordinates
-          const index = spots.indexOf(spotData);
-          const fallbackPositions = [
-            { x: width * 0.25, y: height * 0.35 },
-            { x: width * 0.5, y: height * 0.5 },
-            { x: width * 0.75, y: height * 0.65 },
-          ];
-          return fallbackPositions[index] || { x: width / 2, y: height / 2 };
-        });
-
-        // Rogue location position
-        const roguePos = rogueLocation?.lat && rogueLocation?.lon
-          ? latLonToCitySVG(rogueLocation.lat, rogueLocation.lon, width, height, scale)
-          : null;
-
-        // Player starting position (hotel)
-        const playerPos = hotel?.lat && hotel?.lon
-          ? latLonToCitySVG(hotel.lat, hotel.lon, width, height, scale)
-          : (() => {
-              const trayHeight = 192; // h-48 = 192px
-              const availableHeight = height - trayHeight;
-              return { x: width / 2, y: availableHeight * 0.85 };
-            })();
-
-        // Animation starting position (last investigated spot, or hotel if none)
-        const animationStartPos = (() => {
-          if (lastInvestigatedSpotId) {
-            const lastSpotIndex = spots.findIndex(s => s.spot.id === lastInvestigatedSpotId);
-            if (lastSpotIndex >= 0 && spotPositions[lastSpotIndex]) {
-              return spotPositions[lastSpotIndex];
-            }
-          }
-          return playerPos;
-        })();
-
-        return (
-          <svg
-            viewBox={`0 0 ${width} ${height}`}
-            className="w-full h-full relative z-10"
-          >
-        <defs>
-          {/* City grid pattern */}
-          <pattern
-            id="cityGrid"
-            x="0"
-            y="0"
-            width="50"
-            height="50"
-            patternUnits="userSpaceOnUse"
-          >
-            <path
-              d="M 50 0 L 0 0 0 50"
-              fill="none"
-              stroke="rgba(100, 116, 139, 0.15)"
-              strokeWidth="1"
-            />
-          </pattern>
-
-          {/* Pulsing glow for available spots */}
-          <filter id="spotGlow">
-            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-            <feMerge>
-              <feMergeNode in="coloredBlur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
-
-        {/* Grid background */}
-        <rect x="0" y="0" width={width} height={height} fill="url(#cityGrid)" />
+        {/* Hotel marker (player's current position) */}
+        {hotel?.lat && hotel?.lon && (
+          <Marker
+            position={[hotel.lat, hotel.lon]}
+            icon={createCustomIcon(hotel.icon || '🔍', 'current')}
+            zIndexOffset={1000}
+          />
+        )}
 
         {/* Investigation spot markers */}
         {spots?.map((spotData, index) => {
           const spot = spotData.spot;
-          const position = spotPositions[index] || { x: width / 2, y: height / 2 };
           const isInvestigated = investigatedSpots.includes(spot.id);
-          const isHovered = hoveredSpotId === spot.id;
+
+          if (!spot.lat || !spot.lon) return null;
 
           return (
-            <g key={spot.id}>
-              {/* Marker */}
-              <MapMarker
-                x={position.x}
-                y={position.y}
-                label={spot.name}
-                icon={spot.icon}
-                variant={isInvestigated ? 'disabled' : 'destination'}
-                pulsing={false}
-                isHovered={isHovered}
-                disabled={isInvestigated}
-                onClick={() => !isInvestigated && onSpotClick?.(index)}
-                onHover={(hovered) => onSpotHover?.(hovered ? spot.id : null)}
-              />
-
-              {/* Checkmark for investigated spots */}
-              {isInvestigated && (
-                <text
-                  x={position.x}
-                  y={position.y + 5}
-                  textAnchor="middle"
-                  fill="#22c55e"
-                  fontSize="20"
-                  fontWeight="bold"
-                  className="pointer-events-none"
-                >
-                  ✓
-                </text>
+            <Marker
+              key={spot.id}
+              position={[spot.lat, spot.lon]}
+              icon={createCustomIcon(
+                isInvestigated ? '✓' : spot.icon,
+                isInvestigated ? 'disabled' : 'destination'
               )}
-            </g>
+              eventHandlers={{
+                click: () => !isInvestigated && onSpotClick?.(index),
+                mouseover: () => onSpotHover?.(spot.id),
+                mouseout: () => onSpotHover?.(null),
+              }}
+            />
           );
         })}
 
-        {/* Player marker (at hotel) */}
-        {(
-          <MapMarker
-            x={playerPos.x}
-            y={playerPos.y}
-            label={hotel?.name || "YOU"}
-            icon={hotel?.icon || "🔍"}
-            variant="current"
-            disabled={true}
-          />
-        )}
-
         {/* Rogue location marker */}
-        {roguePos && (
-          <MapMarker
-            x={roguePos.x}
-            y={roguePos.y}
-            label={rogueLocation.name}
-            icon={rogueLocation.icon}
-            variant="destination"
-            pulsing={false}
-            disabled={rogueUsed}
-            onClick={onRogueClick && !rogueUsed ? onRogueClick : undefined}
+        {rogueLocation?.lat && rogueLocation?.lon && (
+          <Marker
+            position={[rogueLocation.lat, rogueLocation.lon]}
+            icon={createCustomIcon(rogueLocation.icon, rogueUsed ? 'disabled' : 'destination')}
+            eventHandlers={{
+              click: onRogueClick && !rogueUsed ? onRogueClick : undefined,
+            }}
           />
         )}
 
-        {/* Investigation Animation - Car traveling on orthogonal path */}
-        {investigatingSpotIndex !== null && spots[investigatingSpotIndex] && (
-          <PathAnimation
-            startPos={animationStartPos}
-            endPos={spotPositions[investigatingSpotIndex] || { x: width / 2, y: height / 2 }}
-            progress={animationProgress}
-            pathType="orthogonal"
-            icon="🚗"
-            color="#fbbf24"
-            glowColor="rgba(251, 191, 36, 0.5)"
-            dashColor="rgba(251, 191, 36, 0.4)"
-            size={22}
+        {/* Auto-fit bounds when clicking on spots */}
+        {hotel && selectedSpot && selectedSpot.lat && selectedSpot.lon && (
+          <FitBoundsOnSelect
+            playerPos={{ lat: hotel.lat, lon: hotel.lon }}
+            destination={{ lat: selectedSpot.lat, lon: selectedSpot.lon }}
           />
         )}
 
-        {/* Rogue Action Animation - Car traveling on orthogonal path (orange) */}
-        {isInvestigatingRogue && roguePos && (
-          <PathAnimation
-            startPos={animationStartPos}
-            endPos={roguePos}
-            progress={animationProgress}
-            pathType="orthogonal"
-            icon="🚗"
-            color="#f97316"
-            glowColor="rgba(249, 115, 22, 0.5)"
-            dashColor="rgba(249, 115, 22, 0.4)"
-            size={22}
-          />
-        )}
-          </svg>
-        );
-      }}
-    </MapContainer>
+        {/* PathAnimation overlay for investigation animation */}
+        {(investigatingSpotIndex !== null || isInvestigatingRogue) &&
+          animationStartPos &&
+          animationEndPos && (
+            <PathAnimationOverlay
+              startPos={animationStartPos}
+              endPos={animationEndPos}
+              progress={animationProgress}
+              pathType="orthogonal"
+              icon="🚗"
+              color={isInvestigatingRogue ? '#f97316' : '#fbbf24'}
+              glowColor={
+                isInvestigatingRogue
+                  ? 'rgba(249, 115, 22, 0.5)'
+                  : 'rgba(251, 191, 36, 0.5)'
+              }
+              dashColor={
+                isInvestigatingRogue
+                  ? 'rgba(249, 115, 22, 0.4)'
+                  : 'rgba(251, 191, 36, 0.4)'
+              }
+              size={22}
+            />
+          )}
+      </MapContainer>
+    </div>
   );
 }
 
