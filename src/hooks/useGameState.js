@@ -40,6 +40,7 @@ export function useGameState(gameData) {
   const [showRogueActionModal, setShowRogueActionModal] = useState(false);
   const [currentRogueAction, setCurrentRogueAction] = useState(null);
   const [lastRogueAction, setLastRogueAction] = useState(null); // Track last rogue action used
+  const [lastVisitedLocation, setLastVisitedLocation] = useState(null); // Track last visited spot/location for travel animation
 
   // Phase 4: Gadget Encounters (henchman & assassination)
   const [currentEncounter, setCurrentEncounter] = useState(null); // Current henchman/assassination encounter
@@ -346,6 +347,9 @@ export function useGameState(gameData) {
     setIsInvestigating(false);
     setPendingInvestigation(null);
 
+    // Track this spot as the last visited location for travel animation
+    setLastVisitedLocation(spot);
+
     // Check for injury-based clue missing
     const missedClue = shouldMissClue();
 
@@ -484,6 +488,12 @@ export function useGameState(gameData) {
     setIsInvestigating(false);
     setPendingRogueAction(null);
 
+    // Track rogue location as the last visited location for travel animation
+    const rogueLocation = currentCase?.cityData?.[currentCityIndex]?.rogueLocation || null;
+    if (rogueLocation) {
+      setLastVisitedLocation(rogueLocation);
+    }
+
     // Rogue actions always get BOTH clues (if available)
     setLastFoundClue({ city: locationClue, suspect: suspectClue });
     setLastRogueAction(rogueAction);
@@ -521,7 +531,7 @@ export function useGameState(gameData) {
     setNotoriety(prev => prev + rogueAction.notoriety_gain);
 
     // No good deed encounters after rogue actions (you're being ruthless)
-  }, [currentCity, currentHour]);
+  }, [currentCity, currentHour, currentCase, currentCityIndex]);
 
   // Get available destinations
   const destinations = useMemo(() => {
@@ -551,9 +561,21 @@ export function useGameState(gameData) {
 
     // Use wrongCityData if in wrong city, otherwise use currentCity
     // This ensures the animation shows where you actually ARE, not the trail city
-    const actualOrigin = wrongCity && wrongCityData
+    let actualOrigin = wrongCity && wrongCityData
       ? citiesById[wrongCityData.id] || wrongCityData
       : currentCity;
+
+    // If we have a last visited location (from investigation or rogue action),
+    // use that as the origin for a more accurate animation
+    if (lastVisitedLocation && lastVisitedLocation.lat && lastVisitedLocation.lon) {
+      // Create a location object compatible with city data structure
+      actualOrigin = {
+        ...actualOrigin,
+        lat: lastVisitedLocation.lat,
+        lon: lastVisitedLocation.lon,
+        name: lastVisitedLocation.name || actualOrigin.name,
+      };
+    }
 
     // Store origin and destination for animation
     setTravelOrigin(actualOrigin);
@@ -562,7 +584,7 @@ export function useGameState(gameData) {
 
     // Return travel time so caller can queue time ticking
     return travelTime;
-  }, [timeRemaining, settings.travel_time, getInjuryTimePenalty, currentCity, wrongCity, wrongCityData, citiesById]);
+  }, [timeRemaining, settings.travel_time, getInjuryTimePenalty, currentCity, wrongCity, wrongCityData, citiesById, lastVisitedLocation]);
 
   // Called after flight animation completes - returns action config for time ticking
   const getTravelTimeConfig = useCallback(() => {
@@ -601,6 +623,7 @@ export function useGameState(gameData) {
     setRogueUsedInCity(false); // Reset rogue action for new city
     setHadEncounterInCity(false); // Reset encounter flag for new city
     setIsInvestigating(false); // Cancel any pending investigation
+    setLastVisitedLocation(null); // Clear last visited location for new city
 
     if (destination.isCorrect) {
       // Advance to next city (no cutscene - assassination only happens when issuing warrant in final city)
