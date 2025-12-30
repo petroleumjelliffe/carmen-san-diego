@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useGameState } from '../hooks/useGameState';
 import { useTravelAnimation } from '../hooks/useTravelAnimation';
 import { useActionQueue } from '../hooks/useActionQueue';
@@ -141,15 +141,27 @@ export function Game({ gameData }) {
     handleFlightAnimationComplete
   );
 
+  // Keep last travel data for showing car at destination
+  const [lastTravelData, setLastTravelData] = useState(null);
+  const [showMap, setShowMap] = useState(false);
+
   // Start travel animation when isTraveling becomes true
   useEffect(() => {
     if (isTraveling && travelOrigin && travelDestination) {
       const destCity = citiesById[travelDestination.cityId];
       if (destCity) {
         startAnimation(travelOrigin, destCity);
+        setShowMap(true);
       }
     }
   }, [isTraveling, travelOrigin, travelDestination, citiesById, startAnimation]);
+
+  // Update last travel data when animation is running
+  useEffect(() => {
+    if (travelData) {
+      setLastTravelData(travelData);
+    }
+  }, [travelData]);
 
   // Menu screen
   if (gameState === 'menu') {
@@ -255,14 +267,16 @@ export function Game({ gameData }) {
             style={{ alignItems: isAnimating || (actionPhase === 'ticking' && pendingAction?.type === 'travel') ? 'center' : 'end' }}
           >
           <div>
-            {/* Travel Animation - shown during flight and time ticking */}
-            {(isAnimating && travelData) || (actionPhase === 'ticking' && pendingAction?.type === 'travel') ? (
+            {/* Travel Animation - shown during flight, time ticking, and car at destination */}
+            {showMap && lastTravelData ? (
               <TravelAnimation
-                travelData={travelData}
-                progress={progress}
+                travelData={lastTravelData}
+                progress={isAnimating || (actionPhase === 'ticking' && pendingAction?.type === 'travel') ? progress : 1.0}
               />
-            ) : (
-              <>
+            ) : null}
+
+            {/* Main content - shown when not traveling */}
+            {!showMap || !(isAnimating || (actionPhase === 'ticking' && pendingAction?.type === 'travel')) ? <>
                 {message && (
                   <div className="bg-yellow-400/20 border border-yellow-400 text-yellow-100 px-4 py-2 rounded mb-4">
                     {message}
@@ -335,8 +349,7 @@ export function Game({ gameData }) {
                     onResetTraits={resetSelectedTraits}
                   />
                 )}
-              </>
-            )}
+              </> : null}
           </div>
         </div>
         </div>

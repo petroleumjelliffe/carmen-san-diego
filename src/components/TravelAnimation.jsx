@@ -1,4 +1,4 @@
-import { Plane } from 'lucide-react';
+import { Plane, Car } from 'lucide-react';
 import {
   generateFlightPath,
   quadraticBezierPoint,
@@ -45,7 +45,7 @@ function WorldMapOutlines() {
   );
 }
 
-export function TravelAnimation({ travelData, progress }) {
+export function TravelAnimation({ travelData, progress, vehicleType = 'plane' }) {
   if (!travelData) return null;
 
   const {
@@ -58,6 +58,9 @@ export function TravelAnimation({ travelData, progress }) {
     svgWidth,
     svgHeight
   } = travelData;
+
+  const isPlane = vehicleType === 'plane';
+  const VehicleIcon = isPlane ? Plane : Car;
 
   // Calculate current plane position
   const planePos = quadraticBezierPoint(fromPoint, controlPoint, toPoint, progress);
@@ -78,14 +81,14 @@ export function TravelAnimation({ travelData, progress }) {
 
   return (
     <div className="flex flex-col items-center justify-center py-4">
-      {/* Flight info header */}
+      {/* Travel info header */}
       <div className="text-center mb-3">
         <div className="text-blue-300 text-xs font-mono uppercase tracking-wider mb-1">
-          In Flight
+          {isPlane ? 'In Flight' : 'En Route'}
         </div>
         <div className="flex items-center justify-center gap-3 text-white">
           <span className="text-base font-bold">{origin.name}</span>
-          <Plane className="text-yellow-400 animate-pulse" size={18} />
+          <VehicleIcon className="text-yellow-400 animate-pulse" size={18} />
           <span className="text-base font-bold">{destination.name}</span>
         </div>
       </div>
@@ -225,24 +228,48 @@ export function TravelAnimation({ travelData, progress }) {
             {destination.name.toUpperCase()}
           </text>
 
-          {/* Plane icon - larger for short flights */}
-          <g
-            transform={`translate(${planePos.x}, ${planePos.y}) rotate(${planeAngle})`}
-            filter="url(#glow)"
-          >
-            {/* Outer glow */}
-            <circle r={isShortFlight ? 16 : 14} fill="rgba(250, 204, 21, 0.2)" />
-            {/* Inner glow */}
-            <circle r={isShortFlight ? 10 : 8} fill="rgba(250, 204, 21, 0.5)" />
-            {/* Plane body */}
-            <circle r={isShortFlight ? 6 : 5} fill="#facc15" />
-            {/* Plane nose direction indicator */}
-            <polygon
-              points="0,-3 10,0 0,3 3,0"
-              fill="white"
-              transform={`translate(${isShortFlight ? 4 : 3}, 0)`}
-            />
-          </g>
+          {/* Vehicle icon - hide when arrived */}
+          {progress < 0.99 && (
+            <g
+              transform={`translate(${planePos.x}, ${planePos.y}) rotate(${planeAngle})`}
+              filter="url(#glow)"
+            >
+              {/* Outer glow */}
+              <circle r={isShortFlight ? 16 : 14} fill="rgba(250, 204, 21, 0.2)" />
+              {/* Inner glow */}
+              <circle r={isShortFlight ? 10 : 8} fill="rgba(250, 204, 21, 0.5)" />
+
+              {isPlane ? (
+                <>
+                  {/* Plane body */}
+                  <circle r={isShortFlight ? 6 : 5} fill="#facc15" />
+                  {/* Plane nose direction indicator */}
+                  <polygon
+                    points="0,-3 10,0 0,3 3,0"
+                    fill="white"
+                    transform={`translate(${isShortFlight ? 4 : 3}, 0)`}
+                  />
+                </>
+              ) : (
+                <>
+                  {/* Car body - rounded rectangle */}
+                  <rect
+                    x="-6"
+                    y="-3"
+                    width="12"
+                    height="6"
+                    rx="2"
+                    fill="#facc15"
+                  />
+                  {/* Car front window */}
+                  <polygon
+                    points="4,-2 7,-2 7,2 4,2"
+                    fill="white"
+                  />
+                </>
+              )}
+            </g>
+          )}
         </svg>
       </div>
 

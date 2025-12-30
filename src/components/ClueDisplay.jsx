@@ -57,14 +57,31 @@ function hashString(str) {
   return Math.abs(hash);
 }
 
+// Skin tone modifiers
+const SKIN_TONES = [
+  '\u{1F3FB}', // Light skin tone
+  '\u{1F3FC}', // Medium-light skin tone
+  '\u{1F3FD}', // Medium skin tone
+  '\u{1F3FE}', // Medium-dark skin tone
+  '\u{1F3FF}', // Dark skin tone
+];
+
 /**
- * Get a deterministic profession emoji based on text
- * Same text will always return the same emoji
+ * Get a deterministic profession emoji based on text with random skin tone
+ * Same text will always return the same emoji, but with a random skin tone
  */
 function getProfessionEmojiForText(text) {
   const hash = hashString(text);
   const professionIndex = hash % PROFESSION_EMOJIS.length;
-  return PROFESSION_EMOJIS[professionIndex];
+  const baseEmoji = PROFESSION_EMOJIS[professionIndex];
+
+  // Randomly select a skin tone
+  const skinTone = SKIN_TONES[Math.floor(Math.random() * SKIN_TONES.length)];
+
+  // Apply skin tone to the emoji
+  // For emojis with gender markers, we need to insert the skin tone after the base emoji
+  // Most profession emojis are compound: base + skin tone + ZWJ + profession/gender
+  return baseEmoji.replace(/(\u{1F468}|\u{1F469})/u, `$1${skinTone}`);
 }
 
 /**
