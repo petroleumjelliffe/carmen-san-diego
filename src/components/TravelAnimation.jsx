@@ -5,6 +5,7 @@ import {
   quadraticBezierTangent,
   approximateBezierLength
 } from '../utils/geoUtils';
+import { MapContainer } from './MapContainer';
 
 // Simplified but recognizable world map continents (equirectangular projection, 800x400)
 // Coordinates roughly: x = (lon + 180) / 360 * 800, y = (90 - lat) / 180 * 400
@@ -45,7 +46,7 @@ function WorldMapOutlines() {
   );
 }
 
-export function TravelAnimation({ travelData, progress, vehicleType = 'plane' }) {
+export function TravelAnimation({ travelData, progress, vehicleType = 'plane', backgroundImage = null }) {
   if (!travelData) return null;
 
   const {
@@ -62,27 +63,10 @@ export function TravelAnimation({ travelData, progress, vehicleType = 'plane' })
   const isPlane = vehicleType === 'plane';
   const VehicleIcon = isPlane ? Plane : Car;
 
-  // Calculate current plane position
-  const planePos = quadraticBezierPoint(fromPoint, controlPoint, toPoint, progress);
-  const planeAngle = quadraticBezierTangent(fromPoint, controlPoint, toPoint, progress);
-
-  // Generate path for animation
-  const pathD = generateFlightPath(fromPoint, controlPoint, toPoint);
-  const pathLength = approximateBezierLength(fromPoint, controlPoint, toPoint);
-
-  // Stroke dashoffset for path reveal animation
-  const dashOffset = pathLength * (1 - progress);
-
-  // Calculate flight path distance in pixels for visual scaling
-  const flightPixelDistance = Math.sqrt(
-    Math.pow(toPoint.x - fromPoint.x, 2) + Math.pow(toPoint.y - fromPoint.y, 2)
-  );
-  const isShortFlight = flightPixelDistance < 100;
-
   return (
-    <div className="flex flex-col items-center justify-center py-4">
+    <div className="w-full h-full flex flex-col gap-3">
       {/* Travel info header */}
-      <div className="text-center mb-3">
+      <div className="text-center flex-shrink-0">
         <div className="text-blue-300 text-xs font-mono uppercase tracking-wider mb-1">
           {isPlane ? 'In Flight' : 'En Route'}
         </div>
@@ -94,15 +78,35 @@ export function TravelAnimation({ travelData, progress, vehicleType = 'plane' })
       </div>
 
       {/* SVG Flight Tracker */}
-      <div className="w-full max-w-2xl">
-        <svg
-          viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-          className="w-full h-auto rounded-lg overflow-hidden"
-          style={{
-            background: 'linear-gradient(180deg, #0a1628 0%, #0f2847 100%)',
-            boxShadow: 'inset 0 0 60px rgba(0, 100, 200, 0.1)'
-          }}
-        >
+      <MapContainer backgroundImage={backgroundImage} className="flex-1">
+        {({ width, height }) => {
+          // Scale coordinates from fixed 800x400 to actual container dimensions
+          const scaleX = width / svgWidth;
+          const scaleY = height / svgHeight;
+
+          const scaledFromPoint = { x: fromPoint.x * scaleX, y: fromPoint.y * scaleY };
+          const scaledToPoint = { x: toPoint.x * scaleX, y: toPoint.y * scaleY };
+          const scaledControlPoint = { x: controlPoint.x * scaleX, y: controlPoint.y * scaleY };
+
+          // Recalculate with scaled coordinates
+          const scaledPlanePos = quadraticBezierPoint(scaledFromPoint, scaledControlPoint, scaledToPoint, progress);
+          const scaledPlaneAngle = quadraticBezierTangent(scaledFromPoint, scaledControlPoint, scaledToPoint, progress);
+          const scaledPathD = generateFlightPath(scaledFromPoint, scaledControlPoint, scaledToPoint);
+          const scaledPathLength = approximateBezierLength(scaledFromPoint, scaledControlPoint, scaledToPoint);
+          const scaledDashOffset = scaledPathLength * (1 - progress);
+
+          // Calculate flight path distance in pixels for visual scaling
+          const flightPixelDistance = Math.sqrt(
+            Math.pow(scaledToPoint.x - scaledFromPoint.x, 2) + Math.pow(scaledToPoint.y - scaledFromPoint.y, 2)
+          );
+          const scaledIsShortFlight = flightPixelDistance < 100;
+
+          return (
+          <svg
+            viewBox={`0 0 ${width} ${height}`}
+            className="w-full h-full relative z-10"
+            preserveAspectRatio="xMidYMid meet"
+          >
           {/* Defs */}
           <defs>
             {/* Subtle grid pattern */}
@@ -142,7 +146,7 @@ export function TravelAnimation({ travelData, progress, vehicleType = 'plane' })
 
           {/* Dashed path (full route) */}
           <path
-            d={pathD}
+            d={scaledPathD}
             fill="none"
             stroke="rgba(100, 180, 255, 0.3)"
             strokeWidth="2"
@@ -151,63 +155,63 @@ export function TravelAnimation({ travelData, progress, vehicleType = 'plane' })
 
           {/* Animated path (traveled portion) */}
           <path
-            d={pathD}
+            d={scaledPathD}
             fill="none"
             stroke="url(#flightGradient)"
             strokeWidth="3"
             strokeLinecap="round"
-            strokeDasharray={pathLength}
-            strokeDashoffset={dashOffset}
+            strokeDasharray={scaledPathLength}
+            strokeDashoffset={scaledDashOffset}
           />
 
           {/* Origin city - pulsing ring */}
           <circle
-            cx={fromPoint.x}
-            cy={fromPoint.y}
+            cx={scaledFromPoint.x}
+            cy={scaledFromPoint.y}
             r="16"
             fill="url(#originPulse)"
             opacity={0.5}
           />
           <circle
-            cx={fromPoint.x}
-            cy={fromPoint.y}
+            cx={scaledFromPoint.x}
+            cy={scaledFromPoint.y}
             r="8"
             fill="#22c55e"
             opacity="0.9"
           />
           <circle
-            cx={fromPoint.x}
-            cy={fromPoint.y}
+            cx={scaledFromPoint.x}
+            cy={scaledFromPoint.y}
             r="3"
             fill="white"
           />
 
           {/* Destination city */}
           <circle
-            cx={toPoint.x}
-            cy={toPoint.y}
+            cx={scaledToPoint.x}
+            cy={scaledToPoint.y}
             r="10"
             fill="#f97316"
             opacity="0.3"
           />
           <circle
-            cx={toPoint.x}
-            cy={toPoint.y}
+            cx={scaledToPoint.x}
+            cy={scaledToPoint.y}
             r="8"
             fill="#f97316"
             opacity="0.9"
           />
           <circle
-            cx={toPoint.x}
-            cy={toPoint.y}
+            cx={scaledToPoint.x}
+            cy={scaledToPoint.y}
             r="3"
             fill="white"
           />
 
           {/* City labels */}
           <text
-            x={fromPoint.x}
-            y={fromPoint.y - 22}
+            x={scaledFromPoint.x}
+            y={scaledFromPoint.y - 22}
             textAnchor="middle"
             fill="#22c55e"
             fontSize="11"
@@ -217,8 +221,8 @@ export function TravelAnimation({ travelData, progress, vehicleType = 'plane' })
             {origin.name.toUpperCase()}
           </text>
           <text
-            x={toPoint.x}
-            y={toPoint.y - 22}
+            x={scaledToPoint.x}
+            y={scaledToPoint.y - 22}
             textAnchor="middle"
             fill="#f97316"
             fontSize="11"
@@ -231,23 +235,23 @@ export function TravelAnimation({ travelData, progress, vehicleType = 'plane' })
           {/* Vehicle icon - hide when arrived */}
           {progress < 0.99 && (
             <g
-              transform={`translate(${planePos.x}, ${planePos.y}) rotate(${planeAngle})`}
+              transform={`translate(${scaledPlanePos.x}, ${scaledPlanePos.y}) rotate(${scaledPlaneAngle})`}
               filter="url(#glow)"
             >
               {/* Outer glow */}
-              <circle r={isShortFlight ? 16 : 14} fill="rgba(250, 204, 21, 0.2)" />
+              <circle r={scaledIsShortFlight ? 16 : 14} fill="rgba(250, 204, 21, 0.2)" />
               {/* Inner glow */}
-              <circle r={isShortFlight ? 10 : 8} fill="rgba(250, 204, 21, 0.5)" />
+              <circle r={scaledIsShortFlight ? 10 : 8} fill="rgba(250, 204, 21, 0.5)" />
 
               {isPlane ? (
                 <>
                   {/* Plane body */}
-                  <circle r={isShortFlight ? 6 : 5} fill="#facc15" />
+                  <circle r={scaledIsShortFlight ? 6 : 5} fill="#facc15" />
                   {/* Plane nose direction indicator */}
                   <polygon
                     points="0,-3 10,0 0,3 3,0"
                     fill="white"
-                    transform={`translate(${isShortFlight ? 4 : 3}, 0)`}
+                    transform={`translate(${scaledIsShortFlight ? 4 : 3}, 0)`}
                   />
                 </>
               ) : (
@@ -270,11 +274,13 @@ export function TravelAnimation({ travelData, progress, vehicleType = 'plane' })
               )}
             </g>
           )}
-        </svg>
-      </div>
+          </svg>
+          );
+        }}
+      </MapContainer>
 
       {/* Progress bar and distance */}
-      <div className="w-full max-w-2xl mt-3 px-4">
+      <div className="w-full px-4 flex-shrink-0">
         <div className="flex justify-between text-xs text-gray-400 mb-1">
           <span className="text-green-400">{origin.name}</span>
           <span className="font-mono text-yellow-400">{distance.toLocaleString()} km</span>

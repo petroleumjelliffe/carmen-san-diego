@@ -283,6 +283,7 @@ export function Game({ gameData }) {
               <TravelAnimation
                 travelData={lastTravelData}
                 progress={isAnimating || (actionPhase === 'ticking' && pendingAction?.type === 'travel') ? progress : 1.0}
+                backgroundImage={backgrounds?.traveling}
               />
             ) : null}
 

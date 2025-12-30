@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { MapMarker } from './MapMarker';
 import { PathAnimation } from './PathAnimation';
+import { MapContainer } from './MapContainer';
 
 /**
  * Realistic city map for investigation screen
@@ -22,36 +23,12 @@ export function CityMapView({
   rogueUsed = false,
   isInvestigatingRogue = false,
 }) {
-  const containerRef = useRef(null);
-  const [dimensions, setDimensions] = useState({ width: 800, height: 500 });
-  const [dimensionsMeasured, setDimensionsMeasured] = useState(false);
-
-  // Measure container dimensions
-  useEffect(() => {
-    const updateDimensions = () => {
-      if (containerRef.current) {
-        const { clientWidth, clientHeight } = containerRef.current;
-        setDimensions({
-          width: clientWidth || 800,
-          height: clientHeight || 500,
-        });
-        setDimensionsMeasured(true);
-      }
-    };
-
-    updateDimensions();
-    window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
-  }, []);
-
-  const width = dimensions.width;
-  const height = dimensions.height;
 
   // Animation progress state (0 to 1)
   const [animationProgress, setAnimationProgress] = useState(0);
 
   // Calculate optimal scale to fit all landmarks
-  const calculateOptimalScale = () => {
+  const calculateOptimalScale = (width, height) => {
     if (!currentCity || !currentCity.lat || !currentCity.lon || !spots || spots.length === 0) {
       return 0.05;
     }
@@ -105,8 +82,6 @@ export function CityMapView({
     return optimalScale;
   };
 
-  const scale = calculateOptimalScale();
-
   // Calculate the center of the landmarks (not city center)
   const getLandmarkCenter = () => {
     const landmarkCoords = spots
@@ -136,10 +111,9 @@ export function CityMapView({
     };
   };
 
-  const landmarkCenter = getLandmarkCenter();
-
   // Convert lat/lon to SVG coordinates using landmark center as reference
-  const latLonToCitySVG = (lat, lon) => {
+  const latLonToCitySVG = (lat, lon, width, height, scale) => {
+    const landmarkCenter = getLandmarkCenter();
     if (!currentCity || !currentCity.lat || !currentCity.lon) {
       return { x: width / 2, y: height / 2 };
     }
@@ -160,46 +134,6 @@ export function CityMapView({
       y: visualCenterY + (latDiffMeters * scale),
     };
   };
-
-  // Position investigation spots based on their lat/lon
-  const spotPositions = spots.map(spotData => {
-    if (spotData.spot.lat && spotData.spot.lon) {
-      return latLonToCitySVG(spotData.spot.lat, spotData.spot.lon);
-    }
-    // Fallback to default positions if no coordinates
-    const index = spots.indexOf(spotData);
-    const fallbackPositions = [
-      { x: width * 0.25, y: height * 0.35 },
-      { x: width * 0.5, y: height * 0.5 },
-      { x: width * 0.75, y: height * 0.65 },
-    ];
-    return fallbackPositions[index] || { x: width / 2, y: height / 2 };
-  });
-
-  // Rogue location position
-  const roguePos = rogueLocation?.lat && rogueLocation?.lon
-    ? latLonToCitySVG(rogueLocation.lat, rogueLocation.lon)
-    : null;
-
-  // Player starting position (hotel)
-  const playerPos = hotel?.lat && hotel?.lon
-    ? latLonToCitySVG(hotel.lat, hotel.lon)
-    : (() => {
-        const trayHeight = 192; // h-48 = 192px
-        const availableHeight = height - trayHeight;
-        return { x: width / 2, y: availableHeight * 0.85 };
-      })();
-
-  // Animation starting position (last investigated spot, or hotel if none)
-  const animationStartPos = (() => {
-    if (lastInvestigatedSpotId) {
-      const lastSpotIndex = spots.findIndex(s => s.spot.id === lastInvestigatedSpotId);
-      if (lastSpotIndex >= 0 && spotPositions[lastSpotIndex]) {
-        return spotPositions[lastSpotIndex];
-      }
-    }
-    return playerPos;
-  })();
 
   // Animate progress when investigating
   useEffect(() => {
@@ -224,19 +158,56 @@ export function CityMapView({
     }
   }, [investigatingSpotIndex, isInvestigatingRogue]);
 
-  // Get city map background image
-  const mapImage = currentCity?.map_image;
-
   return (
-    <div ref={containerRef} className="relative w-full h-full bg-gray-900 rounded-lg overflow-hidden">
-      {/* Dark gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900" />
+    <MapContainer>
+      {({ width, height }) => {
+        const scale = calculateOptimalScale(width, height);
 
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        className="w-full h-full relative z-10"
-        style={{ maxHeight: '600px' }}
-      >
+        // Position investigation spots based on their lat/lon
+        const spotPositions = spots.map(spotData => {
+          if (spotData.spot.lat && spotData.spot.lon) {
+            return latLonToCitySVG(spotData.spot.lat, spotData.spot.lon, width, height, scale);
+          }
+          // Fallback to default positions if no coordinates
+          const index = spots.indexOf(spotData);
+          const fallbackPositions = [
+            { x: width * 0.25, y: height * 0.35 },
+            { x: width * 0.5, y: height * 0.5 },
+            { x: width * 0.75, y: height * 0.65 },
+          ];
+          return fallbackPositions[index] || { x: width / 2, y: height / 2 };
+        });
+
+        // Rogue location position
+        const roguePos = rogueLocation?.lat && rogueLocation?.lon
+          ? latLonToCitySVG(rogueLocation.lat, rogueLocation.lon, width, height, scale)
+          : null;
+
+        // Player starting position (hotel)
+        const playerPos = hotel?.lat && hotel?.lon
+          ? latLonToCitySVG(hotel.lat, hotel.lon, width, height, scale)
+          : (() => {
+              const trayHeight = 192; // h-48 = 192px
+              const availableHeight = height - trayHeight;
+              return { x: width / 2, y: availableHeight * 0.85 };
+            })();
+
+        // Animation starting position (last investigated spot, or hotel if none)
+        const animationStartPos = (() => {
+          if (lastInvestigatedSpotId) {
+            const lastSpotIndex = spots.findIndex(s => s.spot.id === lastInvestigatedSpotId);
+            if (lastSpotIndex >= 0 && spotPositions[lastSpotIndex]) {
+              return spotPositions[lastSpotIndex];
+            }
+          }
+          return playerPos;
+        })();
+
+        return (
+          <svg
+            viewBox={`0 0 ${width} ${height}`}
+            className="w-full h-full relative z-10"
+          >
         <defs>
           {/* City grid pattern */}
           <pattern
@@ -269,7 +240,7 @@ export function CityMapView({
         <rect x="0" y="0" width={width} height={height} fill="url(#cityGrid)" />
 
         {/* Investigation spot markers */}
-        {dimensionsMeasured && spots?.map((spotData, index) => {
+        {spots?.map((spotData, index) => {
           const spot = spotData.spot;
           const position = spotPositions[index] || { x: width / 2, y: height / 2 };
           const isInvestigated = investigatedSpots.includes(spot.id);
@@ -284,7 +255,7 @@ export function CityMapView({
                 label={spot.name}
                 icon={spot.icon}
                 variant={isInvestigated ? 'disabled' : 'destination'}
-                pulsing={!isInvestigated}
+                pulsing={false}
                 isHovered={isHovered}
                 disabled={isInvestigated}
                 onClick={() => !isInvestigated && onSpotClick?.(index)}
@@ -310,7 +281,7 @@ export function CityMapView({
         })}
 
         {/* Player marker (at hotel) */}
-        {dimensionsMeasured && (
+        {(
           <MapMarker
             x={playerPos.x}
             y={playerPos.y}
@@ -322,14 +293,14 @@ export function CityMapView({
         )}
 
         {/* Rogue location marker */}
-        {dimensionsMeasured && roguePos && (
+        {roguePos && (
           <MapMarker
             x={roguePos.x}
             y={roguePos.y}
             label={rogueLocation.name}
             icon={rogueLocation.icon}
             variant="destination"
-            pulsing={!rogueUsed}
+            pulsing={false}
             disabled={rogueUsed}
             onClick={onRogueClick && !rogueUsed ? onRogueClick : undefined}
           />
@@ -364,8 +335,10 @@ export function CityMapView({
             size={22}
           />
         )}
-      </svg>
-    </div>
+          </svg>
+        );
+      }}
+    </MapContainer>
   );
 }
 
