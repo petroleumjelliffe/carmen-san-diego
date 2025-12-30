@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Zap, AlertTriangle, Loader } from 'lucide-react';
-import { EncounterCard } from './EncounterCard';
+import { EncounterDisplay } from './EncounterDisplay';
+import { MessageDisplay } from './MessageDisplay';
 import { FadeIn } from './FadeIn';
 import { CityMapView } from './CityMapView';
 import { OptionCard } from './OptionCard';
 import { OptionTray } from './OptionTray';
-import { ClueDisplay } from './ClueDisplay';
 
 export function InvestigateTab({
   isFinalCity,
@@ -203,9 +203,9 @@ export function InvestigateTab({
               </div>
             </FadeIn>
 
-            {/* Unified Encounter Card - handles henchman, assassination, and good deed */}
+            {/* Unified Encounter Display - handles henchman, assassination, and good deed */}
             <FadeIn show={!!(activeEncounter && encounterType)}>
-              <EncounterCard
+              <EncounterDisplay
                 type={encounterType}
                 encounter={activeEncounter}
                 timerDuration={getTimerDuration()}
@@ -225,10 +225,10 @@ export function InvestigateTab({
           {/* Rogue Action Result with Clue */}
           {lastRogueAction && (
             <div className="space-y-2">
-              <ClueDisplay
-                text={rogueClueText}
+              <MessageDisplay
+                type="witness"
+                quote={rogueClueText}
                 descriptiveText={rogueDescriptiveText}
-                type="rogue"
               />
               <div className="bg-red-900/50 border-l-4 border-red-500 p-3 rounded-lg">
                 <p className="text-red-400 text-sm">
@@ -241,9 +241,9 @@ export function InvestigateTab({
 
           {/* Investigation Result - any clue type (only show if no rogue action) */}
           {(lastFoundClue?.city || lastFoundClue?.suspect) && !lastRogueAction && (
-            <ClueDisplay
-              text={regularClueText}
-              type="investigation"
+            <MessageDisplay
+              type="witness"
+              quote={regularClueText}
             />
           )}
         </div>
