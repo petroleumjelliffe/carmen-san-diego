@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Zap, AlertTriangle, Loader } from 'lucide-react';
 import { EncounterCard } from './EncounterCard';
 import { FadeIn } from './FadeIn';
 import { CityMapView } from './CityMapView';
 import { OptionCard } from './OptionCard';
 import { OptionTray } from './OptionTray';
+import { ClueDisplay } from './ClueDisplay';
 
 export function InvestigateTab({
   isFinalCity,
@@ -116,6 +117,19 @@ export function InvestigateTab({
   // Determine if animation is in progress
   const isAnimating = actionPhase === 'ticking' || actionPhase === 'pending';
 
+  // Memoize clue text to prevent re-rendering ClueDisplay
+  const rogueClueText = useMemo(() => {
+    if (!lastRogueAction) return '';
+    const clueText = lastFoundClue?.city || lastFoundClue?.suspect;
+    return clueText ? String(clueText).trim() : '';
+  }, [lastRogueAction, lastFoundClue]);
+
+  const regularClueText = useMemo(() => {
+    if (lastRogueAction) return ''; // Don't compute if rogue action is active
+    const clue = lastFoundClue?.city || lastFoundClue?.suspect;
+    return clue ? String(clue).trim() : '';
+  }, [lastRogueAction, lastFoundClue]);
+
   // Note: We don't clear investigatingSpotIndex when action completes
   // because the animation in CityMapView needs it to persist for the full 1.5s animation duration
 
@@ -185,30 +199,31 @@ export function InvestigateTab({
 
       {/* Investigation Results Banner - above map */}
       {!hasBlockingOverlay && !isAnimating && (lastFoundClue?.city || lastFoundClue?.suspect || lastRogueAction) && (
-        <div className="absolute top-4 left-4 right-4 z-20">
-          <div className="bg-gray-900/95 backdrop-blur-sm rounded-lg overflow-hidden shadow-lg">
-            {(
-              <>
-                {/* Rogue Action Result */}
-                {lastRogueAction && (
-                  <div className="p-4 border-l-4 border-orange-500">
-                    <p className="text-yellow-100 italic">"{lastRogueAction.success_text}"</p>
-                    <p className="text-red-400 text-xs mt-2">
-                      <AlertTriangle size={10} className="inline mr-1" />
-                      +{lastRogueAction.notoriety_gain} notoriety
-                    </p>
-                  </div>
-                )}
+        <div className="absolute top-4 left-4 right-4 z-20 space-y-2">
+          {/* Rogue Action Result with Clue */}
+          {lastRogueAction && (
+            <div className="space-y-2">
+              <ClueDisplay
+                text={rogueClueText}
+                descriptiveText={lastRogueAction.name ? `${lastRogueAction.name}:` : undefined}
+                type="rogue"
+              />
+              <div className="bg-red-900/50 border-l-4 border-red-500 p-3 rounded-lg">
+                <p className="text-red-400 text-sm">
+                  <AlertTriangle size={14} className="inline mr-1" />
+                  +{lastRogueAction.notoriety_gain} notoriety
+                </p>
+              </div>
+            </div>
+          )}
 
-                {/* Investigation Result - any clue type (same styling) */}
-                {(lastFoundClue?.city || lastFoundClue?.suspect) && (
-                  <div className="p-4 border-l-4 border-yellow-500">
-                    <p className="text-yellow-100 italic">"{lastFoundClue.city || lastFoundClue.suspect}"</p>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+          {/* Investigation Result - any clue type (only show if no rogue action) */}
+          {(lastFoundClue?.city || lastFoundClue?.suspect) && !lastRogueAction && (
+            <ClueDisplay
+              text={regularClueText}
+              type="investigation"
+            />
+          )}
         </div>
       )}
 
