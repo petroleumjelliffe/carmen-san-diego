@@ -122,18 +122,18 @@ interface MessageDisplayProps {
   // Optional warning
   warningText?: string
 
-  // Result handling (encounters)
+  // Result handling (encounters only)
   result?: {
     message: string
     type: 'success' | 'failure' | 'neutral'
     // NO timeLost - all time passes in clock, not shown in message
   }
 
-  // Clue reveal (same for all: investigation, good deed, rogue)
-  revealedClue?: string
-
-  // Continue handler
+  // Continue handler (dismisses encounter, triggers time elapse + clue in parent)
   onContinue?: () => void
+
+  // NOTE: No revealedClue prop - clues appear as separate MessageDisplay instances
+  // after encounter dismisses and time elapses
 
   // Behavioral flags
   autoStream?: boolean // Default true
@@ -219,27 +219,60 @@ CLUE REVEAL (same for all types):
 └─────────────────────────────────────────────┘
 ```
 
-### State Machine
+## Timing and Transition Flow
+
+### Critical: Encounters and Clues are Separate Instances
+
+**Encounters do NOT transform into clues.** They are completely separate MessageDisplay instances.
+
+### Regular Investigation Flow
+```
+1. Player clicks investigation location
+2. Time elapses in header clock (hours tick down)
+3. NEW MessageDisplay appears (witness clue, no header)
+4. Clue streams in
+5. Clue stays visible (no auto-dismiss)
+```
+
+### Encounter Flow (Henchman/Assassination/Good Deed)
+```
+1. Encounter MessageDisplay shows (with header, timer, choices)
+2. Player makes choice (gadget or Continue)
+3. Encounter updates internally: shows result (header stays)
+4. Player clicks Continue button
+5. Encounter MessageDisplay DISMISSES/CLOSES completely
+6. Time elapses in header clock (hours tick down)
+7. NEW MessageDisplay appears (witness clue, no header) - IF encounter yields clue
+8. Clue streams in
+9. Clue stays visible (no auto-dismiss)
+```
+
+### Rogue Action Flow
+```
+1. Rogue MessageDisplay shows (with header, action description)
+2. Rogue updates internally: shows result
+3. Player clicks Continue button
+4. Rogue MessageDisplay DISMISSES/CLOSES completely
+5. Time elapses in header clock
+6. NEW MessageDisplay appears (witness clue, no header)
+7. Clue streams in
+8. Clue stays visible
+```
+
+### State Machine (Per Instance)
 
 ```
 WITNESS (simple):
-  idle → streaming → complete
+  idle → streaming → complete → stays_visible
 
 ENCOUNTER (interactive):
-  setup_display → awaiting_choice → [choice_made | timeout] → showing_result → [revealing_clue] → complete
+  active_phase → [choice_made | timeout] → result_phase → dismissed
 
 ROGUE_ACTION:
-  action_display → showing_result → revealing_clue → complete
+  active_phase → result_phase → dismissed
 ```
 
-### Animation Sequence
-
-1. **Setup Section** (if present): Fade in immediately
-2. **Timer** (if present): Start counting down
-3. **Witness Section**: Delay 200ms, then stream quote word by word
-4. **Choice Section** (if present): Fade in when quote completes
-5. **Result Section**: Replace choice section with result
-6. **Clue Reveal** (if present): Stream after result acknowledged
+Note: Clue appearance after encounter/rogue is handled by parent component, NOT by the MessageDisplay itself.
 
 ### Positioning Behavior
 
@@ -269,13 +302,12 @@ All message displays use the same positioning system:
   headerIcon: '🎭',
   setupText: rogueAction.description,
   quote: rogueAction.success_text,
-  revealedClue: foundClue, // Shows as normal clue after result
   result: {
     message: rogueAction.success_text,
     type: 'success'
     // Time passes in clock, not shown
   },
-  onContinue: completeRogueAction
+  onContinue: completeRogueAction // Dismisses, parent shows clue after time elapses
 }
 ```
 
@@ -302,8 +334,7 @@ All message displays use the same positioning system:
     type: outcome.helped ? 'success' : 'neutral'
     // Time passes in clock
   },
-  revealedClue: outcome.helped && !isTrap ? clue : undefined,
-  onContinue: resolveGoodDeed
+  onContinue: resolveGoodDeed // Dismisses, parent shows clue if helped && !trap
 }
 ```
 
