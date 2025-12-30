@@ -297,8 +297,8 @@ export function Game({ gameData }) {
 
                 {activeTab === 'home' && (
                   <HomeTab
-                    currentCity={currentCity}
-                    cityFact={currentCity?.fact}
+                    currentCity={wrongCity && wrongCityData ? wrongCityData : currentCity}
+                    cityFact={wrongCity && wrongCityData ? wrongCityData.fact : currentCity?.fact}
                   />
                 )}
 
@@ -328,11 +328,11 @@ export function Game({ gameData }) {
                     onProceedToTrial={proceedToTrial}
                     encounterTimers={encounterTimers}
                     isInvestigating={isInvestigating}
-                    cityFact={currentCity?.fact}
+                    cityFact={wrongCity && wrongCityData ? wrongCityData.fact : currentCity?.fact}
                     actionPhase={actionPhase}
                     actionLabel={pendingAction?.label}
                     actionHoursRemaining={actionHoursRemaining}
-                    currentCity={currentCity}
+                    currentCity={wrongCity && wrongCityData ? wrongCityData : currentCity}
                     hotel={hotel}
                     rogueLocation={rogueLocation}
                   />

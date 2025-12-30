@@ -1,48 +1,230 @@
+import { useState, useEffect, useMemo } from 'react';
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import { Plane, Car } from 'lucide-react';
+import L from 'leaflet';
 import {
   generateFlightPath,
   quadraticBezierPoint,
   quadraticBezierTangent,
   approximateBezierLength
 } from '../utils/geoUtils';
-import { MapContainer } from './MapContainer';
 
-// Simplified but recognizable world map continents (equirectangular projection, 800x400)
-// Coordinates roughly: x = (lon + 180) / 360 * 800, y = (90 - lat) / 180 * 400
-function WorldMapOutlines() {
+/**
+ * SVG overlay for animated flight path on Leaflet map
+ */
+function AnimatedFlightPath({ origin, destination, progress, vehicleType }) {
+  const map = useMap();
+  const [positions, setPositions] = useState(null);
+
+  const isPlane = vehicleType === 'plane';
+  const VehicleIcon = isPlane ? Plane : Car;
+
+  useEffect(() => {
+    if (origin && destination) {
+      // Convert lat/lon to pixel coordinates
+      const fromPoint = map.latLngToContainerPoint([origin.lat, origin.lon]);
+      const toPoint = map.latLngToContainerPoint([destination.lat, destination.lon]);
+
+      // Calculate control point for curved path
+      const midX = (fromPoint.x + toPoint.x) / 2;
+      const midY = (fromPoint.y + toPoint.y) / 2;
+      const dx = toPoint.x - fromPoint.x;
+      const dy = toPoint.y - fromPoint.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      // Perpendicular offset for curve
+      const curveHeight = distance * 0.2;
+      const perpX = -dy / distance * curveHeight;
+      const perpY = dx / distance * curveHeight;
+
+      const controlPoint = { x: midX + perpX, y: midY + perpY };
+
+      setPositions({ fromPoint, toPoint, controlPoint });
+    }
+  }, [origin, destination, map]);
+
+  if (!positions) return null;
+
+  const { fromPoint, toPoint, controlPoint } = positions;
+  const mapSize = map.getSize();
+
+  // Calculate current plane position
+  const planePos = quadraticBezierPoint(fromPoint, controlPoint, toPoint, progress);
+  const planeAngle = quadraticBezierTangent(fromPoint, controlPoint, toPoint, progress);
+  const pathD = generateFlightPath(fromPoint, controlPoint, toPoint);
+  const pathLength = approximateBezierLength(fromPoint, controlPoint, toPoint);
+  const dashOffset = pathLength * (1 - progress);
+
+  const flightPixelDistance = Math.sqrt(
+    Math.pow(toPoint.x - fromPoint.x, 2) + Math.pow(toPoint.y - fromPoint.y, 2)
+  );
+  const isShortFlight = flightPixelDistance < 100;
+
   return (
-    <g className="world-map" opacity="0.2" fill="none" stroke="#4a90d9" strokeWidth="1">
-      {/* North America */}
-      <path d="M 80 80 L 120 70 L 160 75 L 180 90 L 200 85 L 220 95 L 210 120 L 195 140 L 180 135 L 165 150 L 140 160 L 120 155 L 100 165 L 85 150 L 75 120 L 80 80 Z" />
-      {/* Central America */}
-      <path d="M 140 160 L 150 175 L 145 190 L 135 195 L 130 180 L 135 165 Z" />
-      {/* South America */}
-      <path d="M 155 195 L 175 200 L 185 220 L 195 250 L 185 290 L 170 320 L 150 340 L 140 320 L 145 280 L 140 250 L 150 220 L 155 195 Z" />
-      {/* Europe */}
-      <path d="M 380 75 L 420 70 L 450 80 L 460 95 L 440 100 L 420 95 L 400 105 L 385 95 L 380 75 Z" />
-      {/* British Isles */}
-      <path d="M 375 80 L 385 75 L 385 90 L 375 90 Z" />
-      {/* Africa */}
-      <path d="M 400 130 L 440 125 L 470 140 L 485 170 L 480 210 L 460 250 L 430 280 L 400 270 L 385 240 L 390 200 L 400 160 L 400 130 Z" />
-      {/* Middle East */}
-      <path d="M 470 120 L 510 115 L 530 130 L 520 150 L 490 155 L 470 140 L 470 120 Z" />
-      {/* Russia/Asia */}
-      <path d="M 460 65 L 520 55 L 600 50 L 680 60 L 720 75 L 700 95 L 650 90 L 600 95 L 550 90 L 500 95 L 470 85 L 460 65 Z" />
-      {/* India */}
-      <path d="M 540 150 L 570 145 L 585 170 L 570 210 L 545 200 L 535 170 L 540 150 Z" />
-      {/* Southeast Asia */}
-      <path d="M 590 160 L 620 155 L 640 170 L 635 190 L 610 195 L 595 180 L 590 160 Z" />
-      {/* China/East Asia */}
-      <path d="M 600 95 L 660 90 L 700 100 L 695 130 L 670 145 L 630 140 L 600 125 L 600 95 Z" />
-      {/* Japan */}
-      <path d="M 710 100 L 720 95 L 725 115 L 715 130 L 705 120 L 710 100 Z" />
-      {/* Indonesia */}
-      <path d="M 620 210 L 680 205 L 710 215 L 700 230 L 650 235 L 620 225 L 620 210 Z" />
-      {/* Australia */}
-      <path d="M 660 260 L 720 250 L 760 265 L 770 300 L 750 330 L 710 340 L 670 325 L 655 295 L 660 260 Z" />
-      {/* New Zealand */}
-      <path d="M 785 320 L 795 315 L 800 335 L 790 345 L 785 320 Z" />
-    </g>
+    <svg
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        zIndex: 1000
+      }}
+      viewBox={`0 0 ${mapSize.x} ${mapSize.y}`}
+    >
+      <defs>
+        {/* Glow filter for vehicle */}
+        <filter id="travelGlow" x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+          <feMerge>
+            <feMergeNode in="coloredBlur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+        {/* Gradient for traveled path */}
+        <linearGradient id="travelFlightGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#22c55e" />
+          <stop offset="100%" stopColor="#fbbf24" />
+        </linearGradient>
+        {/* Pulse animation for origin */}
+        <radialGradient id="travelOriginPulse">
+          <stop offset="0%" stopColor="#22c55e" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
+      {/* Dashed path (full route) */}
+      <path
+        d={pathD}
+        fill="none"
+        stroke="rgba(100, 180, 255, 0.3)"
+        strokeWidth="2"
+        strokeDasharray="8 8"
+      />
+
+      {/* Animated path (traveled portion) */}
+      <path
+        d={pathD}
+        fill="none"
+        stroke="url(#travelFlightGradient)"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeDasharray={pathLength}
+        strokeDashoffset={dashOffset}
+      />
+
+      {/* Origin city - pulsing ring */}
+      <circle
+        cx={fromPoint.x}
+        cy={fromPoint.y}
+        r="16"
+        fill="url(#travelOriginPulse)"
+        opacity={0.5}
+      />
+      <circle
+        cx={fromPoint.x}
+        cy={fromPoint.y}
+        r="8"
+        fill="#22c55e"
+        opacity="0.9"
+      />
+      <circle
+        cx={fromPoint.x}
+        cy={fromPoint.y}
+        r="3"
+        fill="white"
+      />
+
+      {/* Destination city */}
+      <circle
+        cx={toPoint.x}
+        cy={toPoint.y}
+        r="10"
+        fill="#f97316"
+        opacity="0.3"
+      />
+      <circle
+        cx={toPoint.x}
+        cy={toPoint.y}
+        r="8"
+        fill="#f97316"
+        opacity="0.9"
+      />
+      <circle
+        cx={toPoint.x}
+        cy={toPoint.y}
+        r="3"
+        fill="white"
+      />
+
+      {/* City labels */}
+      <text
+        x={fromPoint.x}
+        y={fromPoint.y - 22}
+        textAnchor="middle"
+        fill="#22c55e"
+        fontSize="20"
+        fontWeight="bold"
+        fontFamily="monospace"
+      >
+        {origin.name.toUpperCase()}
+      </text>
+      <text
+        x={toPoint.x}
+        y={toPoint.y - 22}
+        textAnchor="middle"
+        fill="#f97316"
+        fontSize="20"
+        fontWeight="bold"
+        fontFamily="monospace"
+      >
+        {destination.name.toUpperCase()}
+      </text>
+
+      {/* Vehicle icon - hide when arrived */}
+      {progress < 0.99 && (
+        <g
+          transform={`translate(${planePos.x}, ${planePos.y}) rotate(${planeAngle})`}
+          filter="url(#travelGlow)"
+        >
+          {/* Outer glow */}
+          <circle r={isShortFlight ? 16 : 14} fill="rgba(250, 204, 21, 0.2)" />
+          {/* Inner glow */}
+          <circle r={isShortFlight ? 10 : 8} fill="rgba(250, 204, 21, 0.5)" />
+
+          {isPlane ? (
+            <>
+              {/* Plane body */}
+              <circle r={isShortFlight ? 6 : 5} fill="#facc15" />
+              {/* Plane nose direction indicator */}
+              <polygon
+                points="0,-3 10,0 0,3 3,0"
+                fill="white"
+                transform={`translate(${isShortFlight ? 4 : 3}, 0)`}
+              />
+            </>
+          ) : (
+            <>
+              {/* Car body - rounded rectangle */}
+              <rect
+                x="-6"
+                y="-3"
+                width="12"
+                height="6"
+                rx="2"
+                fill="#facc15"
+              />
+              {/* Car front window */}
+              <polygon
+                points="4,-2 7,-2 7,2 4,2"
+                fill="white"
+              />
+            </>
+          )}
+        </g>
+      )}
+    </svg>
   );
 }
 
@@ -53,15 +235,18 @@ export function TravelAnimation({ travelData, progress, vehicleType = 'plane', b
     origin,
     destination,
     distance,
-    fromPoint,
-    toPoint,
-    controlPoint,
-    svgWidth,
-    svgHeight
   } = travelData;
 
   const isPlane = vehicleType === 'plane';
   const VehicleIcon = isPlane ? Plane : Car;
+
+  // Calculate bounds to fit origin and destination
+  const mapBounds = useMemo(() => {
+    return [
+      [Math.min(origin.lat, destination.lat), Math.min(origin.lon, destination.lon)],
+      [Math.max(origin.lat, destination.lat), Math.max(origin.lon, destination.lon)]
+    ];
+  }, [origin, destination]);
 
   return (
     <div className="w-full h-[600px] flex flex-col gap-3">
@@ -77,207 +262,36 @@ export function TravelAnimation({ travelData, progress, vehicleType = 'plane', b
         </div>
       </div>
 
-      {/* SVG Flight Tracker */}
-      <MapContainer backgroundImage={backgroundImage} className="flex-1">
-        {({ width, height }) => {
-          // Scale coordinates from fixed 800x400 to actual container dimensions
-          const scaleX = width / svgWidth;
-          const scaleY = height / svgHeight;
-
-          const scaledFromPoint = { x: fromPoint.x * scaleX, y: fromPoint.y * scaleY };
-          const scaledToPoint = { x: toPoint.x * scaleX, y: toPoint.y * scaleY };
-          const scaledControlPoint = { x: controlPoint.x * scaleX, y: controlPoint.y * scaleY };
-
-          // Recalculate with scaled coordinates
-          const scaledPlanePos = quadraticBezierPoint(scaledFromPoint, scaledControlPoint, scaledToPoint, progress);
-          const scaledPlaneAngle = quadraticBezierTangent(scaledFromPoint, scaledControlPoint, scaledToPoint, progress);
-          const scaledPathD = generateFlightPath(scaledFromPoint, scaledControlPoint, scaledToPoint);
-          const scaledPathLength = approximateBezierLength(scaledFromPoint, scaledControlPoint, scaledToPoint);
-          const scaledDashOffset = scaledPathLength * (1 - progress);
-
-          // Calculate flight path distance in pixels for visual scaling
-          const flightPixelDistance = Math.sqrt(
-            Math.pow(scaledToPoint.x - scaledFromPoint.x, 2) + Math.pow(scaledToPoint.y - scaledFromPoint.y, 2)
-          );
-          const scaledIsShortFlight = flightPixelDistance < 100;
-
-          return (
-          <svg
-            viewBox={`0 0 ${width} ${height}`}
-            className="w-full h-full relative z-10"
-            preserveAspectRatio="xMidYMid meet"
-          >
-          {/* Defs */}
-          <defs>
-            {/* Subtle grid pattern */}
-            <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
-              <path
-                d="M 50 0 L 0 0 0 50"
-                fill="none"
-                stroke="rgba(100, 150, 255, 0.05)"
-                strokeWidth="0.5"
-              />
-            </pattern>
-            {/* Glow filter for plane */}
-            <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-              <feMerge>
-                <feMergeNode in="coloredBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-            {/* Gradient for traveled path */}
-            <linearGradient id="flightGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#22c55e" />
-              <stop offset="100%" stopColor="#fbbf24" />
-            </linearGradient>
-            {/* Pulse animation for origin */}
-            <radialGradient id="originPulse">
-              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
-            </radialGradient>
-          </defs>
-
-          {/* Grid background */}
-          <rect width="100%" height="100%" fill="url(#grid)" />
-
-          {/* World map silhouette */}
-          <WorldMapOutlines />
-
-          {/* Dashed path (full route) */}
-          <path
-            d={scaledPathD}
-            fill="none"
-            stroke="rgba(100, 180, 255, 0.3)"
-            strokeWidth="2"
-            strokeDasharray="8 8"
+      {/* Leaflet Map with SVG Overlay */}
+      <div className="flex-1 relative">
+        <MapContainer
+          bounds={mapBounds}
+          style={{ width: '100%', height: '100%' }}
+          zoomControl={false}
+          touchZoom={false}
+          scrollWheelZoom={false}
+          doubleClickZoom={false}
+          dragging={false}
+          keyboard={false}
+          attributionControl={false}
+          boundsOptions={{ padding: [80, 80] }}
+        >
+          {/* Dark mode map tiles */}
+          <TileLayer
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            subdomains='abcd'
           />
 
-          {/* Animated path (traveled portion) */}
-          <path
-            d={scaledPathD}
-            fill="none"
-            stroke="url(#flightGradient)"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeDasharray={scaledPathLength}
-            strokeDashoffset={scaledDashOffset}
+          {/* Animated flight path overlay */}
+          <AnimatedFlightPath
+            origin={origin}
+            destination={destination}
+            progress={progress}
+            vehicleType={vehicleType}
           />
-
-          {/* Origin city - pulsing ring */}
-          <circle
-            cx={scaledFromPoint.x}
-            cy={scaledFromPoint.y}
-            r="16"
-            fill="url(#originPulse)"
-            opacity={0.5}
-          />
-          <circle
-            cx={scaledFromPoint.x}
-            cy={scaledFromPoint.y}
-            r="8"
-            fill="#22c55e"
-            opacity="0.9"
-          />
-          <circle
-            cx={scaledFromPoint.x}
-            cy={scaledFromPoint.y}
-            r="3"
-            fill="white"
-          />
-
-          {/* Destination city */}
-          <circle
-            cx={scaledToPoint.x}
-            cy={scaledToPoint.y}
-            r="10"
-            fill="#f97316"
-            opacity="0.3"
-          />
-          <circle
-            cx={scaledToPoint.x}
-            cy={scaledToPoint.y}
-            r="8"
-            fill="#f97316"
-            opacity="0.9"
-          />
-          <circle
-            cx={scaledToPoint.x}
-            cy={scaledToPoint.y}
-            r="3"
-            fill="white"
-          />
-
-          {/* City labels */}
-          <text
-            x={scaledFromPoint.x}
-            y={scaledFromPoint.y - 22}
-            textAnchor="middle"
-            fill="#22c55e"
-            fontSize="11"
-            fontWeight="bold"
-            fontFamily="monospace"
-          >
-            {origin.name.toUpperCase()}
-          </text>
-          <text
-            x={scaledToPoint.x}
-            y={scaledToPoint.y - 22}
-            textAnchor="middle"
-            fill="#f97316"
-            fontSize="11"
-            fontWeight="bold"
-            fontFamily="monospace"
-          >
-            {destination.name.toUpperCase()}
-          </text>
-
-          {/* Vehicle icon - hide when arrived */}
-          {progress < 0.99 && (
-            <g
-              transform={`translate(${scaledPlanePos.x}, ${scaledPlanePos.y}) rotate(${scaledPlaneAngle})`}
-              filter="url(#glow)"
-            >
-              {/* Outer glow */}
-              <circle r={scaledIsShortFlight ? 16 : 14} fill="rgba(250, 204, 21, 0.2)" />
-              {/* Inner glow */}
-              <circle r={scaledIsShortFlight ? 10 : 8} fill="rgba(250, 204, 21, 0.5)" />
-
-              {isPlane ? (
-                <>
-                  {/* Plane body */}
-                  <circle r={scaledIsShortFlight ? 6 : 5} fill="#facc15" />
-                  {/* Plane nose direction indicator */}
-                  <polygon
-                    points="0,-3 10,0 0,3 3,0"
-                    fill="white"
-                    transform={`translate(${scaledIsShortFlight ? 4 : 3}, 0)`}
-                  />
-                </>
-              ) : (
-                <>
-                  {/* Car body - rounded rectangle */}
-                  <rect
-                    x="-6"
-                    y="-3"
-                    width="12"
-                    height="6"
-                    rx="2"
-                    fill="#facc15"
-                  />
-                  {/* Car front window */}
-                  <polygon
-                    points="4,-2 7,-2 7,2 4,2"
-                    fill="white"
-                  />
-                </>
-              )}
-            </g>
-          )}
-          </svg>
-          );
-        }}
-      </MapContainer>
+        </MapContainer>
+      </div>
 
       {/* Progress bar and distance */}
       <div className="w-full px-4 flex-shrink-0">

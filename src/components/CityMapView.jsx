@@ -1,8 +1,104 @@
 import { useState, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { createCustomIcon } from '../utils/leafletIcons';
 import { PathAnimation } from './PathAnimation';
+
+/**
+ * SVG overlay for landmark labels
+ */
+function LandmarkLabels({ spots, hotel, rogueLocation, investigatedSpots }) {
+  const map = useMap();
+  const [positions, setPositions] = useState([]);
+
+  useEffect(() => {
+    const updatePositions = () => {
+      const landmarkPositions = [];
+
+      // Add hotel
+      if (hotel?.lat && hotel?.lon) {
+        const point = map.latLngToContainerPoint([hotel.lat, hotel.lon]);
+        landmarkPositions.push({
+          id: 'hotel',
+          name: hotel.name,
+          x: point.x,
+          y: point.y,
+          color: '#22c55e'
+        });
+      }
+
+      // Add investigation spots
+      spots.forEach(spotData => {
+        const spot = spotData.spot;
+        if (spot.lat && spot.lon) {
+          const isInvestigated = investigatedSpots.includes(spot.id);
+          const point = map.latLngToContainerPoint([spot.lat, spot.lon]);
+          landmarkPositions.push({
+            id: spot.id,
+            name: spot.name,
+            x: point.x,
+            y: point.y,
+            color: isInvestigated ? '#9ca3af' : '#3b82f6'
+          });
+        }
+      });
+
+      // Add rogue location
+      if (rogueLocation?.lat && rogueLocation?.lon) {
+        const point = map.latLngToContainerPoint([rogueLocation.lat, rogueLocation.lon]);
+        landmarkPositions.push({
+          id: 'rogue',
+          name: rogueLocation.name,
+          x: point.x,
+          y: point.y,
+          color: '#f97316'
+        });
+      }
+
+      setPositions(landmarkPositions);
+    };
+
+    updatePositions();
+    map.on('move', updatePositions);
+    map.on('zoom', updatePositions);
+
+    return () => {
+      map.off('move', updatePositions);
+      map.off('zoom', updatePositions);
+    };
+  }, [spots, hotel, rogueLocation, investigatedSpots, map]);
+
+  const mapSize = map.getSize();
+
+  return (
+    <svg
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        zIndex: 1000
+      }}
+      viewBox={`0 0 ${mapSize.x} ${mapSize.y}`}
+    >
+      {positions.map((landmark) => (
+        <text
+          key={landmark.id}
+          x={landmark.x}
+          y={landmark.y - 12}
+          textAnchor="middle"
+          fill={landmark.color}
+          fontSize="20"
+          fontWeight="bold"
+          fontFamily="monospace"
+        >
+          {landmark.name.toUpperCase()}
+        </text>
+      ))}
+    </svg>
+  );
+}
 
 /**
  * Component to handle auto-fitting map bounds when selecting destinations
@@ -203,16 +299,21 @@ export function CityMapView({
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         />
 
-        {/* Hotel marker (player's current position) */}
+        {/* Hotel marker (player's current position) - green circle */}
         {hotel?.lat && hotel?.lon && (
-          <Marker
-            position={[hotel.lat, hotel.lon]}
-            icon={createCustomIcon(hotel.icon || '🔍', 'current')}
-            zIndexOffset={1000}
+          <CircleMarker
+            center={[hotel.lat, hotel.lon]}
+            radius={6}
+            pathOptions={{
+              fillColor: '#22c55e',
+              fillOpacity: 0.9,
+              color: 'white',
+              weight: 2,
+            }}
           />
         )}
 
-        {/* Investigation spot markers */}
+        {/* Investigation spot markers - blue circles */}
         {spots?.map((spotData, index) => {
           const spot = spotData.spot;
           const isInvestigated = investigatedSpots.includes(spot.id);
@@ -220,13 +321,16 @@ export function CityMapView({
           if (!spot.lat || !spot.lon) return null;
 
           return (
-            <Marker
+            <CircleMarker
               key={spot.id}
-              position={[spot.lat, spot.lon]}
-              icon={createCustomIcon(
-                isInvestigated ? '✓' : spot.icon,
-                isInvestigated ? 'disabled' : 'destination'
-              )}
+              center={[spot.lat, spot.lon]}
+              radius={6}
+              pathOptions={{
+                fillColor: isInvestigated ? '#9ca3af' : '#3b82f6',
+                fillOpacity: 0.9,
+                color: 'white',
+                weight: 2,
+              }}
               eventHandlers={{
                 click: () => !isInvestigated && onSpotClick?.(index),
                 mouseover: () => onSpotHover?.(spot.id),
@@ -236,11 +340,17 @@ export function CityMapView({
           );
         })}
 
-        {/* Rogue location marker */}
+        {/* Rogue location marker - orange circle */}
         {rogueLocation?.lat && rogueLocation?.lon && (
-          <Marker
-            position={[rogueLocation.lat, rogueLocation.lon]}
-            icon={createCustomIcon(rogueLocation.icon, rogueUsed ? 'disabled' : 'destination')}
+          <CircleMarker
+            center={[rogueLocation.lat, rogueLocation.lon]}
+            radius={6}
+            pathOptions={{
+              fillColor: rogueUsed ? '#9ca3af' : '#f97316',
+              fillOpacity: 0.9,
+              color: 'white',
+              weight: 2,
+            }}
             eventHandlers={{
               click: onRogueClick && !rogueUsed ? onRogueClick : undefined,
             }}
@@ -254,6 +364,14 @@ export function CityMapView({
             destination={{ lat: selectedSpot.lat, lon: selectedSpot.lon }}
           />
         )}
+
+        {/* Landmark labels overlay */}
+        <LandmarkLabels
+          spots={spots}
+          hotel={hotel}
+          rogueLocation={rogueLocation}
+          investigatedSpots={investigatedSpots}
+        />
 
         {/* PathAnimation overlay for investigation animation */}
         {(investigatingSpotIndex !== null || isInvestigatingRogue) &&
