@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { MapMarker } from './MapMarker';
-import { getFlightArcControlPoint } from '../utils/geoUtils';
+import { PathAnimation } from './PathAnimation';
 
 /**
  * Realistic city map for investigation screen
@@ -335,241 +335,34 @@ export function CityMapView({
           />
         )}
 
-        {/* Investigation Animation - Orthogonal lines from last spot to destination */}
+        {/* Investigation Animation - Car traveling on orthogonal path */}
         {investigatingSpotIndex !== null && spots[investigatingSpotIndex] && (
-          <g className="investigation-animation">
-            {(() => {
-              const targetPos = spotPositions[investigatingSpotIndex] || { x: width / 2, y: height / 2 };
-              const spot = spots[investigatingSpotIndex].spot;
-
-              // Orthogonal path - horizontal then vertical (street-like navigation)
-              const cornerX = targetPos.x;
-              const cornerY = animationStartPos.y;
-
-              // Calculate total path length
-              const horizontalDist = Math.abs(targetPos.x - animationStartPos.x);
-              const verticalDist = Math.abs(targetPos.y - animationStartPos.y);
-              const totalDist = horizontalDist + verticalDist;
-
-              // Calculate current position along orthogonal path
-              const getPointOnOrthogonalPath = (t) => {
-                const travelDist = t * totalDist;
-
-                if (travelDist <= horizontalDist) {
-                  // Moving horizontally
-                  const ratio = horizontalDist > 0 ? travelDist / horizontalDist : 0;
-                  return {
-                    x: animationStartPos.x + (cornerX - animationStartPos.x) * ratio,
-                    y: animationStartPos.y
-                  };
-                } else {
-                  // Moving vertically
-                  const verticalProgress = travelDist - horizontalDist;
-                  const ratio = verticalDist > 0 ? verticalProgress / verticalDist : 0;
-                  return {
-                    x: cornerX,
-                    y: cornerY + (targetPos.y - cornerY) * ratio
-                  };
-                }
-              };
-
-              const currentPos = getPointOnOrthogonalPath(animationProgress);
-              const pathD = `M ${animationStartPos.x} ${animationStartPos.y} L ${cornerX} ${cornerY} L ${targetPos.x} ${targetPos.y}`;
-
-              // Calculate path to current position
-              const getCurrentPathD = () => {
-                const travelDist = animationProgress * totalDist;
-                if (travelDist <= horizontalDist) {
-                  // Only horizontal movement so far
-                  return `M ${animationStartPos.x} ${animationStartPos.y} L ${currentPos.x} ${currentPos.y}`;
-                } else {
-                  // Horizontal complete, now vertical
-                  return `M ${animationStartPos.x} ${animationStartPos.y} L ${cornerX} ${cornerY} L ${currentPos.x} ${currentPos.y}`;
-                }
-              };
-
-              return (
-                <>
-                  {/* Full path (faded) */}
-                  <path
-                    d={pathD}
-                    fill="none"
-                    stroke="rgba(251, 191, 36, 0.4)"
-                    strokeWidth="4"
-                    strokeDasharray="8 8"
-                  />
-
-                  {/* Animated line glow */}
-                  <path
-                    d={getCurrentPathD()}
-                    fill="none"
-                    stroke="rgba(251, 191, 36, 0.5)"
-                    strokeWidth="12"
-                    strokeLinecap="round"
-                    filter="blur(4px)"
-                  />
-
-                  {/* Animated line from start to current position */}
-                  <path
-                    d={getCurrentPathD()}
-                    fill="none"
-                    stroke="#fbbf24"
-                    strokeWidth="6"
-                    strokeLinecap="round"
-                    opacity="1"
-                  />
-
-                  {/* Moving icon */}
-                  <g transform={`translate(${currentPos.x}, ${currentPos.y})`}>
-                    {/* Glow effect */}
-                    <circle
-                      r="30"
-                      fill="#fbbf24"
-                      opacity="0.3"
-                      className="animate-pulse"
-                    />
-
-                    {/* Icon background */}
-                    <circle
-                      r="22"
-                      fill="#1f2937"
-                      stroke="#fbbf24"
-                      strokeWidth="3"
-                    />
-
-                    {/* Icon emoji */}
-                    <text
-                      textAnchor="middle"
-                      dominantBaseline="central"
-                      fontSize="28"
-                      className="pointer-events-none"
-                      filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))"
-                    >
-                      {spot.icon || '🔍'}
-                    </text>
-                  </g>
-                </>
-              );
-            })()}
-          </g>
+          <PathAnimation
+            startPos={animationStartPos}
+            endPos={spotPositions[investigatingSpotIndex] || { x: width / 2, y: height / 2 }}
+            progress={animationProgress}
+            pathType="orthogonal"
+            icon="🚗"
+            color="#fbbf24"
+            glowColor="rgba(251, 191, 36, 0.5)"
+            dashColor="rgba(251, 191, 36, 0.4)"
+            size={22}
+          />
         )}
 
-        {/* Rogue Action Animation - Orthogonal lines to rogue location */}
+        {/* Rogue Action Animation - Car traveling on orthogonal path (orange) */}
         {isInvestigatingRogue && roguePos && (
-          <g className="rogue-animation">
-            {(() => {
-              const targetPos = roguePos;
-
-              // Orthogonal path - horizontal then vertical (street-like navigation)
-              const cornerX = targetPos.x;
-              const cornerY = animationStartPos.y;
-
-              // Calculate total path length
-              const horizontalDist = Math.abs(targetPos.x - animationStartPos.x);
-              const verticalDist = Math.abs(targetPos.y - animationStartPos.y);
-              const totalDist = horizontalDist + verticalDist;
-
-              // Calculate current position along orthogonal path
-              const getPointOnOrthogonalPath = (t) => {
-                const travelDist = t * totalDist;
-
-                if (travelDist <= horizontalDist) {
-                  // Moving horizontally
-                  const ratio = horizontalDist > 0 ? travelDist / horizontalDist : 0;
-                  return {
-                    x: animationStartPos.x + (cornerX - animationStartPos.x) * ratio,
-                    y: animationStartPos.y
-                  };
-                } else {
-                  // Moving vertically
-                  const verticalProgress = travelDist - horizontalDist;
-                  const ratio = verticalDist > 0 ? verticalProgress / verticalDist : 0;
-                  return {
-                    x: cornerX,
-                    y: cornerY + (targetPos.y - cornerY) * ratio
-                  };
-                }
-              };
-
-              const currentPos = getPointOnOrthogonalPath(animationProgress);
-              const pathD = `M ${animationStartPos.x} ${animationStartPos.y} L ${cornerX} ${cornerY} L ${targetPos.x} ${targetPos.y}`;
-
-              // Calculate path to current position
-              const getCurrentPathD = () => {
-                const travelDist = animationProgress * totalDist;
-                if (travelDist <= horizontalDist) {
-                  // Only horizontal movement so far
-                  return `M ${animationStartPos.x} ${animationStartPos.y} L ${currentPos.x} ${currentPos.y}`;
-                } else {
-                  // Horizontal complete, now vertical
-                  return `M ${animationStartPos.x} ${animationStartPos.y} L ${cornerX} ${cornerY} L ${currentPos.x} ${currentPos.y}`;
-                }
-              };
-
-              return (
-                <>
-                  {/* Full path (faded) - orange for rogue */}
-                  <path
-                    d={pathD}
-                    fill="none"
-                    stroke="rgba(249, 115, 22, 0.4)"
-                    strokeWidth="4"
-                    strokeDasharray="8 8"
-                  />
-
-                  {/* Animated line glow */}
-                  <path
-                    d={getCurrentPathD()}
-                    fill="none"
-                    stroke="rgba(249, 115, 22, 0.5)"
-                    strokeWidth="12"
-                    strokeLinecap="round"
-                    filter="blur(4px)"
-                  />
-
-                  {/* Animated line from start to current position */}
-                  <path
-                    d={getCurrentPathD()}
-                    fill="none"
-                    stroke="#f97316"
-                    strokeWidth="6"
-                    strokeLinecap="round"
-                    opacity="1"
-                  />
-
-                  {/* Moving icon */}
-                  <g transform={`translate(${currentPos.x}, ${currentPos.y})`}>
-                    {/* Glow effect */}
-                    <circle
-                      r="30"
-                      fill="#f97316"
-                      opacity="0.3"
-                      className="animate-pulse"
-                    />
-
-                    {/* Icon background */}
-                    <circle
-                      r="22"
-                      fill="#1f2937"
-                      stroke="#f97316"
-                      strokeWidth="3"
-                    />
-
-                    {/* Icon emoji */}
-                    <text
-                      textAnchor="middle"
-                      dominantBaseline="central"
-                      fontSize="28"
-                      className="pointer-events-none"
-                      filter="drop-shadow(0 2px 4px rgba(0,0,0,0.8))"
-                    >
-                      {rogueLocation.icon || '⚡'}
-                    </text>
-                  </g>
-                </>
-              );
-            })()}
-          </g>
+          <PathAnimation
+            startPos={animationStartPos}
+            endPos={roguePos}
+            progress={animationProgress}
+            pathType="orthogonal"
+            icon="🚗"
+            color="#f97316"
+            glowColor="rgba(249, 115, 22, 0.5)"
+            dashColor="rgba(249, 115, 22, 0.4)"
+            size={22}
+          />
         )}
       </svg>
     </div>

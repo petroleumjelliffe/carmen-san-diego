@@ -163,6 +163,17 @@ export function Game({ gameData }) {
     }
   }, [travelData]);
 
+  // Hide map when travel completes
+  useEffect(() => {
+    if (!isTraveling && !isAnimating && showMap) {
+      // Wait a brief moment after animation completes before hiding
+      const timeout = setTimeout(() => {
+        setShowMap(false);
+      }, 500);
+      return () => clearTimeout(timeout);
+    }
+  }, [isTraveling, isAnimating, showMap]);
+
   // Menu screen
   if (gameState === 'menu') {
     return (
