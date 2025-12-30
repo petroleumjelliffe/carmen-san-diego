@@ -111,8 +111,8 @@ export function InvestigateTab({
     return 10;
   };
 
-  // Only block map for major overlays (not investigation results)
-  const hasBlockingOverlay = isApprehended || activeEncounter;
+  // Only block map for apprehension
+  const hasBlockingOverlay = isApprehended;
 
   // Determine if animation is in progress
   const isAnimating = actionPhase === 'ticking' || actionPhase === 'pending';
@@ -179,9 +179,9 @@ export function InvestigateTab({
         </div>
       )}
 
-      {/* Blocking Overlays - only for encounters and apprehension */}
+      {/* Blocking Overlay - only for apprehension */}
       {hasBlockingOverlay && (
-        <div className="absolute inset-0 bg-gray-900/95 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-gray-900/95 backdrop-blur-sm flex items-center justify-center p-4 z-40">
           <div className="max-w-2xl w-full space-y-3">
             {/* Apprehended - Shows inline with Continue button */}
             <FadeIn show={isApprehended}>
@@ -202,49 +202,54 @@ export function InvestigateTab({
                 </button>
               </div>
             </FadeIn>
-
-            {/* Unified Encounter Display - handles henchman, assassination, and good deed */}
-            <FadeIn show={!!(activeEncounter && encounterType)}>
-              <EncounterDisplay
-                type={encounterType}
-                encounter={activeEncounter}
-                timerDuration={getTimerDuration()}
-                availableGadgets={availableGadgets}
-                karma={karma}
-                timeRemaining={timeRemaining}
-                onResolve={onEncounterResolve}
-              />
-            </FadeIn>
           </div>
         </div>
       )}
 
-      {/* Investigation Results Banner - above map */}
-      {!hasBlockingOverlay && !isAnimating && (lastFoundClue?.city || lastFoundClue?.suspect || lastRogueAction) && (
+      {/* Message Banner - above map (encounters and clues) */}
+      {!hasBlockingOverlay && (
         <div className="absolute top-4 left-4 right-4 z-20 space-y-2">
-          {/* Rogue Action Result with Clue */}
-          {lastRogueAction && (
-            <div className="space-y-2">
-              <MessageDisplay
-                type="witness"
-                quote={rogueClueText}
-                descriptiveText={rogueDescriptiveText}
-              />
-              <div className="bg-red-900/50 border-l-4 border-red-500 p-3 rounded-lg">
-                <p className="text-red-400 text-sm">
-                  <AlertTriangle size={14} className="inline mr-1" />
-                  Word spreads about your methods.
-                </p>
-              </div>
-            </div>
+          {/* Active Encounter - handles henchman, assassination, and good deed */}
+          {!isAnimating && activeEncounter && encounterType && (
+            <EncounterDisplay
+              type={encounterType}
+              encounter={activeEncounter}
+              timerDuration={getTimerDuration()}
+              availableGadgets={availableGadgets}
+              karma={karma}
+              timeRemaining={timeRemaining}
+              onResolve={onEncounterResolve}
+            />
           )}
 
-          {/* Investigation Result - any clue type (only show if no rogue action) */}
-          {(lastFoundClue?.city || lastFoundClue?.suspect) && !lastRogueAction && (
-            <MessageDisplay
-              type="witness"
-              quote={regularClueText}
-            />
+          {/* Investigation Results - only show if no encounter active */}
+          {!isAnimating && !activeEncounter && (lastFoundClue?.city || lastFoundClue?.suspect || lastRogueAction) && (
+            <>
+              {/* Rogue Action Result with Clue */}
+              {lastRogueAction && (
+                <div className="space-y-2">
+                  <MessageDisplay
+                    type="witness"
+                    quote={rogueClueText}
+                    descriptiveText={rogueDescriptiveText}
+                  />
+                  <div className="bg-red-900/50 border-l-4 border-red-500 p-3 rounded-lg">
+                    <p className="text-red-400 text-sm">
+                      <AlertTriangle size={14} className="inline mr-1" />
+                      Word spreads about your methods.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Investigation Result - any clue type (only show if no rogue action) */}
+              {(lastFoundClue?.city || lastFoundClue?.suspect) && !lastRogueAction && (
+                <MessageDisplay
+                  type="witness"
+                  quote={regularClueText}
+                />
+              )}
+            </>
           )}
         </div>
       )}

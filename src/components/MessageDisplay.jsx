@@ -204,63 +204,73 @@ export function MessageDisplay({
   // Render encounter/event in active phase
   if (phase === 'active') {
     return (
-      <div className={`rounded-lg overflow-hidden mb-4 ${urgencyLevel === 'critical' ? 'animate-pulse' : ''}`}>
-        <div className="bg-gray-900/90 p-4">
-          {/* Header Section */}
-          {headerConfig && (
+      <div className={`space-y-2 ${urgencyLevel === 'critical' ? 'animate-pulse' : ''}`}>
+        {/* Header Section */}
+        {headerConfig && (
+          <div className="bg-gray-900/95 backdrop-blur-sm rounded-lg p-4 border-l-4 border-yellow-500">
             <HeaderSection
               icon={headerConfig.icon}
               title={headerConfig.title}
               titleColor={headerConfig.titleColor}
             />
-          )}
+          </div>
+        )}
 
-          {/* Timer Section */}
-          {timerDuration && (
+        {/* Timer Section */}
+        {timerDuration && (
+          <div className="px-2">
             <TimerSection
               timerPercent={timerPercent}
               urgencyLevel={urgencyLevel}
             />
-          )}
+          </div>
+        )}
 
-          {/* Setup Section */}
-          {setupText && (
-            <p className="text-yellow-100 text-lg mb-4">{setupText}</p>
-          )}
+        {/* Setup Section */}
+        {setupText && (
+          <div className="text-yellow-200/70 text-sm px-2">
+            {setupText}
+          </div>
+        )}
 
-          {/* Warning */}
-          {warningText && (
-            <p className="text-red-300 text-sm mb-4 flex items-center gap-2">
+        {/* Warning */}
+        {warningText && (
+          <div className="bg-red-900/50 border-l-4 border-red-500 p-3 rounded-lg">
+            <p className="text-red-400 text-sm flex items-center gap-2">
               <AlertTriangle size={14} />
               {warningText}
             </p>
-          )}
+          </div>
+        )}
 
-          {/* NOOOO animation for assassination */}
-          {type === 'encounter_assassination' && timeLeft < 3 && (
-            <p className="text-red-300 text-2xl font-bold text-center animate-pulse mb-3">
+        {/* NOOOO animation for assassination */}
+        {type === 'encounter_assassination' && timeLeft < 3 && (
+          <div className="text-center">
+            <p className="text-red-300 text-2xl font-bold animate-pulse">
               {timeLeft < 1 ? 'NOOOOOO!' : 'N...'}
             </p>
-          )}
+          </div>
+        )}
 
-          {/* Witness Section */}
-          <WitnessSection
-            emoji={finalPersonEmoji}
-            displayedText={displayedText}
-            isComplete={isStreamComplete}
-            borderColor="border-yellow-500"
-          />
+        {/* Witness Section */}
+        <WitnessSection
+          emoji={finalPersonEmoji}
+          displayedText={displayedText}
+          isComplete={isStreamComplete}
+          borderColor="border-yellow-500"
+        />
 
-          {/* Choice Section */}
-          {choices.length > 0 && (
+        {/* Choice Section */}
+        {choices.length > 0 && (
+          <div className="px-2">
             <ChoiceSection
               choices={choices}
               onChoice={handleChoiceClick}
               hasTimedOut={hasTimedOut}
               type={type}
             />
-          )}
-        </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -272,10 +282,10 @@ export function MessageDisplay({
       : 'border-yellow-500';
 
     return (
-      <div className="bg-gray-900/80 rounded-lg overflow-hidden mb-4">
+      <div className="space-y-2">
         {/* Keep same header */}
         {headerConfig && (
-          <div className="p-4 pb-0">
+          <div className="bg-gray-900/95 backdrop-blur-sm rounded-lg p-4 border-l-4 border-yellow-500">
             <HeaderSection
               icon={headerConfig.icon}
               title={headerConfig.title}
@@ -284,13 +294,20 @@ export function MessageDisplay({
           </div>
         )}
 
-        {/* Result in quote style */}
-        <div className={`p-4 border-l-4 ${resultBorderColor} mx-4 mb-4`}>
-          <p className="text-yellow-100 italic">"{result.message}"</p>
+        {/* Result in quote style - same as witness */}
+        <div className={`flex items-start gap-4 p-6 bg-gray-900/95 backdrop-blur-sm rounded-lg border-l-4 ${resultBorderColor}`}>
+          <div className="flex-shrink-0 text-7xl leading-none select-none">
+            {finalPersonEmoji}
+          </div>
+          <div className="flex-1 pt-2">
+            <p className="text-yellow-100 text-lg italic leading-relaxed">
+              "{result.message}"
+            </p>
+          </div>
         </div>
 
         {/* Continue button */}
-        <div className="px-4 pb-4">
+        <div className="px-2">
           <button
             onClick={onContinue}
             className="w-full font-bold py-3 rounded transition-colors bg-gray-700 hover:bg-gray-600 text-white"
@@ -341,7 +358,7 @@ function TimerSection({ timerPercent, urgencyLevel }) {
 // Witness Section Component
 function WitnessSection({ emoji, displayedText, isComplete, borderColor }) {
   return (
-    <div className={`flex items-start gap-4 p-6 bg-gray-900/95 backdrop-blur-sm rounded-lg border-l-4 ${borderColor} mb-4`}>
+    <div className={`flex items-start gap-4 p-6 bg-gray-900/95 backdrop-blur-sm rounded-lg border-l-4 ${borderColor}`}>
       {/* Person emoji - large and prominent */}
       <div className="flex-shrink-0 text-7xl leading-none select-none">
         {emoji}
