@@ -21,7 +21,7 @@ export function InvestigateTab({
   currentGoodDeed,
   karma,
   onInvestigate,
-  rogueActions,
+  cityRogueAction,
   onRogueAction,
   notoriety,
   currentEncounter,
@@ -90,8 +90,8 @@ export function InvestigateTab({
 
   const ROGUE_TIME_COST = 2;
 
-  // Pick any rogue action (just use first one for now)
-  const availableRogueAction = rogueActions && rogueActions.length > 0 ? rogueActions[0] : null;
+  // Use the city's randomized rogue action
+  const availableRogueAction = cityRogueAction;
 
   // Determine if there's an active encounter (any type)
   const activeEncounter = currentEncounter || currentGoodDeed;
@@ -120,9 +120,31 @@ export function InvestigateTab({
   // Memoize clue text to prevent re-rendering ClueDisplay
   const rogueClueText = useMemo(() => {
     if (!lastRogueAction) return '';
-    const clueText = lastFoundClue?.city || lastFoundClue?.suspect;
-    return clueText ? String(clueText).trim() : '';
+    // Concatenate both city and suspect clues for rogue actions
+    const cityClue = lastFoundClue?.city || '';
+    const suspectClue = lastFoundClue?.suspect || '';
+
+    if (cityClue && suspectClue) {
+      // Both clues - concatenate with period separator
+      const cityEnding = /[.!?]$/.test(cityClue) ? '' : '.';
+      return `${cityClue}${cityEnding} ${suspectClue}`;
+    }
+    // Only one clue
+    return cityClue || suspectClue || '';
   }, [lastRogueAction, lastFoundClue]);
+
+  // Memoize rogue action descriptive text (description + success text)
+  const rogueDescriptiveText = useMemo(() => {
+    if (!lastRogueAction) return '';
+    const description = lastRogueAction.description || '';
+    const successText = lastRogueAction.success_text || '';
+
+    if (description && successText) {
+      const descEnding = /[.!?]$/.test(description) ? '' : '.';
+      return `${description}${descEnding} ${successText}`;
+    }
+    return description || successText || lastRogueAction.name || '';
+  }, [lastRogueAction]);
 
   const regularClueText = useMemo(() => {
     if (lastRogueAction) return ''; // Don't compute if rogue action is active
@@ -205,13 +227,13 @@ export function InvestigateTab({
             <div className="space-y-2">
               <ClueDisplay
                 text={rogueClueText}
-                descriptiveText={lastRogueAction.name ? `${lastRogueAction.name}:` : undefined}
+                descriptiveText={rogueDescriptiveText}
                 type="rogue"
               />
               <div className="bg-red-900/50 border-l-4 border-red-500 p-3 rounded-lg">
                 <p className="text-red-400 text-sm">
                   <AlertTriangle size={14} className="inline mr-1" />
-                  +{lastRogueAction.notoriety_gain} notoriety
+                  Word spreads about your methods.
                 </p>
               </div>
             </div>

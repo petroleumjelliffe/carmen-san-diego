@@ -53,6 +53,7 @@ export function Game({ gameData }) {
     nextInvestigationCost,
     hotel,
     rogueLocation,
+    cityRogueAction,
     karma,
     notoriety,
     savedNPCs,
@@ -305,7 +306,7 @@ export function Game({ gameData }) {
                     currentGoodDeed={currentGoodDeed}
                     karma={karma}
                     onInvestigate={handleInvestigate}
-                    rogueActions={rogueActions}
+                    cityRogueAction={cityRogueAction}
                     onRogueAction={handleRogueAction}
                     notoriety={notoriety}
                     currentEncounter={currentEncounter}

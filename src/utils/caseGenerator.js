@@ -19,6 +19,7 @@ export function generateCase(gameData) {
     finalCityClues,
     deadEnds,
     investigationSpots,
+    rogueActions,
   } = gameData;
 
   // Pick random cities for the trail
@@ -50,6 +51,12 @@ export function generateCase(gameData) {
 
   // Pre-select assassination attempt for final city
   const assassinationAttempt = pickRandom(encounters?.assassination_attempts || []);
+
+  // Shuffle investigation rogue actions and assign one to each city
+  const investigationRogueActions = rogueActions?.filter(ra => ra.type === 'investigation') || [];
+  console.log('ROGUE ACTION DEBUG - Original order:', investigationRogueActions.map(ra => ra.id));
+  const shuffledRogueActions = shuffle([...investigationRogueActions]);
+  console.log('ROGUE ACTION DEBUG - Shuffled order:', shuffledRogueActions.map(ra => ra.id));
 
   // Pre-generate data for each city in the trail
   const cityData = caseCities.map((cityId, cityIndex) => {
@@ -113,6 +120,9 @@ export function generateCase(gameData) {
       ? cityInvestigationSpots
       : investigationSpots;
 
+    // Assign a rogue action for this city (cycle through shuffled list)
+    const rogueAction = shuffledRogueActions[cityIndex % shuffledRogueActions.length] || null;
+
     return {
       cityId,
       cityName: city?.name || cityId,
@@ -126,6 +136,7 @@ export function generateCase(gameData) {
       investigationSpots: investigationSpotsToUse,  // City-specific spots
       hotel,  // City-specific hotel
       rogueLocation,  // City-specific rogue location
+      rogueAction,  // Randomized rogue action for this city
       // Assign encounter for this city (if applicable)
       // City 0 = no encounter, Cities 1-2 = henchman, Final = assassination
       encounter: isFinalCity
@@ -167,6 +178,7 @@ export function generateCase(gameData) {
         suspectClue: cd.suspectClue,
         locationClues: cd.locationClues,
         encounter: cd.encounter?.name || 'none',
+        rogueAction: cd.rogueAction?.id || 'none',
         destinations: cd.destinations.map(d => `${d.name}${d.isCorrect ? ' ✓' : ''}`),
       });
     });

@@ -753,9 +753,10 @@ export function useGameState(gameData) {
     setGameState('menu');
   }, []);
 
-  // Current city's hotel and rogue location
+  // Current city's hotel, rogue location, and rogue action
   const hotel = currentCase?.cityData?.[currentCityIndex]?.hotel || null;
   const rogueLocation = currentCase?.cityData?.[currentCityIndex]?.rogueLocation || null;
+  const cityRogueAction = currentCase?.cityData?.[currentCityIndex]?.rogueAction || null;
 
   return {
     // State
@@ -786,6 +787,7 @@ export function useGameState(gameData) {
     nextInvestigationCost,
     hotel,
     rogueLocation,
+    cityRogueAction,  // Randomized rogue action for current city
 
     // Phase 3: Karma & Notoriety
     karma,
