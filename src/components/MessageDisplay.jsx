@@ -185,17 +185,20 @@ export function MessageDisplay({
   if (type === 'witness') {
     return (
       <div className="space-y-2">
-        {/* Optional descriptive text above */}
+        {/* Optional descriptive text above - shown as separate card */}
         {descriptiveText && (
-          <div className="text-yellow-200/70 text-sm px-2">
-            {descriptiveText}
+          <div className="bg-gray-900/95 backdrop-blur-sm rounded-lg p-4 border-l-4 border-yellow-500">
+            <p className="text-yellow-100 text-lg leading-relaxed">
+              {descriptiveText}
+            </p>
           </div>
         )}
         <WitnessSection
-          emoji={finalPersonEmoji}
+          emoji={descriptiveText ? null : finalPersonEmoji}
           displayedText={displayedText}
           isComplete={isStreamComplete}
           borderColor="border-yellow-500"
+          showQuotes={!descriptiveText}
         />
       </div>
     );
@@ -356,20 +359,23 @@ function TimerSection({ timerPercent, urgencyLevel }) {
 }
 
 // Witness Section Component
-function WitnessSection({ emoji, displayedText, isComplete, borderColor }) {
+function WitnessSection({ emoji, displayedText, isComplete, borderColor, showQuotes = true }) {
   return (
     <div className={`flex items-start gap-4 p-6 bg-gray-900/95 backdrop-blur-sm rounded-lg border-l-4 ${borderColor}`}>
-      {/* Person emoji - large and prominent */}
-      <div className="flex-shrink-0 text-7xl leading-none select-none">
-        {emoji}
-      </div>
+      {/* Person emoji - large and prominent (optional) */}
+      {emoji && (
+        <div className="flex-shrink-0 text-7xl leading-none select-none">
+          {emoji}
+        </div>
+      )}
 
       {/* Quote text with streaming effect */}
-      <div className="flex-1 pt-2">
+      <div className={`flex-1 ${emoji ? 'pt-2' : ''}`}>
         <p className="text-yellow-100 text-lg italic leading-relaxed">
-          "{displayedText}
+          {showQuotes && '"'}
+          {displayedText}
           {!isComplete && <span className="animate-pulse">|</span>}
-          "
+          {showQuotes && '"'}
         </p>
       </div>
     </div>

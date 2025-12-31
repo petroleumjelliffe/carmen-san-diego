@@ -47,6 +47,7 @@ export function Game({ gameData }) {
     permanentInjuries,
     currentGoodDeed,
     lastRogueAction,
+    activeRogueAction,
     currentEncounter,
     availableGadgets,
     selectedTraits,
@@ -63,6 +64,7 @@ export function Game({ gameData }) {
     completeInvestigation,
     rogueInvestigate,
     completeRogueInvestigation,
+    resolveRogueAction,
     travel,
     completeTravelAnimation,
     getTravelTimeConfig,
@@ -75,7 +77,7 @@ export function Game({ gameData }) {
     setSelectedWarrant,
   } = useGameState(gameData);
 
-  const { ranks, suspects, settings, rogueActions, encounterTimers, citiesById, backgrounds } = gameData;
+  const { ranks, suspects, settings, rogueActions, encounterTimers, citiesById, backgrounds, witnessPhrases } = gameData;
 
   // Action queue for staged time advancement
   const {
@@ -313,6 +315,8 @@ export function Game({ gameData }) {
                     collectedClues={collectedClues}
                     lastFoundClue={lastFoundClue}
                     lastRogueAction={lastRogueAction}
+                    activeRogueAction={activeRogueAction}
+                    onResolveRogueAction={resolveRogueAction}
                     rogueUsedInCity={rogueUsedInCity}
                     currentGoodDeed={currentGoodDeed}
                     karma={karma}
@@ -335,6 +339,7 @@ export function Game({ gameData }) {
                     currentCity={wrongCity && wrongCityData ? wrongCityData : currentCity}
                     hotel={hotel}
                     rogueLocation={rogueLocation}
+                    witnessPhrases={witnessPhrases}
                   />
                 )}
 

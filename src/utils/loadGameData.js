@@ -13,6 +13,7 @@ import goodDeeds from '../../config/good_deeds.yaml';
 import rogueActions from '../../config/rogue_actions.yaml';
 import encounters from '../../config/encounters.yaml';
 import gadgetsConfig from '../../config/gadgets.yaml';
+import witnessPhrases from '../../config/witness-phrases.yaml';
 
 import { indexById, groupBy } from './helpers';
 import { validateGameData } from './validation';
@@ -36,6 +37,7 @@ export function loadGameData() {
   const fakeGoodDeedsList = goodDeeds.fake_good_deeds;
   const rogueActionsList = rogueActions.rogue_actions;
   const gadgetsList = gadgetsConfig.gadgets;
+  const witnessPhrasesList = witnessPhrases.witness_closing_phrases;
   const gameSettings = settings.settings;
   const difficultySettings = settings.difficulty;
   const encounterTimers = settings.encounter_timers;
@@ -45,6 +47,7 @@ export function loadGameData() {
     difficulty: difficultySettings,
     encounterTimers: encounterTimers,
     backgrounds: backgroundsData,
+    witnessPhrases: witnessPhrasesList,
 
     // Raw arrays
     cities: citiesList,

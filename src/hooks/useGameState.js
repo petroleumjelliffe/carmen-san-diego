@@ -30,6 +30,7 @@ export function useGameState(gameData) {
   const [lastEncounterResult, setLastEncounterResult] = useState(null); // Track henchman/assassination results
   const [rogueUsedInCity, setRogueUsedInCity] = useState(false); // Track if rogue was used in current city
   const [hadEncounterInCity, setHadEncounterInCity] = useState(false); // Track if encounter already happened in current city
+  const [activeRogueAction, setActiveRogueAction] = useState(null); // Active rogue action (shown before clue)
 
   // Phase 3: Karma & Notoriety System (persists across cases)
   const [karma, setKarma] = useState(0); // Good deeds completed
@@ -356,7 +357,10 @@ export function useGameState(gameData) {
     if (missedClue) {
       setMessage(`You investigated the ${spot.name}, but your injuries made you miss the clue...`);
     } else {
-      setLastFoundClue({ city: clue.destinationClue, suspect: clue.suspectClue });
+      setLastFoundClue({
+        city: clue.destinationClue,
+        suspect: clue.suspectClue
+      });
 
       // Store clues with metadata (city name, location name, time collected)
       const cityName = currentCity?.name || 'Unknown';
@@ -478,7 +482,7 @@ export function useGameState(gameData) {
     };
   }, [timeRemaining, cityClues, rogueUsedInCity, isInvestigating]);
 
-  // Complete rogue investigation - reveals clues and updates notoriety
+  // Complete rogue investigation - shows rogue action (clue revealed after continue)
   const completeRogueInvestigation = useCallback(() => {
     const pending = pendingRogueActionRef.current;
     if (!pending) return;
@@ -494,9 +498,16 @@ export function useGameState(gameData) {
       setLastVisitedLocation(rogueLocation);
     }
 
-    // Rogue actions always get BOTH clues (if available)
-    setLastFoundClue({ city: locationClue, suspect: suspectClue });
-    setLastRogueAction(rogueAction);
+    // Set active rogue action (with clue data stored for later reveal - no fear phrase yet)
+    setActiveRogueAction({
+      action: rogueAction,
+      locationClue: locationClue,
+      suspectClue: suspectClue,
+    });
+
+    // Clear previous clue and rogue action
+    setLastFoundClue({ city: null, suspect: null });
+    setLastRogueAction(null);
 
     // Store clues with metadata (city name, rogue action name, time collected)
     const cityName = currentCity?.name || 'Unknown';
@@ -532,6 +543,20 @@ export function useGameState(gameData) {
 
     // No good deed encounters after rogue actions (you're being ruthless)
   }, [currentCity, currentHour, currentCase, currentCityIndex]);
+
+  // Resolve rogue action - clears active rogue action and reveals clue
+  const resolveRogueAction = useCallback(() => {
+    if (!activeRogueAction) return;
+
+    const { locationClue, suspectClue, action } = activeRogueAction;
+
+    // Clear active rogue action
+    setActiveRogueAction(null);
+
+    // Set the clue for display
+    setLastFoundClue({ city: locationClue, suspect: suspectClue });
+    setLastRogueAction(action);
+  }, [activeRogueAction]);
 
   // Get available destinations
   const destinations = useMemo(() => {
@@ -798,6 +823,7 @@ export function useGameState(gameData) {
     showRogueActionModal,
     currentRogueAction,
     lastRogueAction,
+    activeRogueAction,
 
     // Phase 4: Gadget Encounters
     currentEncounter,
@@ -826,6 +852,7 @@ export function useGameState(gameData) {
     completeInvestigation,
     rogueInvestigate,
     completeRogueInvestigation,
+    resolveRogueAction,
     travel,
     getTravelTimeConfig,
     completeTravelAnimation,

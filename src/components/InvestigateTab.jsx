@@ -6,6 +6,7 @@ import { FadeIn } from './FadeIn';
 import { CityMapView } from './CityMapView';
 import { OptionCard } from './OptionCard';
 import { OptionTray } from './OptionTray';
+import { pickRandom } from '../utils/helpers';
 
 export function InvestigateTab({
   isFinalCity,
@@ -17,6 +18,8 @@ export function InvestigateTab({
   collectedClues,
   lastFoundClue,
   lastRogueAction,
+  activeRogueAction,
+  onResolveRogueAction,
   rogueUsedInCity,
   currentGoodDeed,
   karma,
@@ -39,6 +42,7 @@ export function InvestigateTab({
   currentCity,
   hotel,
   rogueLocation,
+  witnessPhrases,
 }) {
   const [hoveredSpotId, setHoveredSpotId] = useState(null);
   const [investigatingSpotIndex, setInvestigatingSpotIndex] = useState(null);
@@ -124,14 +128,25 @@ export function InvestigateTab({
     const cityClue = lastFoundClue?.city || '';
     const suspectClue = lastFoundClue?.suspect || '';
 
+    let concatenated = '';
     if (cityClue && suspectClue) {
       // Both clues - concatenate with period separator
       const cityEnding = /[.!?]$/.test(cityClue) ? '' : '.';
-      return `${cityClue}${cityEnding} ${suspectClue}`;
+      concatenated = `${cityClue}${cityEnding} ${suspectClue}`;
+    } else {
+      // Only one clue
+      concatenated = cityClue || suspectClue || '';
     }
-    // Only one clue
-    return cityClue || suspectClue || '';
-  }, [lastRogueAction, lastFoundClue]);
+
+    // Add fear phrase to concatenated result
+    if (concatenated && witnessPhrases && witnessPhrases.length > 0) {
+      const phrase = pickRandom(witnessPhrases);
+      const needsPeriod = !/[.!?]$/.test(concatenated);
+      return `${concatenated}${needsPeriod ? '.' : ''} ${phrase}`;
+    }
+
+    return concatenated;
+  }, [lastRogueAction, lastFoundClue, witnessPhrases]);
 
   // Memoize rogue action descriptive text (description + success text)
   const rogueDescriptiveText = useMemo(() => {
@@ -222,24 +237,45 @@ export function InvestigateTab({
             />
           )}
 
-          {/* Investigation Results - only show if no encounter active */}
-          {!isAnimating && !activeEncounter && (lastFoundClue?.city || lastFoundClue?.suspect || lastRogueAction) && (
+          {/* Active Rogue Action - shown before clue reveal */}
+          {!isAnimating && !activeEncounter && activeRogueAction && (
+            <div className="space-y-2">
+              {/* Rogue action description */}
+              <div className="bg-gray-900/95 backdrop-blur-sm rounded-lg p-4 border-l-4 border-yellow-500">
+                <p className="text-yellow-100 text-lg leading-relaxed">
+                  {activeRogueAction.action.description} {activeRogueAction.action.success_text}
+                </p>
+              </div>
+
+              {/* Notoriety warning */}
+              <div className="bg-red-900/50 border-l-4 border-red-500 p-3 rounded-lg">
+                <p className="text-red-400 text-sm">
+                  <AlertTriangle size={14} className="inline mr-1" />
+                  Word spreads about your methods.
+                </p>
+              </div>
+
+              {/* Continue button */}
+              <div className="px-2">
+                <button
+                  onClick={onResolveRogueAction}
+                  className="w-full font-bold py-3 rounded transition-colors bg-gray-700 hover:bg-gray-600 text-white"
+                >
+                  CONTINUE
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Investigation Results - only show if no encounter or active rogue action */}
+          {!isAnimating && !activeEncounter && !activeRogueAction && (lastFoundClue?.city || lastFoundClue?.suspect || lastRogueAction) && (
             <>
-              {/* Rogue Action Result with Clue */}
+              {/* Rogue Action Clue (after rogue action resolved) */}
               {lastRogueAction && (
-                <div className="space-y-2">
-                  <MessageDisplay
-                    type="witness"
-                    quote={rogueClueText}
-                    descriptiveText={rogueDescriptiveText}
-                  />
-                  <div className="bg-red-900/50 border-l-4 border-red-500 p-3 rounded-lg">
-                    <p className="text-red-400 text-sm">
-                      <AlertTriangle size={14} className="inline mr-1" />
-                      Word spreads about your methods.
-                    </p>
-                  </div>
-                </div>
+                <MessageDisplay
+                  type="witness"
+                  quote={rogueClueText}
+                />
               )}
 
               {/* Investigation Result - any clue type (only show if no rogue action) */}
