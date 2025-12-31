@@ -37,7 +37,7 @@ This document defines the exact display behavior for all message types across di
 | **Good Deed** | active | ✅ "SOMEONE NEEDS HELP" | ❌ | ✅ optional | ✅ optional | ❌  | ✅ no "" | ✅ | ✅ 1 button | ✅ | ❌ |
 | **Good Deed** | resolved | ✅ "SOMEONE NEEDS HELP" | ❌ | ❌ | ✅ "Your integrity..." | ✅ auto-generated | ✅ with "" result.message | ❌ | ❌ | ❌ | ✅ |
 | **Henchman** | active | ✅ "HENCHMAN ENCOUNTER" | ❌ | ✅ optional | ❌ | ❌ | ✅ no "" | ✅ | ✅ 3x3 grid | ✅ | ❌ |
-| **Henchman** | resolved | ✅ "HENCHMAN ENCOUNTER" | ❌ | ❌ | ❌ | ❌ | ✅ no "" result.message | ❌ | ❌ | ❌ | ❌ |
+| **Henchman** | resolved | ✅ "HENCHMAN ENCOUNTER" | ❌ | ❌ | ❌ | ❌ | ✅ no "" result.message | ❌ | ❌ | ❌ | ✅ |
 | **Assassination** | active | ✅ "ASSASSINATION ATTEMPT" | ❌ | ✅ optional | ✅ optional | ❌ | ✅ no "" | ✅ | ✅ 3x3 grid | ✅ | ❌ |
 | **Assassination** | resolved | ✅ "ASSASSINATION ATTEMPT" | ❌ | ❌ | ❌ | ✅ auto-generated | ✅ with "" result.message | ❌ | ❌ | ❌ | ✅ |
 | **Apprehension** | complete | ✅ "SUSPECT APPREHENDED" | ❌ | ❌ | ❌ | ✅ auto-generated | ✅ with "" | ✅ | ❌ | ❌ | ✅ |

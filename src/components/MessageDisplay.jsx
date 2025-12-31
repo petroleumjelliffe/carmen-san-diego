@@ -273,7 +273,7 @@ export function MessageDisplay({
 
         {/* Witness Section */}
         <WitnessSection
-          emoji={type === 'encounter_henchman' || type === 'encounter_assassination' ? null : finalPersonEmoji}
+          emoji={null}
           displayedText={displayedText}
           isComplete={isStreamComplete}
           borderColor="border-yellow-500"
