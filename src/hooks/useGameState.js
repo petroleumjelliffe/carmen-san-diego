@@ -409,8 +409,8 @@ export function useGameState(gameData) {
     }
 
     // GOOD DEED: Can trigger on any investigation if no henchman/assassination, once per case
-    // Only triggers if: not in wrong city, no encounter just triggered, haven't had one this case
-    if (!wrongCity && !hadGoodDeedInCase && goodDeeds && !currentGoodDeed && Math.random() < 0.25) {
+    // Only triggers if: not in wrong city, not final city, no encounter just triggered, haven't had one this case
+    if (!wrongCity && !isFinalCity && !hadGoodDeedInCase && goodDeeds && !currentGoodDeed && Math.random() < 0.25) {
       // Check if high karma triggers fake good deed trap
       const isFakeTrap = karma >= 5 && fakeGoodDeeds && Math.random() < 0.25;
 

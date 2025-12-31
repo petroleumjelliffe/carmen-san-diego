@@ -306,7 +306,7 @@ export function MessageDisplay({
 
     const showEmojiInResolved = type !== 'encounter_henchman';
     const showQuotesInResolved = type === 'encounter_good_deed' || type === 'encounter_assassination';
-    const showContinueButton = type !== 'encounter_henchman';
+    const showContinueButton = true; // All encounters show continue button
 
     return (
       <div className="space-y-2">

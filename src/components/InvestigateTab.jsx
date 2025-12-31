@@ -115,8 +115,8 @@ export function InvestigateTab({
     return 10;
   };
 
-  // Only block map for apprehension
-  const hasBlockingOverlay = isApprehended;
+  // No blocking overlays - all messages in banner area
+  const hasBlockingOverlay = false;
 
   // Determine if animation is in progress
   const isAnimating = actionPhase === 'ticking' || actionPhase === 'pending';
@@ -173,8 +173,7 @@ export function InvestigateTab({
   return (
     <div className="relative h-[600px]">
       {/* City Map Background */}
-      {!hasBlockingOverlay && (
-        <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0">
           <CityMapView
             currentCity={currentCity}
             spots={cityClues}
@@ -191,33 +190,25 @@ export function InvestigateTab({
             isInvestigatingRogue={isInvestigatingRogue}
             isAnimating={isAnimating}
           />
-        </div>
-      )}
-
-      {/* Blocking Overlay - only for apprehension */}
-      {hasBlockingOverlay && (
-        <div className="absolute inset-0 bg-gray-900/95 backdrop-blur-sm flex items-center justify-center p-4 z-40">
-          <div className="max-w-2xl w-full">
-            {/* Apprehended - Using MessageDisplay format */}
-            <FadeIn show={isApprehended}>
-              <MessageDisplay
-                type="witness"
-                headerTitle="SUSPECT APPREHENDED!"
-                headerIcon={<span className="text-2xl">🚔</span>}
-                personEmoji="🚔"
-                quote={`${selectedWarrant?.name} is now in custody. Time to face the court and see if you got the right person...`}
-                onContinue={onProceedToTrial}
-              />
-            </FadeIn>
-          </div>
-        </div>
-      )}
+      </div>
 
       {/* Message Banner - above map (encounters and clues) */}
-      {!hasBlockingOverlay && (
-        <div className="absolute top-4 left-4 right-4 z-20 space-y-2">
+      <div className="absolute top-4 left-4 right-4 z-20 space-y-2">
+        {/* Apprehension Message */}
+          {isApprehended && (
+            <MessageDisplay
+              type="witness"
+              headerTitle="SUSPECT APPREHENDED!"
+              headerIcon={<span className="text-2xl">🚔</span>}
+              personEmoji="🚔"
+              quote={`${selectedWarrant?.name} is now in custody. Time to face the court and see if you got the right person...`}
+              showQuotes={false}
+              onContinue={onProceedToTrial}
+            />
+          )}
+
           {/* Active Encounter - handles henchman, assassination, and good deed */}
-          {!isAnimating && activeEncounter && encounterType && (
+          {!isAnimating && !isApprehended && activeEncounter && encounterType && (
             <EncounterDisplay
               type={encounterType}
               encounter={activeEncounter}
@@ -230,7 +221,7 @@ export function InvestigateTab({
           )}
 
           {/* Active Rogue Action - shown before clue reveal */}
-          {!isAnimating && !activeEncounter && activeRogueAction && (
+          {!isAnimating && !isApprehended && !activeEncounter && activeRogueAction && (
             <div className="space-y-2">
               {/* Header */}
               <div className="bg-gray-900/95 backdrop-blur-sm rounded-lg p-4 border-l-4 border-yellow-500">
@@ -260,7 +251,7 @@ export function InvestigateTab({
           )}
 
           {/* Investigation Results - only show if no encounter or active rogue action */}
-          {!isAnimating && !activeEncounter && !activeRogueAction && (lastFoundClue?.city || lastFoundClue?.suspect || lastRogueAction) && (
+          {!isAnimating && !isApprehended && !activeEncounter && !activeRogueAction && (lastFoundClue?.city || lastFoundClue?.suspect || lastRogueAction) && (
             <>
               {/* Rogue Action Clue (after rogue action resolved) */}
               {lastRogueAction && (
@@ -289,11 +280,10 @@ export function InvestigateTab({
               )}
             </>
           )}
-        </div>
-      )}
+      </div>
 
       {/* Wrong City Message - banner at top */}
-      {wrongCity && !hasBlockingOverlay && (
+      {wrongCity && (
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-800/95 backdrop-blur-sm px-6 py-3 rounded-lg text-center shadow-lg z-20">
           <p className="text-yellow-200">
             The trail seems cold here... but you can still ask around.
@@ -302,8 +292,7 @@ export function InvestigateTab({
       )}
 
       {/* Option Tray - Always horizontal at bottom */}
-      {!hasBlockingOverlay && (
-        <div className="absolute bottom-0 left-0 right-0 h-48 p-4 bg-gray-900/90 backdrop-blur-sm z-30">
+      <div className="absolute bottom-0 left-0 right-0 h-48 p-4 bg-gray-900/90 backdrop-blur-sm z-30">
           <OptionTray orientation="horizontal">
             {/* Investigation Spots */}
             {cityClues.map((clue, i) => {
@@ -344,8 +333,7 @@ export function InvestigateTab({
               </div>
             )}
           </OptionTray>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

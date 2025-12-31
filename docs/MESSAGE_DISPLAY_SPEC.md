@@ -33,14 +33,14 @@ This document defines the exact display behavior for all message types across di
 |--------------|-------|----------------------|-------------------------------------|------------------------|----------------------|----------------------------|----------------------|----------------------|-------------------|---------------------|----------------------|
 | **Normal Witness** | complete | ❌ | ❌ | ❌ | ❌ | ✅ auto-generated | ✅ with "" | ✅ | ❌ | ❌ | ❌ |
 | **Rogue Action Desc** | custom | ✅ "UNORTHODOX METHODS" | ✅ action.description | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Rogue Clue** | complete | ❌ | ❌ | ❌ | ✅ "Word spreads..." | ✅ auto-generated | ✅ no "" | ✅ | ❌ | ❌ | ❌ |
+| **Rogue Clue** | complete | ❌ | ❌ | ❌ | ✅ "Word spreads..." | ✅ auto-generated | ✅ with "" | ✅ | ❌ | ❌ | ❌ |
 | **Good Deed** | active | ✅ "SOMEONE NEEDS HELP" | ❌ | ✅ optional | ✅ optional | ❌  | ✅ no "" | ✅ | ✅ 1 button | ✅ | ❌ |
 | **Good Deed** | resolved | ✅ "SOMEONE NEEDS HELP" | ❌ | ❌ | ✅ "Your integrity..." | ✅ auto-generated | ✅ with "" result.message | ❌ | ❌ | ❌ | ✅ |
 | **Henchman** | active | ✅ "HENCHMAN ENCOUNTER" | ❌ | ✅ optional | ❌ | ❌ | ✅ no "" | ✅ | ✅ 3x3 grid | ✅ | ❌ |
 | **Henchman** | resolved | ✅ "HENCHMAN ENCOUNTER" | ❌ | ❌ | ❌ | ❌ | ✅ no "" result.message | ❌ | ❌ | ❌ | ✅ |
 | **Assassination** | active | ✅ "ASSASSINATION ATTEMPT" | ❌ | ✅ optional | ✅ optional | ❌ | ✅ no "" | ✅ | ✅ 3x3 grid | ✅ | ❌ |
-| **Assassination** | resolved | ✅ "ASSASSINATION ATTEMPT" | ❌ | ❌ | ❌ | ✅ auto-generated | ✅ with "" result.message | ❌ | ❌ | ❌ | ✅ |
-| **Apprehension** | complete | ✅ "SUSPECT APPREHENDED" | ❌ | ❌ | ❌ | ✅ auto-generated | ✅ with "" | ✅ | ❌ | ❌ | ✅ |
+| **Assassination** | resolved | ✅ "ASSASSINATION ATTEMPT" | ❌ | ❌ | ❌ | ❌ | ✅ no "" result.message | ❌ | ❌ | ❌ | ✅ |
+| **Apprehension** | complete | ✅ "SUSPECT APPREHENDED" | ❌ | ❌ | ❌ | ✅ auto-generated | ✅ no "" | ✅ | ❌ | ❌ | ✅ |
 
 ## Element Display Logic
 
