@@ -232,7 +232,10 @@ export function useGameState(gameData) {
   const acceptBriefing = useCallback(() => {
     setGameState('playing');
     setActiveTab('home'); // Start at home tab to show city fact
-  }, []);
+
+    // Save game state after accepting briefing and starting case
+    saveCurrentState();
+  }, [saveCurrentState]);
 
   // Helper function to advance time and check for auto-sleep
   const advanceTime = useCallback((hours) => {
@@ -747,12 +750,18 @@ export function useGameState(gameData) {
       setSolvedCases(prev => prev + 1);
     }
     setGameState('debrief');
-  }, [selectedWarrant, currentCase]);
+
+    // Save game state after completing trial
+    saveCurrentState();
+  }, [selectedWarrant, currentCase, saveCurrentState]);
 
   // Proceed from apprehended screen to trial
   const proceedToTrial = useCallback(() => {
     setGameState('trial');
-  }, []);
+
+    // Save game state when arriving at courthouse
+    saveCurrentState();
+  }, [saveCurrentState]);
 
   // Cycle through trait values in dossier (null → value1 → value2 → null)
   const cycleSelectedTrait = useCallback((trait) => {
@@ -838,7 +847,10 @@ export function useGameState(gameData) {
   // Return to menu
   const returnToMenu = useCallback(() => {
     setGameState('menu');
-  }, []);
+
+    // Save game state when returning to main menu
+    saveCurrentState();
+  }, [saveCurrentState]);
 
   // Current city's hotel, rogue location, and rogue action
   const hotel = currentCase?.cityData?.[currentCityIndex]?.hotel || null;
