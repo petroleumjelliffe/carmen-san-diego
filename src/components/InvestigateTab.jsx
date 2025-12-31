@@ -183,13 +183,13 @@ export function InvestigateTab({
             hoveredSpotId={hoveredSpotId}
             onSpotHover={setHoveredSpotId}
             investigatingSpotIndex={investigatingSpotIndex}
-            isAnimating={isAnimating}
             hotel={hotel}
             rogueLocation={rogueLocation}
             lastInvestigatedSpotId={lastInvestigatedSpotId}
             onRogueClick={availableRogueAction && onRogueAction ? handleRogueClick : null}
             rogueUsed={rogueUsedInCity}
             isInvestigatingRogue={isInvestigatingRogue}
+            isAnimating={isAnimating}
           />
         </div>
       )}
@@ -232,18 +232,18 @@ export function InvestigateTab({
           {/* Active Rogue Action - shown before clue reveal */}
           {!isAnimating && !activeEncounter && activeRogueAction && (
             <div className="space-y-2">
+              {/* Header */}
+              <div className="bg-gray-900/95 backdrop-blur-sm rounded-lg p-4 border-l-4 border-yellow-500">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">⚡</span>
+                  <h3 className="text-lg font-bold text-purple-400">UNORTHODOX METHODS</h3>
+                </div>
+              </div>
+
               {/* Rogue action description */}
               <div className="bg-gray-900/95 backdrop-blur-sm rounded-lg p-4 border-l-4 border-yellow-500">
                 <p className="text-yellow-100 text-lg leading-relaxed">
                   {activeRogueAction.action.description} {activeRogueAction.action.success_text}
-                </p>
-              </div>
-
-              {/* Notoriety warning */}
-              <div className="bg-red-900/50 border-l-4 border-red-500 p-3 rounded-lg">
-                <p className="text-red-400 text-sm">
-                  <AlertTriangle size={14} className="inline mr-1" />
-                  Word spreads about your methods.
                 </p>
               </div>
 
@@ -264,11 +264,20 @@ export function InvestigateTab({
             <>
               {/* Rogue Action Clue (after rogue action resolved) */}
               {lastRogueAction && (
-                <MessageDisplay
-                  type="witness"
-                  quote={rogueClueText}
-                  hideEmojiAndQuotes={true}
-                />
+                <div className="space-y-2">
+                  <MessageDisplay
+                    type="witness"
+                    quote={rogueClueText}
+                    showQuotes={false}
+                  />
+                  {/* Notoriety warning */}
+                  <div className="bg-red-900/50 border-l-4 border-red-500 p-3 rounded-lg">
+                    <p className="text-red-400 text-sm flex items-center gap-2">
+                      <AlertTriangle size={14} />
+                      Word spreads about your methods.
+                    </p>
+                  </div>
+                </div>
               )}
 
               {/* Investigation Result - any clue type (only show if no rogue action) */}

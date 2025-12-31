@@ -84,6 +84,7 @@ export function MessageDisplay({
   // Behavioral flags
   autoStream = true,
   hideEmojiAndQuotes = false,
+  showQuotes = undefined,
 }) {
   // Phase is determined by result presence for encounters
   // Witnesses are always in 'complete' phase
@@ -211,7 +212,7 @@ export function MessageDisplay({
           displayedText={displayedText}
           isComplete={isStreamComplete}
           borderColor="border-yellow-500"
-          showQuotes={hideEmojiAndQuotes ? false : !descriptiveText}
+          showQuotes={showQuotes !== undefined ? showQuotes : (hideEmojiAndQuotes ? false : !descriptiveText)}
         />
 
         {/* Optional continue button for special events */}
@@ -276,7 +277,7 @@ export function MessageDisplay({
           displayedText={displayedText}
           isComplete={isStreamComplete}
           borderColor="border-yellow-500"
-          showQuotes={type !== 'encounter_henchman' && type !== 'encounter_assassination'}
+          showQuotes={showQuotes !== undefined ? showQuotes : (type !== 'encounter_henchman' && type !== 'encounter_assassination' && type !== 'encounter_good_deed')}
         />
 
         {/* Choice Section with integrated timer */}
@@ -303,6 +304,10 @@ export function MessageDisplay({
       : result.type === 'failure' ? 'border-red-500'
       : 'border-yellow-500';
 
+    const showEmojiInResolved = type !== 'encounter_henchman';
+    const showQuotesInResolved = type === 'encounter_good_deed' || type === 'encounter_assassination';
+    const showContinueButton = type !== 'encounter_henchman';
+
     return (
       <div className="space-y-2">
         {/* Keep same header */}
@@ -318,25 +323,39 @@ export function MessageDisplay({
 
         {/* Result in quote style - same as witness */}
         <div className={`flex items-start gap-4 p-6 bg-gray-900/95 backdrop-blur-sm rounded-lg border-l-4 ${resultBorderColor}`}>
-          <div className="flex-shrink-0 text-7xl leading-none select-none">
-            {finalPersonEmoji}
-          </div>
-          <div className="flex-1 pt-2">
+          {showEmojiInResolved && (
+            <div className="flex-shrink-0 text-7xl leading-none select-none">
+              {finalPersonEmoji}
+            </div>
+          )}
+          <div className={`flex-1 ${showEmojiInResolved ? 'pt-2' : ''}`}>
             <p className="text-yellow-100 text-lg italic leading-relaxed">
-              "{result.message}"
+              {showQuotesInResolved ? '"' : ''}{result.message}{showQuotesInResolved ? '"' : ''}
             </p>
           </div>
         </div>
 
-        {/* Continue button */}
-        <div className="px-2">
-          <button
-            onClick={onContinue}
-            className="w-full font-bold py-3 rounded transition-colors bg-gray-700 hover:bg-gray-600 text-white"
-          >
-            CONTINUE
-          </button>
-        </div>
+        {/* Integrity warning for good deed */}
+        {type === 'encounter_good_deed' && result.type === 'success' && (
+          <div className="bg-green-900/50 border-l-4 border-green-500 p-3 rounded-lg">
+            <p className="text-green-400 text-sm flex items-center gap-2">
+              <Heart size={14} />
+              Your integrity strengthens your reputation.
+            </p>
+          </div>
+        )}
+
+        {/* Continue button (not for henchman) */}
+        {showContinueButton && onContinue && (
+          <div className="px-2">
+            <button
+              onClick={onContinue}
+              className="w-full font-bold py-3 rounded transition-colors bg-gray-700 hover:bg-gray-600 text-white"
+            >
+              CONTINUE
+            </button>
+          </div>
+        )}
       </div>
     );
   }

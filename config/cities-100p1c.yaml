@@ -1,0 +1,334 @@
+cities:
+  - id: east_village
+    name: East Village
+    country: United States
+    region: north_america
+    lat: 40.7260
+    lon: -73.9870
+    icon: 🎸
+    fact: "The East Village has been a center of counterculture in NYC since the 1960s."
+    background_image: "https://images.unsplash.com/photo-1518235506717-e1ed3306a89b?w=1920&q=80"
+    landmarks:
+      - id: l_train_tunnel
+        name: L Train Tunnel
+        type: investigation
+        neighborhood: East Village
+        icon: 🚇
+        lat: 40.7177
+        lon: -73.9576
+        time_cost: 2
+        clues:
+          - "A couple goof balls were permuting the slogan of a captain morgan's ad"
+          - "Gum is open or something"
+          - "There's a guy singing beatle songs with half his head shaved"
+          - "A gut on harmonica was hopping from foot to foot"
+
+      - id: n_train_platform
+        name: N Train Platform
+        type: investigation
+        neighborhood: Union Square
+        icon: 🚊
+        lat: 40.7342
+        lon: -73.9875
+        time_cost: 2
+        clues:
+          - "Someone shouted suck it on the tracks"
+
+      - id: virgin_megastore
+        name: Virgin Megastore
+        type: investigation
+        neighborhood: Union Square
+        icon: 🎵
+        lat: 40.7347
+        lon: -73.9898
+        time_cost: 3
+        clues:
+          - "Plama tv was announced"
+          - "Phantom planet played a show there"
+
+  - id: lower_manhattan
+    name: Lower Manhattan
+    country: United States
+    region: north_america
+    lat: 40.7150
+    lon: -74.0100
+    icon: 🏙️
+    fact: "Lower Manhattan is home to Wall Street and the former World Trade Center site."
+    background_image: "https://images.unsplash.com/photo-1518235506717-e1ed3306a89b?w=1920&q=80"
+    landmarks:
+      - id: stuyvesant_high_school
+        name: Stuyvesant High School
+        type: investigation
+        neighborhood: Battery Park City
+        icon: 🏫
+        lat: 40.7183
+        lon: -74.0142
+        time_cost: 3
+        clues:
+          - "Math terach was asking abot crocodiles"
+          - "Duplicity is a toxic currency"
+          - "Don'tt throw soda in a husky voice"
+          - "Jars of gravity"
+
+      - id: the_movies
+        name: The Movies
+        type: investigation
+        neighborhood: Tribeca
+        icon: 🎬
+        lat: 40.7195
+        lon: -74.0089
+        time_cost: 2
+        clues:
+          - "Make out with your new girldfrined with your friend next to you"
+          - "High chairs for your short friend"
+
+      - id: bodega
+        name: Bodega
+        type: investigation
+        neighborhood: Lower Manhattan
+        icon: 🏪
+        lat: 40.7150
+        lon: -74.0087
+        time_cost: 2
+        clues:
+          - "Buy windex gatorade"
+          - "A kid said they were legal at 18"
+
+  - id: stuyvesant_town
+    name: Stuyvesant Town
+    country: United States
+    region: north_america
+    lat: 40.7300
+    lon: -73.9750
+    icon: 🏘️
+    fact: "Stuyvesant Town is one of the largest apartment complexes in the United States."
+    background_image: "https://images.unsplash.com/photo-1518235506717-e1ed3306a89b?w=1920&q=80"
+    landmarks:
+      - id: stuy_town_basketball_court
+        name: Stuy Town Basketball Court
+        type: investigation
+        neighborhood: Stuyvesant Town
+        icon: 🏀
+        lat: 40.7257
+        lon: -73.9733
+        time_cost: 2
+        clues:
+          - "Someone says Jorndannnnn"
+          - "Iaan and noel are scrubbing chalk off the blacktop"
+          - "Peter vescey's children are spotted nearby"
+          - "A lanky kid duybked two handed recently"
+
+      - id: mailbox
+        name: Mailbox
+        type: investigation
+        neighborhood: Stuyvesant Town
+        icon: 📬
+        lat: 40.7300
+        lon: -73.9750
+        time_cost: 2
+        clues:
+          - "Outside at a mailbox"
+
+      - id: larrys_apartment
+        name: Larry's Apartment
+        type: investigation
+        neighborhood: Stuyvesant Town
+        icon: 🏠
+        lat: 40.7320
+        lon: -73.9760
+        time_cost: 2
+        clues:
+          - "Malfunction cd byurner"
+          - "Sit ona plastic bag"
+          - "Take a shower, turn on the box fan, and youre in flavor country"
+          - "Conrad foa posters adorned the walls"
+          - "The scneet of polo sport was intense"
+
+  - id: upper_east_side
+    name: Upper East Side
+    country: United States
+    region: north_america
+    lat: 40.7736
+    lon: -73.9566
+    icon: 🏛️
+    fact: "The Upper East Side is home to Museum Mile along Fifth Avenue."
+    background_image: "https://images.unsplash.com/photo-1518235506717-e1ed3306a89b?w=1920&q=80"
+    landmarks:
+      - id: normandy_court
+        name: Normandy Court
+        type: investigation
+        neighborhood: Upper East Side
+        icon: 🏢
+        lat: 40.7840
+        lon: -73.9490
+        time_cost: 2
+        clues:
+          - "A naked girl was found sleeping outside of an apartment"
+          - "The stench of melted plastic and popcorn billowed through the halls"
+          - "Som eidiots forgot to pay their electric bill"
+          - "The drains were clogged with wax."
+
+      - id: scotts_house
+        name: Scott's House
+        type: investigation
+        neighborhood: Upper East Side
+        icon: 🏠
+        lat: 40.7750
+        lon: -73.9580
+        time_cost: 2
+        clues:
+          - "Fall sleep on the toilet aand waake up with your legs paaaralyzzd"
+          - "Sit on a chair with your girlfriend and wath the chair buckle in slow motin"
+
+      - id: papa_bens
+        name: Papa Ben's
+        type: investigation
+        neighborhood: Upper East Side
+        icon: 🍝
+        lat: 40.7700
+        lon: -73.9550
+        time_cost: 2
+        clues:
+          - "Baked ziti"
+          - "Drirnk in the bathroom"
+          - "Chaney will be there according to alecl"
+
+  - id: chelsea
+    name: Chelsea
+    country: United States
+    region: north_america
+    lat: 40.7450
+    lon: -74.0000
+    icon: 🌈
+    fact: "Chelsea is known for its art galleries and vibrant LGBTQ+ community."
+    background_image: "https://images.unsplash.com/photo-1518235506717-e1ed3306a89b?w=1920&q=80"
+    landmarks:
+      - id: chelsea_piers
+        name: Chelsea Piers
+        type: investigation
+        neighborhood: Chelsea
+        icon: ⛳
+        lat: 40.7407
+        lon: -74.0107
+        time_cost: 3
+        clues:
+          - "People were bragging abot boats and chairs"
+          - "Someone said their god on the driving range"
+          - "Law and order waas being fimlmed on the roof"
+          - "Someone punted a basketball for no reason"
+
+      - id: tracy_js
+        name: Tracy J's
+        type: investigation
+        neighborhood: Chelsea
+        icon: 🍺
+        lat: 40.7450
+        lon: -73.9970
+        time_cost: 2
+        clues:
+          - "Some people were booed off for singing plush"
+          - "Some kids were wearing ridiculous hats"
+
+      - id: mcdonalds
+        name: McDonald's
+        type: investigation
+        neighborhood: Chelsea
+        icon: 🍔
+        lat: 40.7420
+        lon: -73.9950
+        time_cost: 2
+        clues:
+          - "Zargreb songs about communism"
+          - "Monopoly fries"
+
+  - id: west_village
+    name: West Village
+    country: United States
+    region: north_america
+    lat: 40.7350
+    lon: -74.0027
+    icon: 🍷
+    fact: "The West Village is famous for its historic brownstones and bohemian culture."
+    background_image: "https://images.unsplash.com/photo-1518235506717-e1ed3306a89b?w=1920&q=80"
+    landmarks:
+      - id: daves_chinese
+        name: Dave's Chinese
+        type: investigation
+        neighborhood: West Village
+        icon: 🥡
+        lat: 40.7340
+        lon: -74.0020
+        time_cost: 2
+        clues:
+          - "Lo mein would be great on the bbq"
+          - "Heard about a new musical being written there"
+
+      - id: texas_bbq
+        name: Texas BBQ
+        type: investigation
+        neighborhood: West Village
+        icon: 🍖
+        lat: 40.7360
+        lon: -74.0030
+        time_cost: 2
+        clues:
+          - "The don't card for blue hawaiis"
+          - "Quarter chicken white meat is a great deal"
+
+      - id: cancun
+        name: Cancun
+        type: investigation
+        neighborhood: West Village
+        icon: 🌮
+        lat: 40.7330
+        lon: -74.0010
+        time_cost: 2
+        clues:
+          - "They have chris maher"
+          - "Random girl in GROUP SHOT"
+
+  - id: brooklyn_beyond
+    name: Brooklyn & Beyond
+    country: United States
+    region: north_america
+    lat: 40.6782
+    lon: -73.9442
+    icon: 🌉
+    fact: "Brooklyn has more residents than Manhattan and is known for its diverse neighborhoods."
+    background_image: "https://images.unsplash.com/photo-1518235506717-e1ed3306a89b?w=1920&q=80"
+    landmarks:
+      - id: jers_house
+        name: Jer's House
+        type: investigation
+        neighborhood: Brooklyn
+        icon: 🏠
+        lat: 40.6782
+        lon: -73.9442
+        time_cost: 2
+        clues:
+          - "Some nutritgrain bars wer spotted int eh trash"
+          - "I heard someone shriek \"you ungrateful basteard\""
+          - "People were talking about a bagel place that smearaed cream cheese with raats"
+
+      - id: mitchs_apartment
+        name: Mitch's Apartment
+        type: investigation
+        neighborhood: Brooklyn
+        icon: 🏠
+        lat: 40.6900
+        lon: -73.9500
+        time_cost: 2
+        clues:
+          - "Only use special detergents"
+          - "Check out all the owl statues"
+
+      - id: atlantic_city
+        name: Atlantic City
+        type: investigation
+        neighborhood: New Jersey
+        icon: 🎰
+        lat: 39.3773
+        lon: -74.4510
+        time_cost: 3
+        clues:
+          - "Mention gmail city"
