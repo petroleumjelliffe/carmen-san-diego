@@ -146,8 +146,8 @@ export function useGameState(gameData) {
     }
   }, []);
 
-  // Auto-save game state when important values change
-  useEffect(() => {
+  // Helper to save current game state
+  const saveCurrentState = useCallback(() => {
     const gameStateSnapshot = {
       karma,
       notoriety,
@@ -170,11 +170,13 @@ export function useGameState(gameData) {
       wrongCityData
     };
 
-    saveState(gameStateSnapshot);
+    saveState(gameStateSnapshot, true); // immediate save
   }, [
     karma,
     notoriety,
     solvedCases,
+    savedNPCs,
+    permanentInjuries,
     currentCase,
     currentCityIndex,
     timeRemaining,
@@ -182,7 +184,13 @@ export function useGameState(gameData) {
     collectedClues,
     investigatedLocations,
     selectedWarrant,
-    usedGadgets
+    usedGadgets,
+    hadGoodDeedInCase,
+    hadEncounterInCity,
+    rogueUsedInCity,
+    selectedTraits,
+    wrongCity,
+    wrongCityData
   ]);
 
   // Start a new case (show briefing)
@@ -438,6 +446,9 @@ export function useGameState(gameData) {
           }],
         }));
       }
+
+      // Save game state after collecting clues
+      saveCurrentState();
     }
 
     // ENCOUNTER TRIGGER: Use pre-generated encounter from cityData
@@ -488,7 +499,7 @@ export function useGameState(gameData) {
         return;
       }
     }
-  }, [wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant, currentCity, currentHour, currentCityIndex, hadGoodDeedInCase, currentCase]);
+  }, [wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant, currentCity, currentHour, currentCityIndex, hadGoodDeedInCase, currentCase, saveCurrentState]);
 
   // Rogue investigate - returns action config or null if invalid
   // Fast but increases notoriety, gets BOTH clues
@@ -711,8 +722,11 @@ export function useGameState(gameData) {
       setActiveTab('home');
     }
 
+    // Save game state after arriving at city
+    saveCurrentState();
+
     // Time was already ticked by the action queue, no need to advance here
-  }, [travelDestination]);
+  }, [travelDestination, saveCurrentState]);
 
   // Issue a warrant - just confirms the suspect selection (can be done anytime)
   // The actual apprehension happens on second investigation at final city
@@ -867,6 +881,8 @@ export function useGameState(gameData) {
     notoriety,
     savedNPCs,
     permanentInjuries,
+    showVersionWarning,
+    dismissVersionWarning: () => setShowVersionWarning(false),
     currentGoodDeed,
     showRogueActionModal,
     currentRogueAction,

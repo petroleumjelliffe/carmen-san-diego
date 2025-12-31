@@ -13,6 +13,7 @@ import { TravelAnimation } from './TravelAnimation';
 import { Briefing } from './Briefing';
 import { Trial } from './Trial';
 import { Debrief } from './Debrief';
+import { VersionWarning } from './VersionWarning';
 import { Loader } from 'lucide-react';
 
 export function Game({ gameData }) {
@@ -45,6 +46,8 @@ export function Game({ gameData }) {
     notoriety,
     savedNPCs,
     permanentInjuries,
+    showVersionWarning,
+    dismissVersionWarning,
     currentGoodDeed,
     lastRogueAction,
     activeRogueAction,
@@ -378,6 +381,11 @@ export function Game({ gameData }) {
         setActiveTab={setActiveTab}
         variant="mobile"
       />
+
+      {/* Version warning overlay */}
+      {showVersionWarning && (
+        <VersionWarning onDismiss={dismissVersionWarning} />
+      )}
     </div>
   );
 }
