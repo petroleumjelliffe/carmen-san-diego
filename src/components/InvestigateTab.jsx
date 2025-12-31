@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Zap, AlertTriangle, Loader } from 'lucide-react';
-import { EncounterCard } from './EncounterCard';
+import { EncounterDisplay } from './EncounterDisplay';
+import { MessageDisplay } from './MessageDisplay';
 import { FadeIn } from './FadeIn';
 import { CityMapView } from './CityMapView';
 import { OptionCard } from './OptionCard';
 import { OptionTray } from './OptionTray';
-import { ClueDisplay } from './ClueDisplay';
+import { pickRandom } from '../utils/helpers';
 
 export function InvestigateTab({
   isFinalCity,
@@ -17,6 +18,8 @@ export function InvestigateTab({
   collectedClues,
   lastFoundClue,
   lastRogueAction,
+  activeRogueAction,
+  onResolveRogueAction,
   rogueUsedInCity,
   currentGoodDeed,
   karma,
@@ -39,6 +42,7 @@ export function InvestigateTab({
   currentCity,
   hotel,
   rogueLocation,
+  witnessPhrases,
 }) {
   const [hoveredSpotId, setHoveredSpotId] = useState(null);
   const [investigatingSpotIndex, setInvestigatingSpotIndex] = useState(null);
@@ -111,8 +115,8 @@ export function InvestigateTab({
     return 10;
   };
 
-  // Only block map for major overlays (not investigation results)
-  const hasBlockingOverlay = isApprehended || activeEncounter;
+  // No blocking overlays - all messages in banner area
+  const hasBlockingOverlay = false;
 
   // Determine if animation is in progress
   const isAnimating = actionPhase === 'ticking' || actionPhase === 'pending';
@@ -124,14 +128,25 @@ export function InvestigateTab({
     const cityClue = lastFoundClue?.city || '';
     const suspectClue = lastFoundClue?.suspect || '';
 
+    let concatenated = '';
     if (cityClue && suspectClue) {
       // Both clues - concatenate with period separator
       const cityEnding = /[.!?]$/.test(cityClue) ? '' : '.';
-      return `${cityClue}${cityEnding} ${suspectClue}`;
+      concatenated = `${cityClue}${cityEnding} ${suspectClue}`;
+    } else {
+      // Only one clue
+      concatenated = cityClue || suspectClue || '';
     }
-    // Only one clue
-    return cityClue || suspectClue || '';
-  }, [lastRogueAction, lastFoundClue]);
+
+    // Add fear phrase to concatenated result
+    if (concatenated && witnessPhrases && witnessPhrases.length > 0) {
+      const phrase = pickRandom(witnessPhrases);
+      const needsPeriod = !/[.!?]$/.test(concatenated);
+      return `${concatenated}${needsPeriod ? '.' : ''} ${phrase}`;
+    }
+
+    return concatenated;
+  }, [lastRogueAction, lastFoundClue, witnessPhrases]);
 
   // Memoize rogue action descriptive text (description + success text)
   const rogueDescriptiveText = useMemo(() => {
@@ -158,8 +173,7 @@ export function InvestigateTab({
   return (
     <div className="relative h-[600px]">
       {/* City Map Background */}
-      {!hasBlockingOverlay && (
-        <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0">
           <CityMapView
             currentCity={currentCity}
             spots={cityClues}
@@ -168,89 +182,108 @@ export function InvestigateTab({
             hoveredSpotId={hoveredSpotId}
             onSpotHover={setHoveredSpotId}
             investigatingSpotIndex={investigatingSpotIndex}
-            isAnimating={isAnimating}
             hotel={hotel}
             rogueLocation={rogueLocation}
             lastInvestigatedSpotId={lastInvestigatedSpotId}
             onRogueClick={availableRogueAction && onRogueAction ? handleRogueClick : null}
             rogueUsed={rogueUsedInCity}
             isInvestigatingRogue={isInvestigatingRogue}
+            isAnimating={isAnimating}
           />
-        </div>
-      )}
+      </div>
 
-      {/* Blocking Overlays - only for encounters and apprehension */}
-      {hasBlockingOverlay && (
-        <div className="absolute inset-0 bg-gray-900/95 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="max-w-2xl w-full space-y-3">
-            {/* Apprehended - Shows inline with Continue button */}
-            <FadeIn show={isApprehended}>
-              <div className="bg-green-900/50 border-2 border-green-400 p-6 rounded-lg text-center">
-                <div className="text-5xl mb-3">🚔</div>
-                <h3 className="text-2xl font-bold text-green-400 mb-2">SUSPECT APPREHENDED!</h3>
-                <p className="text-yellow-100 text-lg mb-2">
-                  {selectedWarrant?.name} is now in custody.
-                </p>
-                <p className="text-yellow-200/70 mb-4">
-                  Time to face the court and see if you got the right person...
-                </p>
-                <button
-                  onClick={onProceedToTrial}
-                  className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 px-6 rounded-lg text-lg transition-all"
-                >
-                  Continue to Trial
-                </button>
-              </div>
-            </FadeIn>
+      {/* Message Banner - above map (encounters and clues) */}
+      <div className="absolute top-4 left-4 right-4 z-20 space-y-2">
+        {/* Apprehension Message */}
+          {isApprehended && (
+            <MessageDisplay
+              type="witness"
+              headerTitle="SUSPECT APPREHENDED!"
+              headerIcon={<span className="text-2xl">🚔</span>}
+              personEmoji="🚔"
+              quote={`${selectedWarrant?.name} is now in custody. Time to face the court and see if you got the right person...`}
+              showQuotes={false}
+              onContinue={onProceedToTrial}
+            />
+          )}
 
-            {/* Unified Encounter Card - handles henchman, assassination, and good deed */}
-            <FadeIn show={!!(activeEncounter && encounterType)}>
-              <EncounterCard
-                type={encounterType}
-                encounter={activeEncounter}
-                timerDuration={getTimerDuration()}
-                availableGadgets={availableGadgets}
-                karma={karma}
-                timeRemaining={timeRemaining}
-                onResolve={onEncounterResolve}
-              />
-            </FadeIn>
-          </div>
-        </div>
-      )}
+          {/* Active Encounter - handles henchman, assassination, and good deed */}
+          {!isAnimating && !isApprehended && activeEncounter && encounterType && (
+            <EncounterDisplay
+              type={encounterType}
+              encounter={activeEncounter}
+              timerDuration={getTimerDuration()}
+              availableGadgets={availableGadgets}
+              karma={karma}
+              timeRemaining={timeRemaining}
+              onResolve={onEncounterResolve}
+            />
+          )}
 
-      {/* Investigation Results Banner - above map */}
-      {!hasBlockingOverlay && !isAnimating && (lastFoundClue?.city || lastFoundClue?.suspect || lastRogueAction) && (
-        <div className="absolute top-4 left-4 right-4 z-20 space-y-2">
-          {/* Rogue Action Result with Clue */}
-          {lastRogueAction && (
+          {/* Active Rogue Action - shown before clue reveal */}
+          {!isAnimating && !isApprehended && !activeEncounter && activeRogueAction && (
             <div className="space-y-2">
-              <ClueDisplay
-                text={rogueClueText}
-                descriptiveText={rogueDescriptiveText}
-                type="rogue"
-              />
-              <div className="bg-red-900/50 border-l-4 border-red-500 p-3 rounded-lg">
-                <p className="text-red-400 text-sm">
-                  <AlertTriangle size={14} className="inline mr-1" />
-                  Word spreads about your methods.
+              {/* Header */}
+              <div className="bg-gray-900/95 backdrop-blur-sm rounded-lg p-4 border-l-4 border-yellow-500">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">⚡</span>
+                  <h3 className="text-lg font-bold text-purple-400">UNORTHODOX METHODS</h3>
+                </div>
+              </div>
+
+              {/* Rogue action description */}
+              <div className="bg-gray-900/95 backdrop-blur-sm rounded-lg p-4 border-l-4 border-yellow-500">
+                <p className="text-yellow-100 text-lg leading-relaxed">
+                  {activeRogueAction.action.description} {activeRogueAction.action.success_text}
                 </p>
+              </div>
+
+              {/* Continue button */}
+              <div className="px-2">
+                <button
+                  onClick={onResolveRogueAction}
+                  className="w-full font-bold py-3 rounded transition-colors bg-gray-700 hover:bg-gray-600 text-white"
+                >
+                  CONTINUE
+                </button>
               </div>
             </div>
           )}
 
-          {/* Investigation Result - any clue type (only show if no rogue action) */}
-          {(lastFoundClue?.city || lastFoundClue?.suspect) && !lastRogueAction && (
-            <ClueDisplay
-              text={regularClueText}
-              type="investigation"
-            />
+          {/* Investigation Results - only show if no encounter or active rogue action */}
+          {!isAnimating && !isApprehended && !activeEncounter && !activeRogueAction && (lastFoundClue?.city || lastFoundClue?.suspect || lastRogueAction) && (
+            <>
+              {/* Rogue Action Clue (after rogue action resolved) */}
+              {lastRogueAction && (
+                <div className="space-y-2">
+                  <MessageDisplay
+                    type="witness"
+                    quote={rogueClueText}
+                    showQuotes={false}
+                  />
+                  {/* Notoriety warning */}
+                  <div className="bg-red-900/50 border-l-4 border-red-500 p-3 rounded-lg">
+                    <p className="text-red-400 text-sm flex items-center gap-2">
+                      <AlertTriangle size={14} />
+                      Word spreads about your methods.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Investigation Result - any clue type (only show if no rogue action) */}
+              {(lastFoundClue?.city || lastFoundClue?.suspect) && !lastRogueAction && (
+                <MessageDisplay
+                  type="witness"
+                  quote={regularClueText}
+                />
+              )}
+            </>
           )}
-        </div>
-      )}
+      </div>
 
       {/* Wrong City Message - banner at top */}
-      {wrongCity && !hasBlockingOverlay && (
+      {wrongCity && (
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-800/95 backdrop-blur-sm px-6 py-3 rounded-lg text-center shadow-lg z-20">
           <p className="text-yellow-200">
             The trail seems cold here... but you can still ask around.
@@ -259,8 +292,7 @@ export function InvestigateTab({
       )}
 
       {/* Option Tray - Always horizontal at bottom */}
-      {!hasBlockingOverlay && (
-        <div className="absolute bottom-0 left-0 right-0 h-48 p-4 bg-gray-900/90 backdrop-blur-sm z-30">
+      <div className="absolute bottom-0 left-0 right-0 h-48 p-4 bg-gray-900/90 backdrop-blur-sm z-30">
           <OptionTray orientation="horizontal">
             {/* Investigation Spots */}
             {cityClues.map((clue, i) => {
@@ -301,8 +333,7 @@ export function InvestigateTab({
               </div>
             )}
           </OptionTray>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

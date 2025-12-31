@@ -114,7 +114,7 @@ function FitBoundsOnSelect({ playerPos, destination }) {
       ]);
 
       map.fitBounds(bounds, {
-        padding: [80, 80],
+        padding: [80, 80, 220, 80], // top, right, bottom (tray height + margin), left
         maxZoom: 16,
         animate: true,
         duration: 0.5
@@ -191,9 +191,11 @@ export function CityMapView({
   onRogueClick = null,
   rogueUsed = false,
   isInvestigatingRogue = false,
+  isAnimating = false,
 }) {
   const mapRef = useRef(null);
   const [animationProgress, setAnimationProgress] = useState(0);
+  const [lastAnimationEnd, setLastAnimationEnd] = useState(null);
 
   // Calculate center and bounds for initial map view
   const getInitialBounds = () => {
@@ -227,6 +229,17 @@ export function CityMapView({
   useEffect(() => {
     if (investigatingSpotIndex !== null || isInvestigatingRogue) {
       setAnimationProgress(0);
+
+      // Store the destination for this animation
+      if (isInvestigatingRogue && rogueLocation?.lat && rogueLocation?.lon) {
+        setLastAnimationEnd({ lat: rogueLocation.lat, lon: rogueLocation.lon });
+      } else if (investigatingSpotIndex !== null) {
+        const spot = spots[investigatingSpotIndex]?.spot;
+        if (spot?.lat && spot?.lon) {
+          setLastAnimationEnd({ lat: spot.lat, lon: spot.lon });
+        }
+      }
+
       const startTime = Date.now();
       const duration = 1500; // 1.5 second animation
 
@@ -244,7 +257,7 @@ export function CityMapView({
     } else {
       setAnimationProgress(0);
     }
-  }, [investigatingSpotIndex, isInvestigatingRogue]);
+  }, [investigatingSpotIndex, isInvestigatingRogue, spots, rogueLocation]);
 
   // Get selected destination for fit bounds (when clicking a spot)
   const selectedSpot = investigatingSpotIndex !== null
@@ -272,7 +285,8 @@ export function CityMapView({
         return { lat: spot.lat, lon: spot.lon };
       }
     }
-    return null;
+    // Use last animation end position when showing completed animation during ticking
+    return lastAnimationEnd;
   };
 
   const animationStartPos = getAnimationStartPos();
@@ -291,7 +305,7 @@ export function CityMapView({
         dragging={true}
         minZoom={12}
         maxZoom={18}
-        boundsOptions={{ padding: [80, 80] }}
+        boundsOptions={{ padding: [80, 80, 220, 80] }} // Account for bottom tray
       >
         {/* OpenStreetMap tiles */}
         <TileLayer
@@ -374,13 +388,13 @@ export function CityMapView({
         />
 
         {/* PathAnimation overlay for investigation animation */}
-        {(investigatingSpotIndex !== null || isInvestigatingRogue) &&
+        {(investigatingSpotIndex !== null || isInvestigatingRogue || isAnimating) &&
           animationStartPos &&
           animationEndPos && (
             <PathAnimationOverlay
               startPos={animationStartPos}
               endPos={animationEndPos}
-              progress={animationProgress}
+              progress={investigatingSpotIndex !== null || isInvestigatingRogue ? animationProgress : 1.0}
               pathType="orthogonal"
               icon="🚗"
               color={isInvestigatingRogue ? '#f97316' : '#fbbf24'}
