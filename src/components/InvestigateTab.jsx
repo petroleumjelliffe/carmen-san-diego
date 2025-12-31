@@ -267,6 +267,7 @@ export function InvestigateTab({
                 <MessageDisplay
                   type="witness"
                   quote={rogueClueText}
+                  hideEmojiAndQuotes={true}
                 />
               )}
 

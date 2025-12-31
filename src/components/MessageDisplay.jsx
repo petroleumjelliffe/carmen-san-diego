@@ -83,6 +83,7 @@ export function MessageDisplay({
 
   // Behavioral flags
   autoStream = true,
+  hideEmojiAndQuotes = false,
 }) {
   // Phase is determined by result presence for encounters
   // Witnesses are always in 'complete' phase
@@ -94,10 +95,11 @@ export function MessageDisplay({
   const intervalRef = useRef(null);
   const currentIndexRef = useRef(0);
 
-  // Generate person emoji if not provided
+  // Generate person emoji if not provided (unless hideEmojiAndQuotes is true)
   const finalPersonEmoji = useMemo(() => {
+    if (hideEmojiAndQuotes) return '';
     return personEmoji || (quote ? getProfessionEmojiForText(quote) : '');
-  }, [personEmoji, quote]);
+  }, [personEmoji, quote, hideEmojiAndQuotes]);
 
   // Handle timeout for encounters
   const handleTimeout = useCallback(() => {
@@ -205,11 +207,11 @@ export function MessageDisplay({
           </div>
         )}
         <WitnessSection
-          emoji={descriptiveText ? null : finalPersonEmoji}
+          emoji={hideEmojiAndQuotes ? null : (descriptiveText ? null : finalPersonEmoji)}
           displayedText={displayedText}
           isComplete={isStreamComplete}
           borderColor="border-yellow-500"
-          showQuotes={!descriptiveText}
+          showQuotes={hideEmojiAndQuotes ? false : !descriptiveText}
         />
 
         {/* Optional continue button for special events */}
@@ -230,7 +232,7 @@ export function MessageDisplay({
   // Render encounter/event in active phase
   if (phase === 'active') {
     return (
-      <div className={`space-y-2 ${urgencyLevel === 'critical' ? 'animate-pulse' : ''}`}>
+      <div className="space-y-2">
         {/* Header Section */}
         {headerConfig && (
           <div className="bg-gray-900/95 backdrop-blur-sm rounded-lg p-4 border-l-4 border-yellow-500">
@@ -238,16 +240,6 @@ export function MessageDisplay({
               icon={headerConfig.icon}
               title={headerConfig.title}
               titleColor={headerConfig.titleColor}
-            />
-          </div>
-        )}
-
-        {/* Timer Section */}
-        {timerDuration && (
-          <div className="px-2">
-            <TimerSection
-              timerPercent={timerPercent}
-              urgencyLevel={urgencyLevel}
             />
           </div>
         )}
@@ -272,7 +264,7 @@ export function MessageDisplay({
         {/* NOOOO animation for assassination */}
         {type === 'encounter_assassination' && timeLeft < 3 && (
           <div className="text-center">
-            <p className="text-red-300 text-2xl font-bold animate-pulse">
+            <p className="text-red-300 text-2xl font-bold">
               {timeLeft < 1 ? 'NOOOOOO!' : 'N...'}
             </p>
           </div>
@@ -287,7 +279,7 @@ export function MessageDisplay({
           showQuotes={type !== 'encounter_henchman' && type !== 'encounter_assassination'}
         />
 
-        {/* Choice Section */}
+        {/* Choice Section with integrated timer */}
         {choices.length > 0 && (
           <div className="px-2">
             <ChoiceSection
@@ -295,6 +287,9 @@ export function MessageDisplay({
               onChoice={handleChoiceClick}
               hasTimedOut={hasTimedOut}
               type={type}
+              timerPercent={timerPercent}
+              urgencyLevel={urgencyLevel}
+              showTimer={!!timerDuration}
             />
           </div>
         )}
@@ -407,27 +402,42 @@ function WitnessSection({ emoji, displayedText, isComplete, borderColor, showQuo
 }
 
 // Choice Section Component
-function ChoiceSection({ choices, onChoice, hasTimedOut, type }) {
-  // Good deed has single help button
+function ChoiceSection({ choices, onChoice, hasTimedOut, type, timerPercent = 100, urgencyLevel = 'normal', showTimer = false }) {
+  const timerColors = {
+    critical: 'bg-red-500',
+    warning: 'bg-orange-500',
+    normal: 'bg-green-500',
+  };
+
+  // Good deed has single help button with timer
   if (type === 'encounter_good_deed') {
     const choice = choices[0];
     return (
-      <button
-        onClick={() => onChoice(choice.id)}
-        disabled={choice.disabled || hasTimedOut}
-        className={`w-full text-white font-bold py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-2 ${
-          choice.disabled || hasTimedOut
-            ? 'bg-gray-700 cursor-not-allowed'
-            : 'bg-green-700 hover:bg-green-600'
-        }`}
-      >
-        <Heart size={20} />
-        <span>{choice.label}</span>
-      </button>
+      <div className="relative">
+        <button
+          onClick={() => onChoice(choice.id)}
+          disabled={choice.disabled || hasTimedOut}
+          className={`w-full text-white font-bold py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-2 relative overflow-hidden ${
+            choice.disabled || hasTimedOut
+              ? 'bg-gray-700 cursor-not-allowed'
+              : 'bg-green-700 hover:bg-green-600'
+          }`}
+        >
+          {/* Timer bar background */}
+          {showTimer && !hasTimedOut && (
+            <div
+              className={`absolute inset-0 transition-all duration-100 ${timerColors[urgencyLevel]} opacity-20`}
+              style={{ width: `${timerPercent}%` }}
+            />
+          )}
+          <Heart size={20} className="relative z-10" />
+          <span className="relative z-10">{choice.label}</span>
+        </button>
+      </div>
     );
   }
 
-  // Gadget encounters have grid of choices
+  // Gadget encounters have grid of choices with timer on each
   return (
     <div className="grid grid-cols-3 gap-2">
       {choices.map((choice) => (
@@ -435,7 +445,7 @@ function ChoiceSection({ choices, onChoice, hasTimedOut, type }) {
           key={choice.id}
           onClick={() => onChoice(choice.id)}
           disabled={choice.disabled || hasTimedOut}
-          className={`p-3 rounded-lg flex flex-col items-center gap-1 transition-all ${
+          className={`p-3 rounded-lg flex flex-col items-center gap-1 transition-all relative overflow-hidden ${
             choice.disabled
               ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
               : hasTimedOut
@@ -443,9 +453,16 @@ function ChoiceSection({ choices, onChoice, hasTimedOut, type }) {
               : 'bg-blue-700 hover:bg-blue-600 text-white cursor-pointer'
           }`}
         >
-          {choice.icon && <span className="text-2xl">{choice.icon}</span>}
-          <span className="text-xs font-bold">{choice.label}</span>
-          {choice.disabled && <span className="text-xs">Used</span>}
+          {/* Timer bar background */}
+          {showTimer && !hasTimedOut && !choice.disabled && (
+            <div
+              className={`absolute inset-0 transition-all duration-100 ${timerColors[urgencyLevel]} opacity-20`}
+              style={{ width: `${timerPercent}%` }}
+            />
+          )}
+          {choice.icon && <span className="text-2xl relative z-10">{choice.icon}</span>}
+          <span className="text-xs font-bold relative z-10">{choice.label}</span>
+          {choice.disabled && <span className="text-xs relative z-10">Used</span>}
         </button>
       ))}
     </div>
