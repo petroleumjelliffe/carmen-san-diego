@@ -197,25 +197,17 @@ export function InvestigateTab({
       {/* Blocking Overlay - only for apprehension */}
       {hasBlockingOverlay && (
         <div className="absolute inset-0 bg-gray-900/95 backdrop-blur-sm flex items-center justify-center p-4 z-40">
-          <div className="max-w-2xl w-full space-y-3">
-            {/* Apprehended - Shows inline with Continue button */}
+          <div className="max-w-2xl w-full">
+            {/* Apprehended - Using MessageDisplay format */}
             <FadeIn show={isApprehended}>
-              <div className="bg-green-900/50 border-2 border-green-400 p-6 rounded-lg text-center">
-                <div className="text-5xl mb-3">🚔</div>
-                <h3 className="text-2xl font-bold text-green-400 mb-2">SUSPECT APPREHENDED!</h3>
-                <p className="text-yellow-100 text-lg mb-2">
-                  {selectedWarrant?.name} is now in custody.
-                </p>
-                <p className="text-yellow-200/70 mb-4">
-                  Time to face the court and see if you got the right person...
-                </p>
-                <button
-                  onClick={onProceedToTrial}
-                  className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 px-6 rounded-lg text-lg transition-all"
-                >
-                  Continue to Trial
-                </button>
-              </div>
+              <MessageDisplay
+                type="witness"
+                headerTitle="SUSPECT APPREHENDED!"
+                headerIcon={<span className="text-2xl">🚔</span>}
+                personEmoji="🚔"
+                quote={`${selectedWarrant?.name} is now in custody. Time to face the court and see if you got the right person...`}
+                onContinue={onProceedToTrial}
+              />
             </FadeIn>
           </div>
         </div>

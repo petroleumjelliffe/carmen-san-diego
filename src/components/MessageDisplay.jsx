@@ -181,10 +181,21 @@ export function MessageDisplay({
   // Get header styling
   const headerConfig = getHeaderConfig(type, headerTitle, headerIcon);
 
-  // Render simple witness clue (no header)
+  // Render simple witness clue (optionally with header for special events)
   if (type === 'witness') {
     return (
       <div className="space-y-2">
+        {/* Optional header for special events like apprehension */}
+        {headerConfig && (
+          <div className="bg-gray-900/95 backdrop-blur-sm rounded-lg p-4 border-l-4 border-yellow-500">
+            <HeaderSection
+              icon={headerConfig.icon}
+              title={headerConfig.title}
+              titleColor={headerConfig.titleColor}
+            />
+          </div>
+        )}
+
         {/* Optional descriptive text above - shown as separate card */}
         {descriptiveText && (
           <div className="bg-gray-900/95 backdrop-blur-sm rounded-lg p-4 border-l-4 border-yellow-500">
@@ -200,6 +211,18 @@ export function MessageDisplay({
           borderColor="border-yellow-500"
           showQuotes={!descriptiveText}
         />
+
+        {/* Optional continue button for special events */}
+        {onContinue && (
+          <div className="px-2">
+            <button
+              onClick={onContinue}
+              className="w-full font-bold py-3 rounded transition-colors bg-gray-700 hover:bg-gray-600 text-white"
+            >
+              CONTINUE
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -257,10 +280,11 @@ export function MessageDisplay({
 
         {/* Witness Section */}
         <WitnessSection
-          emoji={finalPersonEmoji}
+          emoji={type === 'encounter_henchman' || type === 'encounter_assassination' ? null : finalPersonEmoji}
           displayedText={displayedText}
           isComplete={isStreamComplete}
           borderColor="border-yellow-500"
+          showQuotes={type !== 'encounter_henchman' && type !== 'encounter_assassination'}
         />
 
         {/* Choice Section */}
@@ -430,7 +454,8 @@ function ChoiceSection({ choices, onChoice, hasTimedOut, type }) {
 
 // Helper to get header configuration by type
 function getHeaderConfig(type, customTitle, customIcon) {
-  if (type === 'witness') return null;
+  // Allow witness type to have custom header (for apprehension, etc.)
+  if (type === 'witness' && !customTitle) return null;
 
   if (type === 'encounter_assassination') {
     return {
