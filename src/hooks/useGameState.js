@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { generateCase } from '../utils/caseGenerator';
 import { generateCluesForCity, getDestinations } from '../utils/clueGenerator';
 import { pickRandom } from '../utils/helpers';
+import { loadSaveState, saveState } from '../utils/saveManager';
 
 /**
  * Custom hook for managing all game state
@@ -55,6 +56,9 @@ export function useGameState(gameData) {
     hobby: null,    // null | 'intellectual' | 'physical'
   });
 
+  // Version warning for save migration
+  const [showVersionWarning, setShowVersionWarning] = useState(false);
+
   // Investigation animation state
   const [isInvestigating, setIsInvestigating] = useState(false);
   const [pendingInvestigation, setPendingInvestigation] = useState(null); // { locationIndex, spot, clue }
@@ -104,38 +108,82 @@ export function useGameState(gameData) {
     }
   }, [currentCase, currentCity, currentCityIndex, wrongCity, gameState, gameData]);
 
-  // Load persistent state from LocalStorage on mount
+  // Load save state on mount (profile + optionally active case)
   useEffect(() => {
-    try {
-      const savedProfile = localStorage.getItem('carmen-profile');
-      if (savedProfile) {
-        const profile = JSON.parse(savedProfile);
-        setKarma(profile.karma || 0);
-        setNotoriety(profile.notoriety || 0);
-        setSavedNPCs(profile.savedNPCs || []);
-        setPermanentInjuries(profile.injuries || []);
-        setSolvedCases(profile.solvedCases || 0);
-      }
-    } catch (e) {
-      console.error('Failed to load profile:', e);
+    const { profile, activeCase, versionMismatch } = loadSaveState();
+
+    // Load profile data
+    if (profile) {
+      setKarma(profile.karma || 0);
+      setNotoriety(profile.notoriety || 0);
+      setSolvedCases(profile.solvedCases || 0);
+      setSavedNPCs(profile.savedNPCs || []);
+      setPermanentInjuries(profile.injuries || []);
+    }
+
+    // Load active case if available and version matches
+    if (activeCase && !versionMismatch) {
+      setCurrentCase(activeCase.case);
+      setCurrentCityIndex(activeCase.currentCityIndex);
+      setTimeRemaining(activeCase.timeRemaining);
+      setCurrentHour(activeCase.currentHour);
+      setCollectedClues(activeCase.collectedClues);
+      setInvestigatedLocations(activeCase.investigatedLocations);
+      setSelectedWarrant(activeCase.selectedWarrant);
+      setUsedGadgets(activeCase.usedGadgets);
+      setHadGoodDeedInCase(activeCase.hadGoodDeedInCase);
+      setHadEncounterInCity(activeCase.hadEncounterInCity);
+      setRogueUsedInCity(activeCase.rogueUsedInCity);
+      setSelectedTraits(activeCase.selectedTraits);
+      setWrongCity(activeCase.wrongCity);
+      setWrongCityData(activeCase.wrongCityData);
+      setGameState('playing');
+    }
+
+    // Show version warning if save was incompatible
+    if (versionMismatch) {
+      setShowVersionWarning(true);
     }
   }, []);
 
-  // Save persistent state to LocalStorage when it changes
+  // Auto-save game state when important values change
   useEffect(() => {
-    try {
-      const profile = {
-        karma,
-        notoriety,
-        savedNPCs,
-        injuries: permanentInjuries,
-        solvedCases,
-      };
-      localStorage.setItem('carmen-profile', JSON.stringify(profile));
-    } catch (e) {
-      console.error('Failed to save profile:', e);
-    }
-  }, [karma, notoriety, savedNPCs, permanentInjuries, solvedCases]);
+    const gameStateSnapshot = {
+      karma,
+      notoriety,
+      solvedCases,
+      savedNPCs,
+      permanentInjuries,
+      currentCase,
+      currentCityIndex,
+      timeRemaining,
+      currentHour,
+      collectedClues,
+      investigatedLocations,
+      selectedWarrant,
+      usedGadgets,
+      hadGoodDeedInCase,
+      hadEncounterInCity,
+      rogueUsedInCity,
+      selectedTraits,
+      wrongCity,
+      wrongCityData
+    };
+
+    saveState(gameStateSnapshot);
+  }, [
+    karma,
+    notoriety,
+    solvedCases,
+    currentCase,
+    currentCityIndex,
+    timeRemaining,
+    currentHour,
+    collectedClues,
+    investigatedLocations,
+    selectedWarrant,
+    usedGadgets
+  ]);
 
   // Start a new case (show briefing)
   const startNewCase = useCallback(() => {
