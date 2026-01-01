@@ -199,6 +199,8 @@ export function Game({ gameData }) {
         startingCity={startingCity}
         settings={settings}
         onAccept={acceptBriefing}
+        backgrounds={backgrounds}
+        citiesById={citiesById}
       />
     );
   }

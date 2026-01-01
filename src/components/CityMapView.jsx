@@ -307,10 +307,10 @@ export function CityMapView({
         maxZoom={18}
         boundsOptions={{ padding: [80, 80, 220, 80] }} // Account for bottom tray
       >
-        {/* OpenStreetMap tiles */}
+        {/* CartoDB Dark Matter tiles for better label readability */}
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
         />
 
         {/* Hotel marker (player's current position) - green circle */}
