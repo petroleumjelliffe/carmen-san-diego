@@ -4,6 +4,7 @@ import yaml from '@modyfi/vite-plugin-yaml'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  base: '/carmen-san-diego/',
   plugins: [
     react(),
     yaml(),
@@ -14,6 +15,8 @@ export default defineConfig({
         name: 'Where in the World is The Shadow Syndicate?',
         short_name: 'Carmen San Diego',
         description: 'Track Carmen Sandiego and The Shadow Syndicate across the globe',
+        start_url: '/carmen-san-diego/',
+        scope: '/carmen-san-diego/',
         theme_color: '#1e293b',
         background_color: '#0f172a',
         display: 'standalone',
