@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { generateCase } from '../utils/caseGenerator';
 import { generateCluesForCity, getDestinations } from '../utils/clueGenerator';
 import { pickRandom } from '../utils/helpers';
+import { loadSaveState, saveState } from '../utils/saveManager';
 
 /**
  * Custom hook for managing all game state
@@ -55,6 +56,9 @@ export function useGameState(gameData) {
     hobby: null,    // null | 'intellectual' | 'physical'
   });
 
+  // Version warning for save migration
+  const [showVersionWarning, setShowVersionWarning] = useState(false);
+
   // Investigation animation state
   const [isInvestigating, setIsInvestigating] = useState(false);
   const [pendingInvestigation, setPendingInvestigation] = useState(null); // { locationIndex, spot, clue }
@@ -104,38 +108,90 @@ export function useGameState(gameData) {
     }
   }, [currentCase, currentCity, currentCityIndex, wrongCity, gameState, gameData]);
 
-  // Load persistent state from LocalStorage on mount
+  // Load save state on mount (profile + optionally active case)
   useEffect(() => {
-    try {
-      const savedProfile = localStorage.getItem('carmen-profile');
-      if (savedProfile) {
-        const profile = JSON.parse(savedProfile);
-        setKarma(profile.karma || 0);
-        setNotoriety(profile.notoriety || 0);
-        setSavedNPCs(profile.savedNPCs || []);
-        setPermanentInjuries(profile.injuries || []);
-        setSolvedCases(profile.solvedCases || 0);
-      }
-    } catch (e) {
-      console.error('Failed to load profile:', e);
+    const { profile, activeCase, versionMismatch } = loadSaveState();
+
+    // Load profile data
+    if (profile) {
+      setKarma(profile.karma || 0);
+      setNotoriety(profile.notoriety || 0);
+      setSolvedCases(profile.solvedCases || 0);
+      setSavedNPCs(profile.savedNPCs || []);
+      setPermanentInjuries(profile.injuries || []);
+    }
+
+    // Load active case if available and version matches
+    if (activeCase && !versionMismatch) {
+      setCurrentCase(activeCase.case);
+      setCurrentCityIndex(activeCase.currentCityIndex);
+      setTimeRemaining(activeCase.timeRemaining);
+      setCurrentHour(activeCase.currentHour);
+      setCollectedClues(activeCase.collectedClues);
+      setInvestigatedLocations(activeCase.investigatedLocations);
+      setSelectedWarrant(activeCase.selectedWarrant);
+      setUsedGadgets(activeCase.usedGadgets);
+      setHadGoodDeedInCase(activeCase.hadGoodDeedInCase);
+      setHadEncounterInCity(activeCase.hadEncounterInCity);
+      setRogueUsedInCity(activeCase.rogueUsedInCity);
+      setSelectedTraits(activeCase.selectedTraits);
+      setWrongCity(activeCase.wrongCity);
+      setWrongCityData(activeCase.wrongCityData);
+      setGameState('playing');
+    }
+
+    // Show version warning if save was incompatible
+    if (versionMismatch) {
+      setShowVersionWarning(true);
     }
   }, []);
 
-  // Save persistent state to LocalStorage when it changes
-  useEffect(() => {
-    try {
-      const profile = {
-        karma,
-        notoriety,
-        savedNPCs,
-        injuries: permanentInjuries,
-        solvedCases,
-      };
-      localStorage.setItem('carmen-profile', JSON.stringify(profile));
-    } catch (e) {
-      console.error('Failed to save profile:', e);
-    }
-  }, [karma, notoriety, savedNPCs, permanentInjuries, solvedCases]);
+  // Helper to save current game state
+  const saveCurrentState = useCallback(() => {
+    const gameStateSnapshot = {
+      karma,
+      notoriety,
+      solvedCases,
+      savedNPCs,
+      permanentInjuries,
+      currentCase,
+      currentCityIndex,
+      timeRemaining,
+      currentHour,
+      collectedClues,
+      investigatedLocations,
+      selectedWarrant,
+      usedGadgets,
+      hadGoodDeedInCase,
+      hadEncounterInCity,
+      rogueUsedInCity,
+      selectedTraits,
+      wrongCity,
+      wrongCityData
+    };
+
+    saveState(gameStateSnapshot, true); // immediate save
+  }, [
+    karma,
+    notoriety,
+    solvedCases,
+    savedNPCs,
+    permanentInjuries,
+    currentCase,
+    currentCityIndex,
+    timeRemaining,
+    currentHour,
+    collectedClues,
+    investigatedLocations,
+    selectedWarrant,
+    usedGadgets,
+    hadGoodDeedInCase,
+    hadEncounterInCity,
+    rogueUsedInCity,
+    selectedTraits,
+    wrongCity,
+    wrongCityData
+  ]);
 
   // Start a new case (show briefing)
   const startNewCase = useCallback(() => {
@@ -176,7 +232,10 @@ export function useGameState(gameData) {
   const acceptBriefing = useCallback(() => {
     setGameState('playing');
     setActiveTab('home'); // Start at home tab to show city fact
-  }, []);
+
+    // Save game state after accepting briefing and starting case
+    saveCurrentState();
+  }, [saveCurrentState]);
 
   // Helper function to advance time and check for auto-sleep
   const advanceTime = useCallback((hours) => {
@@ -390,6 +449,9 @@ export function useGameState(gameData) {
           }],
         }));
       }
+
+      // Save game state after collecting clues
+      saveCurrentState();
     }
 
     // ENCOUNTER TRIGGER: Use pre-generated encounter from cityData
@@ -440,7 +502,7 @@ export function useGameState(gameData) {
         return;
       }
     }
-  }, [wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant, currentCity, currentHour, currentCityIndex, hadGoodDeedInCase, currentCase]);
+  }, [wrongCity, karma, goodDeeds, fakeGoodDeeds, encounters, shouldMissClue, hadEncounterInCity, isFinalCity, currentEncounter, selectedWarrant, currentCity, currentHour, currentCityIndex, hadGoodDeedInCase, currentCase, saveCurrentState]);
 
   // Rogue investigate - returns action config or null if invalid
   // Fast but increases notoriety, gets BOTH clues
@@ -663,8 +725,11 @@ export function useGameState(gameData) {
       setActiveTab('home');
     }
 
+    // Save game state after arriving at city
+    saveCurrentState();
+
     // Time was already ticked by the action queue, no need to advance here
-  }, [travelDestination]);
+  }, [travelDestination, saveCurrentState]);
 
   // Issue a warrant - just confirms the suspect selection (can be done anytime)
   // The actual apprehension happens on second investigation at final city
@@ -685,12 +750,18 @@ export function useGameState(gameData) {
       setSolvedCases(prev => prev + 1);
     }
     setGameState('debrief');
-  }, [selectedWarrant, currentCase]);
+
+    // Save game state after completing trial
+    saveCurrentState();
+  }, [selectedWarrant, currentCase, saveCurrentState]);
 
   // Proceed from apprehended screen to trial
   const proceedToTrial = useCallback(() => {
     setGameState('trial');
-  }, []);
+
+    // Save game state when arriving at courthouse
+    saveCurrentState();
+  }, [saveCurrentState]);
 
   // Cycle through trait values in dossier (null → value1 → value2 → null)
   const cycleSelectedTrait = useCallback((trait) => {
@@ -776,7 +847,10 @@ export function useGameState(gameData) {
   // Return to menu
   const returnToMenu = useCallback(() => {
     setGameState('menu');
-  }, []);
+
+    // Save game state when returning to main menu
+    saveCurrentState();
+  }, [saveCurrentState]);
 
   // Current city's hotel, rogue location, and rogue action
   const hotel = currentCase?.cityData?.[currentCityIndex]?.hotel || null;
@@ -819,6 +893,8 @@ export function useGameState(gameData) {
     notoriety,
     savedNPCs,
     permanentInjuries,
+    showVersionWarning,
+    dismissVersionWarning: () => setShowVersionWarning(false),
     currentGoodDeed,
     showRogueActionModal,
     currentRogueAction,
