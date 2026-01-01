@@ -4,7 +4,7 @@ const TABS = [
   { id: 'home', icon: Home, label: 'Home' },
   { id: 'investigate', icon: Search, label: 'Investigate' },
   { id: 'airport', icon: Plane, label: 'Airport' },
-  { id: 'dossier', icon: FileText, label: 'Dossier' },
+  { id: 'dossier', icon: FileText, label: 'Evidence' },
 ];
 
 // Mobile bottom nav button

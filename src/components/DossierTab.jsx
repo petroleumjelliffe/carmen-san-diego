@@ -1,5 +1,5 @@
 import { User, X, MapPin, Clock, FileText } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 // Pushpin decoration component
 function Pushpin() {
@@ -160,7 +160,15 @@ export function DossierTab({
   selectedTraits,
   onCycleTrait,
   onResetTraits,
+  currentCity,
 }) {
+  const [activeSubTab, setActiveSubTab] = useState('suspect');
+
+  // Filter city clues to only show those from current city
+  const currentCityClues = useMemo(() => {
+    if (!currentCity) return [];
+    return collectedClues.city.filter(clue => clue.cityName === currentCity.name);
+  }, [collectedClues.city, currentCity]);
 
   // Stable rotations for each suspect based on their id
   const rotations = useMemo(() => {
@@ -210,6 +218,35 @@ export function DossierTab({
         </h2>
       </div>
 
+      {/* Sub-tab Navigation */}
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setActiveSubTab('suspect')}
+          className={`flex-1 py-2 px-4 font-bold rounded transition-all ${
+            activeSubTab === 'suspect'
+              ? 'bg-amber-600 text-white shadow-lg'
+              : 'bg-amber-200/50 text-amber-900 hover:bg-amber-300/50'
+          }`}
+        >
+          <User size={16} className="inline mr-2" />
+          Suspect
+        </button>
+        <button
+          onClick={() => setActiveSubTab('location')}
+          className={`flex-1 py-2 px-4 font-bold rounded transition-all ${
+            activeSubTab === 'location'
+              ? 'bg-amber-600 text-white shadow-lg'
+              : 'bg-amber-200/50 text-amber-900 hover:bg-amber-300/50'
+          }`}
+        >
+          <MapPin size={16} className="inline mr-2" />
+          Location
+        </button>
+      </div>
+
+      {/* Suspect Tab Content */}
+      {activeSubTab === 'suspect' && (
+        <>
       {/* Suspect Profile - Interactive Trait Selector */}
       <div className="relative">
         <NoteCard color="yellow" rotation={-1}>
@@ -308,20 +345,28 @@ export function DossierTab({
           </div>
         </NoteCard>
       </div>
+        </>
+      )}
 
-      {/* Location Intel */}
-      {collectedClues.city.length > 0 && (
+      {/* Location Tab Content */}
+      {activeSubTab === 'location' && (
         <div className="relative">
           <NoteCard color="blue" rotation={2}>
             <div className="flex items-center gap-2 mb-2 border-b border-blue-300 pb-1">
               <MapPin size={16} className="text-blue-700" />
-              <span className="font-bold text-blue-900">Location Intel</span>
+              <span className="font-bold text-blue-900">Next Destination Intel</span>
             </div>
-            <div className="space-y-2 max-h-40 overflow-y-auto">
-              {collectedClues.city.map((clue, i) => (
-                <ClueQuote key={i} clue={clue} />
-              ))}
-            </div>
+            {currentCityClues.length > 0 ? (
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {currentCityClues.map((clue, i) => (
+                  <ClueQuote key={i} clue={clue} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 italic text-sm text-center py-4">
+                No location intel gathered in this city yet...
+              </p>
+            )}
           </NoteCard>
         </div>
       )}

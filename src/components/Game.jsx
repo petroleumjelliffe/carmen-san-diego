@@ -369,6 +369,7 @@ export function Game({ gameData }) {
                     selectedTraits={selectedTraits}
                     onCycleTrait={cycleSelectedTrait}
                     onResetTraits={resetSelectedTraits}
+                    currentCity={currentCity}
                   />
                 )}
               </> : null}
