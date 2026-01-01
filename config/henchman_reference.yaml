@@ -1,14 +1,9 @@
 # Henchman Reference Table
-# Maps each henchman encounter to its solving gadget and associated good deed
-# Edit this file to keep all henchman data consistent
+# Maps each encounter to its solving gadget, linked good deed, and rescue text
+# Edit this file to keep all encounter data consistent
 
 # ============================================================================
-# HENCHMAN ENCOUNTERS
-# ============================================================================
-# Each henchman has:
-#   - gadget: The gadget that defeats this encounter
-#   - good_deed: The good deed thematically linked to this henchman
-#   - notes: Design notes for consistency
+# HENCHMAN ENCOUNTERS (Mini Bosses)
 # ============================================================================
 
 henchmen:
@@ -17,62 +12,60 @@ henchmen:
     name: Street Tailing
     gadget: smoke_bomb
     good_deed: stop_pickpocket
+    good_deed_npc: Yuki
+    good_deed_title: Tourist
+    rescue_text: "A familiar face appears in the crowd - it's Yuki! She 'accidentally' trips the henchman, sending them sprawling into a fruit cart. 'Go! I'll handle this!' she shouts."
     theme: "Crowded urban environment, stealth"
-    notes: |
-      Henchman follows through market → Smoke bomb to escape
-      Good deed: Stop pickpocket in similar crowded setting
 
   - id: alley_ambush
     name: Alley Ambush
     gadget: smoke_bomb
     good_deed: falling_scaffolding
+    good_deed_npc: Marco
+    good_deed_title: Construction Worker
+    rescue_text: "A muscular figure drops from above - Marco! He tackles your attacker to the ground. 'Nobody ambushes my friend!' he growls, pinning them down."
     theme: "Dark alleys, sudden danger"
-    notes: |
-      Ambushed in shadows → Smoke bomb to vanish
-      Good deed: Save construction worker from similar sudden danger
 
   # --- X-RAY GLASSES ENCOUNTERS ---
   - id: booby_trap
     name: Booby Trap
     gadget: xray_glasses
     good_deed: lost_wallet
+    good_deed_npc: James
+    good_deed_title: Retired Officer
+    rescue_text: "A hand grabs your shoulder before you touch the door. It's James! 'Hold it, detective. See that wire? Amateur hour.' He deftly disarms the trap with practiced hands."
     theme: "Hidden dangers, investigation skills"
-    notes: |
-      Hotel door rigged with trap → X-ray to detect mechanism
-      Good deed: Find lost wallet, return to owner (detective work)
 
   - id: suspicious_package
     name: Suspicious Package
     gadget: xray_glasses
     good_deed: injured_animal
+    good_deed_npc: Sofia
+    good_deed_title: Veterinarian
+    rescue_text: "Sofia rushes over, medical bag in hand. 'Don't touch that! I've seen this before - it's a fake.' She examines it carefully. 'Just a clock and confetti. They're trying to slow you down.'"
     theme: "Caution, careful examination"
-    notes: |
-      Ticking package → X-ray to see contents
-      Good deed: Help injured animal (patience, care)
 
   # --- SHOE PHONE ENCOUNTERS ---
   - id: surrounded_by_goons
     name: Surrounded by Goons
     gadget: shoe_phone
     good_deed: child_traffic
+    good_deed_npc: Chen
+    good_deed_title: Grateful Father
+    rescue_text: "A car screeches around the corner - Chen at the wheel! He plows through trash cans, scattering the goons. 'Get in!' he yells, throwing open the passenger door."
     theme: "Calling for help, rescue"
-    notes: |
-      Cornered by thugs → Call for backup
-      Good deed: Rescue child from traffic (be the backup)
 
   - id: police_interrogation
     name: Police Interrogation
     gadget: shoe_phone
     good_deed: lost_traveler
+    good_deed_npc: Ahmed
+    good_deed_title: Business Traveler
+    rescue_text: "The door bursts open. Ahmed strides in with two lawyers and a city official. 'This detective is under my protection. Release them immediately, or my legal team will make your careers very... interesting.'"
     theme: "Communication, bureaucracy"
-    notes: |
-      Corrupt police detain you → Call agency for help
-      Good deed: Help lost traveler navigate (communication)
 
 # ============================================================================
-# ASSASSINATION ATTEMPTS (Final City)
-# ============================================================================
-# Higher stakes encounters with timers
+# ASSASSINATION ATTEMPTS (Big Bosses)
 # ============================================================================
 
 assassinations:
@@ -80,168 +73,166 @@ assassinations:
     name: Rooftop Sniper
     gadget: grappling_hook
     good_deed: burning_cart
+    good_deed_npc: Maria
+    good_deed_title: Street Vendor
+    rescue_text: "Maria tackles you from the side! You tumble together behind a concrete barrier as the bullet sparks off the pavement where you stood. 'Stay down!' she hisses. 'I spotted the glint from my cart.'"
     theme: "Vertical escape, quick action"
-    notes: |
-      Sniper aiming → Grappling hook to swing away
-      Good deed: Help with fire emergency (urgent action)
 
   - id: poisoned_drink
     name: Poisoned Drink
     gadget: antidote_pills
     good_deed: elderly_groceries
+    good_deed_npc: Ruth
+    good_deed_title: Grandmother
+    rescue_text: "A wrinkled hand knocks the cup from your grasp! Ruth stands there, eyes sharp. 'I saw him slip something in when you weren't looking, dear. My late husband was a chemist - I know poison when I see it.'"
     theme: "Health, care for others"
-    notes: |
-      Coffee poisoned → Antidote pills save you
-      Good deed: Help elderly person (care/compassion)
 
   - id: locked_room
     name: Locked Room
     gadget: laser_watch
-    good_deed: null
+    good_deed: locked_room_deed
+    good_deed_npc: TBD
+    good_deed_title: TBD
+    rescue_text: "TBD - Need good deed assignment"
     theme: "Escape, cutting through obstacles"
-    notes: |
-      Room filling with gas → Laser cuts lock
-      Good deed: TBD (need thematic match)
 
   - id: falling_safe
     name: Falling Safe
     gadget: grappling_hook
-    good_deed: null
+    good_deed: falling_safe_deed
+    good_deed_npc: TBD
+    good_deed_title: TBD
+    rescue_text: "TBD - Need good deed assignment"
     theme: "Vertical movement, quick escape"
-    notes: |
-      Safe falling → Grappling hook to swing clear
-      Good deed: TBD (shares gadget with rooftop_sniper)
 
   - id: ticking_bomb
     name: Ticking Bomb
     gadget: xray_glasses
-    good_deed: null
+    good_deed: ticking_bomb_deed
+    good_deed_npc: TBD
+    good_deed_title: TBD
+    rescue_text: "TBD - Need good deed assignment"
     theme: "Detection, defusal"
-    notes: |
-      Bomb under table → X-ray to find right wire
-      Good deed: TBD (shares gadget with booby_trap/suspicious_package)
 
   - id: knife_assassin
     name: Knife Assassin
     gadget: smoke_bomb
-    good_deed: null
+    good_deed: knife_assassin_deed
+    good_deed_npc: TBD
+    good_deed_title: TBD
+    rescue_text: "TBD - Need good deed assignment"
     theme: "Close combat, escape"
-    notes: |
-      Assassin lunges → Smoke bomb to vanish
-      Good deed: TBD (shares gadget with street_tailing/alley_ambush)
 
 # ============================================================================
 # GADGET SUMMARY
 # ============================================================================
 
-gadgets_summary:
+gadgets:
   smoke_bomb:
     icon: "💨"
-    defeats_henchmen: [street_tailing, alley_ambush]
-    defeats_assassinations: [knife_assassin]
-    theme: "Escape, vanishing, misdirection"
+    name: Smoke Bomb
+    defeats: [street_tailing, alley_ambush, knife_assassin]
 
   xray_glasses:
     icon: "👓"
-    defeats_henchmen: [booby_trap, suspicious_package]
-    defeats_assassinations: [ticking_bomb]
-    theme: "Detection, seeing hidden threats"
+    name: X-Ray Glasses
+    defeats: [booby_trap, suspicious_package, ticking_bomb]
 
   shoe_phone:
     icon: "📱"
-    defeats_henchmen: [surrounded_by_goons, police_interrogation]
-    defeats_assassinations: []
-    theme: "Communication, calling for help"
+    name: Shoe Phone
+    defeats: [surrounded_by_goons, police_interrogation]
 
   laser_watch:
     icon: "⚡"
-    defeats_henchmen: []
-    defeats_assassinations: [locked_room]
-    theme: "Cutting, escaping confinement"
+    name: Laser Watch
+    defeats: [locked_room]
 
   grappling_hook:
     icon: "🎯"
-    defeats_henchmen: []
-    defeats_assassinations: [rooftop_sniper, falling_safe]
-    theme: "Vertical movement, reaching/escaping heights"
+    name: Grappling Hook
+    defeats: [rooftop_sniper, falling_safe]
 
   antidote_pills:
     icon: "💊"
-    defeats_henchmen: []
-    defeats_assassinations: [poisoned_drink]
-    theme: "Health, counteracting poison"
+    name: Antidote Pills
+    defeats: [poisoned_drink]
 
 # ============================================================================
-# GOOD DEEDS SUMMARY
+# GOOD DEEDS LINKED TO ENCOUNTERS
 # ============================================================================
 
-good_deeds_summary:
-  burning_cart:
-    npc: "Maria (Street Vendor)"
-    time_cost: 3
-    linked_to: rooftop_sniper
-    theme: "Fire emergency, urgent action"
-
-  child_traffic:
-    npc: "Chen (Grateful Father)"
-    time_cost: 2
-    linked_to: surrounded_by_goons
-    theme: "Rescue, being the backup"
-
-  lost_wallet:
-    npc: "James (Retired Officer)"
-    time_cost: 4
-    linked_to: booby_trap
-    theme: "Detective work, investigation"
-
-  elderly_groceries:
-    npc: "Ruth (Grandmother)"
-    time_cost: 3
-    linked_to: poisoned_drink
-    theme: "Care, compassion, health"
-
+good_deeds:
   stop_pickpocket:
-    npc: "Yuki (Tourist)"
+    npc_name: Yuki
+    npc_title: Tourist
     time_cost: 2
-    linked_to: street_tailing
-    theme: "Crowded spaces, awareness"
-
-  lost_traveler:
-    npc: "Ahmed (Business Traveler)"
-    time_cost: 4
-    linked_to: police_interrogation
-    theme: "Communication, helping navigate"
-
-  injured_animal:
-    npc: "Sofia (Veterinarian)"
-    time_cost: 3
-    linked_to: suspicious_package
-    theme: "Patience, careful examination"
+    saves_from: street_tailing
 
   falling_scaffolding:
-    npc: "Marco (Construction Worker)"
+    npc_name: Marco
+    npc_title: Construction Worker
     time_cost: 2
-    linked_to: alley_ambush
-    theme: "Sudden danger, quick reaction"
+    saves_from: alley_ambush
+
+  lost_wallet:
+    npc_name: James
+    npc_title: Retired Officer
+    time_cost: 4
+    saves_from: booby_trap
+
+  injured_animal:
+    npc_name: Sofia
+    npc_title: Veterinarian
+    time_cost: 3
+    saves_from: suspicious_package
+
+  child_traffic:
+    npc_name: Chen
+    npc_title: Grateful Father
+    time_cost: 2
+    saves_from: surrounded_by_goons
+
+  lost_traveler:
+    npc_name: Ahmed
+    npc_title: Business Traveler
+    time_cost: 4
+    saves_from: police_interrogation
+
+  burning_cart:
+    npc_name: Maria
+    npc_title: Street Vendor
+    time_cost: 3
+    saves_from: rooftop_sniper
+
+  elderly_groceries:
+    npc_name: Ruth
+    npc_title: Grandmother
+    time_cost: 3
+    saves_from: poisoned_drink
 
 # ============================================================================
 # QUICK REFERENCE TABLE
 # ============================================================================
 #
-# | Henchman             | Gadget       | Good Deed          | NPC    |
-# |----------------------|--------------|--------------------| -------|
-# | street_tailing       | smoke_bomb   | stop_pickpocket    | Yuki   |
-# | alley_ambush         | smoke_bomb   | falling_scaffolding| Marco  |
-# | booby_trap           | xray_glasses | lost_wallet        | James  |
-# | suspicious_package   | xray_glasses | injured_animal     | Sofia  |
-# | surrounded_by_goons  | shoe_phone   | child_traffic      | Chen   |
-# | police_interrogation | shoe_phone   | lost_traveler      | Ahmed  |
-# |----------------------|--------------|--------------------| -------|
-# | rooftop_sniper       | grappling    | burning_cart       | Maria  |
-# | poisoned_drink       | antidote     | elderly_groceries  | Ruth   |
-# | locked_room          | laser_watch  | (TBD)              | -      |
-# | falling_safe         | grappling    | (TBD)              | -      |
-# | ticking_bomb         | xray_glasses | (TBD)              | -      |
-# | knife_assassin       | smoke_bomb   | (TBD)              | -      |
+# MINI BOSSES (Henchmen)
+# | Encounter            | Gadget       | Good Deed          | NPC   | Rescue Text Preview                    |
+# |----------------------|--------------|--------------------|-------|----------------------------------------|
+# | street_tailing       | smoke_bomb   | stop_pickpocket    | Yuki  | Trips henchman into fruit cart         |
+# | alley_ambush         | smoke_bomb   | falling_scaffolding| Marco | Drops from above, tackles attacker     |
+# | booby_trap           | xray_glasses | lost_wallet        | James | Spots wire, disarms trap               |
+# | suspicious_package   | xray_glasses | injured_animal     | Sofia | Identifies fake bomb                   |
+# | surrounded_by_goons  | shoe_phone   | child_traffic      | Chen  | Drives in, scatters goons              |
+# | police_interrogation | shoe_phone   | lost_traveler      | Ahmed | Arrives with lawyers, frees you        |
+#
+# BIG BOSSES (Assassinations)
+# | Encounter            | Gadget       | Good Deed          | NPC   | Rescue Text Preview                    |
+# |----------------------|--------------|--------------------|-------|----------------------------------------|
+# | rooftop_sniper       | grappling    | burning_cart       | Maria | Tackles you behind cover               |
+# | poisoned_drink       | antidote     | elderly_groceries  | Ruth  | Knocks cup away, spotted the poison    |
+# | locked_room          | laser_watch  | TBD                | TBD   | TBD                                    |
+# | falling_safe         | grappling    | TBD                | TBD   | TBD                                    |
+# | ticking_bomb         | xray_glasses | TBD                | TBD   | TBD                                    |
+# | knife_assassin       | smoke_bomb   | TBD                | TBD   | TBD                                    |
 #
 # ============================================================================
