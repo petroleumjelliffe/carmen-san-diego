@@ -199,6 +199,8 @@ export function Game({ gameData }) {
         startingCity={startingCity}
         settings={settings}
         onAccept={acceptBriefing}
+        backgrounds={backgrounds}
+        citiesById={citiesById}
       />
     );
   }
@@ -367,6 +369,7 @@ export function Game({ gameData }) {
                     selectedTraits={selectedTraits}
                     onCycleTrait={cycleSelectedTrait}
                     onResetTraits={resetSelectedTraits}
+                    currentCity={currentCity}
                   />
                 )}
               </> : null}

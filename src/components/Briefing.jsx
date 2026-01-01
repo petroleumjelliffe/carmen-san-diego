@@ -2,6 +2,7 @@ import { GameLayout } from './GameLayout';
 import { Header } from './Header';
 import { FileText, MapPin, Clock, Shield, Briefcase, ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { usePrefetchBackgrounds } from '../hooks/usePrefetchBackgrounds';
 
 // Classified stamp decoration
 function ClassifiedStamp() {
@@ -84,9 +85,12 @@ function ManilaFolder({ caseNumber, children }) {
  * Briefing - Shows case details and mission equipment at start of case
  * Two-step flow: Case Details → Equipment
  */
-export function Briefing({ currentCase, startingCity, settings, onAccept }) {
+export function Briefing({ currentCase, startingCity, settings, onAccept, backgrounds, citiesById }) {
   const [briefingStep, setBriefingStep] = useState(1);
   const [isSigned, setIsSigned] = useState(false);
+
+  // Prefetch background images while user reads briefing
+  usePrefetchBackgrounds(currentCase, citiesById, backgrounds);
 
   if (!currentCase) return null;
 
