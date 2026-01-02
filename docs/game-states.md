@@ -352,6 +352,8 @@ Player selects destination from travel options
    ┌─────────────────┐
    │   traveling     │
    │   (animation)   │
+   │   duration =    │
+   │   travelHours   │
    └────────┬────────┘
             │
             │ Destination correct?
@@ -361,6 +363,44 @@ Player selects destination from travel options
             ▼
        idle (+ save)
 ```
+
+### Travel Time Calculation
+
+Travel time is proportional to the distance between cities.
+
+**Formula:**
+```javascript
+// Haversine distance between two lat/lng points
+function getDistanceKm(from, to) {
+  const R = 6371; // Earth's radius in km
+  const dLat = toRad(to.lat - from.lat);
+  const dLng = toRad(to.lng - from.lng);
+  const a = Math.sin(dLat/2) ** 2 +
+            Math.cos(toRad(from.lat)) * Math.cos(toRad(to.lat)) *
+            Math.sin(dLng/2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Convert distance to travel hours
+function getTravelHours(distanceKm) {
+  // ~800 km/h average (accounts for airports, connections)
+  // Minimum 2 hours (short hops still take time)
+  // Maximum 16 hours (longest intercontinental)
+  const hours = Math.round(distanceKm / 800);
+  return Math.max(2, Math.min(16, hours));
+}
+```
+
+**Example travel times:**
+| Route | Distance | Hours |
+|-------|----------|-------|
+| Paris → London | ~340 km | 2 hours |
+| New York → Chicago | ~1,150 km | 2 hours |
+| Tokyo → Sydney | ~7,800 km | 10 hours |
+| London → Tokyo | ~9,500 km | 12 hours |
+| New York → Sydney | ~16,000 km | 16 hours |
+
+**UI consideration:** Show estimated travel time before player confirms destination.
 
 ### Wrong City Simplified Model
 
@@ -694,7 +734,7 @@ type GameEvent =
   | { type: 'START_CASE' }
   | { type: 'ACCEPT_BRIEFING' }
   | { type: 'INVESTIGATE'; spotIndex: number; isRogueAction: boolean }
-  | { type: 'TRAVEL'; destination: string }
+  | { type: 'TRAVEL'; destination: string; travelHours: number }
   | { type: 'RESOLVE_ENCOUNTER' }
   | { type: 'CONTINUE' }
   | { type: 'WAKE' }
@@ -728,6 +768,7 @@ interface GameContext {
   encounterQueue: EncounterType[];  // For stacking
   witnessClueVariant: WitnessClueVariant | null;
   pendingRogueAction: boolean;
+  travelHours: number | null;  // Current travel duration (for animation)
 
   // Pre-rolled values (dice rolls happen as actions, not in guards)
   goodDeedRoll: number | null;
@@ -771,6 +812,7 @@ const gameMachine = createMachine({
     encounterQueue: [],
     witnessClueVariant: null,
     pendingRogueAction: false,
+    travelHours: null,
     goodDeedRoll: null,
 
     // UI
@@ -824,6 +866,7 @@ const gameMachine = createMachine({
               actions: ['setInvestigationParams', 'rollGoodDeedDice']
             },
             TRAVEL: {
+              // travelHours passed in event, calculated from distance
               target: 'traveling',
               actions: 'setTravelDestination'
             }
@@ -842,6 +885,7 @@ const gameMachine = createMachine({
         },
 
         traveling: {
+          // travelHours already stored in context by setTravelDestination
           entry: 'advanceTimeForTravel',
           on: {
             ARRIVE: {
@@ -1043,10 +1087,14 @@ const actions = {
     };
   }),
 
-  advanceTimeForTravel: assign((ctx) => ({
-    currentHour: (ctx.currentHour + 4) % 24,  // 4 hours for travel
-    timeRemaining: ctx.timeRemaining - 4,
-  })),
+  advanceTimeForTravel: assign((ctx) => {
+    // Travel time proportional to distance (stored by setTravelDestination)
+    const hours = ctx.travelHours || 4;
+    return {
+      currentHour: (ctx.currentHour + hours) % 24,
+      timeRemaining: ctx.timeRemaining - hours,
+    };
+  }),
 
   advanceTimeForInvestigation: assign((ctx) => {
     // Progressive cost: 2h, 4h, 8h based on investigation count in city
@@ -1121,10 +1169,16 @@ const actions = {
     investigatedLocations: [...ctx.investigatedLocations, event.locationId],
   })),
 
+  // === Travel ===
+  setTravelDestination: assign((ctx, event) => ({
+    travelHours: event.travelHours,  // Store for animation & time advancement
+  })),
+
   // === Location ===
   updateLocation: assign((ctx, event) => ({
     cityIndex: event.isCorrectDestination ? ctx.cityIndex + 1 : ctx.cityIndex,
     wrongCity: !event.isCorrectDestination,
+    travelHours: null,  // Clear after arrival
   })),
 
   resetCityFlags: assign({
@@ -1155,6 +1209,7 @@ const actions = {
     encounterQueue: [],
     witnessClueVariant: null,
     pendingRogueAction: false,
+    travelHours: null,
     goodDeedRoll: null,
     lastSleepMessage: null,
   }),
