@@ -664,112 +664,550 @@ Game saves automatically at these transitions:
 
 ---
 
-## XState Machine Sketch
+## XState Machine Architecture
+
+### Design Decisions
+
+1. **Hierarchical machine** - Activity states are nested inside `playing` state
+2. **Self-contained context** - All state needed for guards lives in machine context
+3. **Pure guards** - No side effects; dice rolls happen as actions, results stored in context
+4. **Centralized time** - Single `advanceTime` action handles all time changes + timeout checks
+5. **Intermediate state for idle entry** - `checkingIdle` state handles sleep/timeout checks cleanly
+
+### TypeScript Types
+
+```typescript
+// Primary game states
+type GameState = 'menu' | 'briefing' | 'playing' | 'apprehended' | 'trial' | 'debrief';
+
+// Activity states (within playing)
+type ActivityState = 'idle' | 'checkingIdle' | 'traveling' | 'investigating' | 'encounter' | 'witnessClue' | 'sleeping';
+
+// Encounter types
+type EncounterType = 'henchman' | 'assassination' | 'goodDeed' | 'rogueAction' | 'apprehension' | 'timeOut' | null;
+
+// Witness clue variants
+type WitnessClueVariant = 'normal' | 'rogue';
+
+// Events
+type GameEvent =
+  | { type: 'START_CASE' }
+  | { type: 'ACCEPT_BRIEFING' }
+  | { type: 'INVESTIGATE'; spotIndex: number; isRogueAction: boolean }
+  | { type: 'TRAVEL'; destination: string }
+  | { type: 'RESOLVE_ENCOUNTER' }
+  | { type: 'CONTINUE' }
+  | { type: 'WAKE' }
+  | { type: 'PROCEED_TO_TRIAL' }
+  | { type: 'COMPLETE_TRIAL' }
+  | { type: 'RETURN_TO_MENU' };
+
+// Full context
+interface GameContext {
+  // Time
+  currentHour: number;
+  timeRemaining: number;
+
+  // Location
+  cityIndex: number;
+  wrongCity: boolean;
+
+  // Case data (set on case start)
+  totalCities: number;
+
+  // Progress flags
+  hadEncounterInCity: boolean;
+  hadGoodDeedInCase: boolean;
+  rogueUsedInCity: boolean;
+  investigatedLocations: string[];
+  warrantIssued: boolean;
+  selectedWarrant: Suspect | null;
+
+  // Activity state data
+  encounterType: EncounterType;
+  encounterQueue: EncounterType[];  // For stacking
+  witnessClueVariant: WitnessClueVariant | null;
+  pendingRogueAction: boolean;
+
+  // Pre-rolled values (dice rolls happen as actions, not in guards)
+  goodDeedRoll: number | null;
+
+  // UI state
+  lastSleepMessage: string | null;
+
+  // Debrief outcome
+  debriefOutcome: 'time_out' | 'no_warrant' | 'wrong_warrant' | 'success' | null;
+}
+```
+
+### Hierarchical Machine Structure
 
 ```javascript
-const activityMachine = createMachine({
-  id: 'activity',
-  initial: 'idle',
+import { createMachine, assign } from 'xstate';
+
+const gameMachine = createMachine({
+  id: 'carmenSandiego',
+  initial: 'menu',
   context: {
-    encounterType: null,      // henchman | assassination | goodDeed | rogueAction | apprehension | timeOut
-    witnessClueVariant: null, // normal | rogue
+    // Time
+    currentHour: 8,
+    timeRemaining: 72,
+
+    // Location
+    cityIndex: 0,
+    wrongCity: false,
+    totalCities: 5,
+
+    // Progress flags
+    hadEncounterInCity: false,
+    hadGoodDeedInCase: false,
+    rogueUsedInCity: false,
+    investigatedLocations: [],
+    warrantIssued: false,
+    selectedWarrant: null,
+
+    // Activity state
+    encounterType: null,
+    encounterQueue: [],
+    witnessClueVariant: null,
+    pendingRogueAction: false,
+    goodDeedRoll: null,
+
+    // UI
+    lastSleepMessage: null,
+    debriefOutcome: null,
   },
   states: {
-    idle: {
-      entry: ['saveGame'],
-      always: [
-        { target: 'sleeping', cond: 'isSleepTime' }
-      ],
+    menu: {
       on: {
-        INVESTIGATE: 'investigating',
-        TRAVEL: 'traveling',
-        TIME_OUT: 'encounter', // with encounterType: timeOut
+        START_CASE: { target: 'briefing', actions: 'initializeCase' },
+        LOAD_SAVE: { target: 'playing', actions: 'loadSavedState' }
       }
     },
-    sleeping: {
-      entry: ['advanceTimeToMorning', 'showSleepMessage'],
+
+    briefing: {
       on: {
-        WAKE: 'idle'  // Auto-triggered after animation/message
+        ACCEPT_BRIEFING: { target: 'playing', actions: 'saveGame' }
       }
     },
-    traveling: {
+
+    // ========================================
+    // PLAYING - Contains nested activity states
+    // ========================================
+    playing: {
+      initial: 'checkingIdle',
+
+      // Global handlers for playing state
       on: {
-        ARRIVE: [
-          { target: 'sleeping', cond: 'isSleepTime' },
-          { target: 'idle' }
-        ]
+        // Time out can interrupt from any activity state
+        TIME_OUT: {
+          target: '.encounter',
+          actions: 'setTimeOutEncounter',
+          cond: 'isTimeExpired'
+        }
+      },
+
+      states: {
+        // Entry point - checks if we should sleep or go to idle
+        checkingIdle: {
+          always: [
+            { target: 'sleeping', cond: 'isSleepTime' },
+            { target: 'idle' }
+          ]
+        },
+
+        idle: {
+          entry: ['saveGame', 'clearTransientState'],
+          on: {
+            INVESTIGATE: {
+              target: 'investigating',
+              actions: ['setInvestigationParams', 'rollGoodDeedDice']
+            },
+            TRAVEL: {
+              target: 'traveling',
+              actions: 'setTravelDestination'
+            }
+          }
+        },
+
+        sleeping: {
+          entry: ['advanceTimeToMorning', 'setSleepMessage'],
+          on: {
+            WAKE: [
+              // After sleeping, check if time ran out
+              { target: '#carmenSandiego.debrief', cond: 'isTimeExpired', actions: 'setTimeOutOutcome' },
+              { target: 'idle' }
+            ]
+          }
+        },
+
+        traveling: {
+          entry: 'advanceTimeForTravel',
+          on: {
+            ARRIVE: {
+              target: 'checkingIdle',
+              actions: ['updateLocation', 'resetCityFlags']
+            }
+          }
+        },
+
+        investigating: {
+          entry: 'advanceTimeForInvestigation',
+          always: [
+            // Priority 1: Apprehension (final city, assassination done)
+            {
+              target: 'encounter',
+              cond: 'shouldApprehend',
+              actions: 'setApprehensionEncounter'
+            },
+            // Priority 2: Mandatory encounter (henchman/assassination)
+            {
+              target: 'encounter',
+              cond: 'shouldHenchman',
+              actions: 'setHenchmanEncounter'
+            },
+            {
+              target: 'encounter',
+              cond: 'shouldAssassination',
+              actions: 'setAssassinationEncounter'
+            },
+            // Priority 3: Rogue action (if selected, no mandatory encounter)
+            {
+              target: 'encounter',
+              cond: 'shouldRogueActionAlone',
+              actions: 'setRogueEncounter'
+            },
+            // Priority 4: Good deed (2nd+ investigation, dice roll)
+            {
+              target: 'encounter',
+              cond: 'shouldGoodDeed',
+              actions: 'setGoodDeedEncounter'
+            },
+            // Default: straight to clue
+            {
+              target: 'witnessClue',
+              actions: 'setNormalClue'
+            }
+          ]
+        },
+
+        encounter: {
+          on: {
+            RESOLVE_ENCOUNTER: [
+              // Check for stacked rogue action
+              {
+                target: 'encounter',
+                cond: 'hasStackedRogueAction',
+                actions: 'setRogueEncounter'
+              },
+              // Exit to parent states for terminal encounters
+              {
+                target: '#carmenSandiego.apprehended',
+                cond: 'isApprehension',
+                actions: 'saveGame'
+              },
+              {
+                target: '#carmenSandiego.debrief',
+                cond: 'isTimeOut',
+                actions: 'setTimeOutOutcome'
+              },
+              // Normal flow: proceed to witness clue
+              {
+                target: 'witnessClue',
+                actions: 'markEncounterComplete'
+              }
+            ]
+          }
+        },
+
+        witnessClue: {
+          on: {
+            CONTINUE: {
+              target: 'checkingIdle',
+              actions: 'recordClue'
+            }
+          }
+        }
       }
     },
-    investigating: {
-      always: [
-        { target: 'encounter', cond: 'shouldApprehend', actions: 'setApprehension' },
-        { target: 'encounter', cond: 'shouldHenchman', actions: 'setHenchman' },
-        { target: 'encounter', cond: 'shouldAssassination', actions: 'setAssassination' },
-        { target: 'encounter', cond: 'shouldRogueAction', actions: 'setRogueAction' },
-        { target: 'encounter', cond: 'shouldGoodDeed', actions: 'setGoodDeed' },
-        { target: 'witnessClue', actions: 'setNormalClue' }
-      ]
-    },
-    encounter: {
+
+    apprehended: {
+      entry: 'saveGame',
       on: {
-        RESOLVE: [
-          { target: 'encounter', cond: 'hasStackedRogueAction', actions: 'setRogueAction' },
-          { target: 'witnessClue', cond: 'notApprehensionOrTimeout' },
-          { target: '#apprehended', cond: 'isApprehension' },
-          { target: '#debrief', cond: 'isTimeOut' }
-        ]
+        PROCEED_TO_TRIAL: 'trial'
       }
     },
-    witnessClue: {
-      // variants: normal (1 clue) or rogue (both clues + fear)
+
+    trial: {
+      entry: ['determineTrialOutcome', 'saveGame'],
       on: {
-        CONTINUE: [
-          { target: 'sleeping', cond: 'isSleepTime' },
-          { target: 'idle' }
-        ]
+        COMPLETE_TRIAL: 'debrief'
+      }
+    },
+
+    debrief: {
+      entry: ['updateStats', 'saveGame'],
+      on: {
+        RETURN_TO_MENU: {
+          target: 'menu',
+          actions: 'clearCaseState'
+        }
       }
     }
   }
 });
 ```
 
-### Guards (conditions)
+### Guards (Pure Functions)
 
 ```javascript
 const guards = {
-  // Sleep check
-  isSleepTime: (ctx) => currentHour >= 23 || currentHour < 7,
+  // Time checks
+  isSleepTime: (ctx) => ctx.currentHour >= 23 || ctx.currentHour < 7,
+  isTimeExpired: (ctx) => ctx.timeRemaining <= 0,
+
+  // Location checks
+  isFinalCity: (ctx) => ctx.cityIndex === ctx.totalCities - 1,
+  isWrongCity: (ctx) => ctx.wrongCity,
+  isCity1: (ctx) => ctx.cityIndex === 0,
+  isCities2ToNMinus1: (ctx) => ctx.cityIndex >= 1 && ctx.cityIndex < ctx.totalCities - 1,
 
   // Investigation routing
-  shouldApprehend: (ctx) => isFinalCity && hadEncounterInCity,
-  shouldHenchman: (ctx) => cityIndex >= 1 && cityIndex < finalIndex && !wrongCity && !hadEncounterInCity,
-  shouldAssassination: (ctx) => isFinalCity && !hadEncounterInCity,
-  shouldRogueAction: (ctx) => rogueActionSelected && !rogueUsedInCity,
-  shouldGoodDeed: (ctx) => !isFirstInvestigation && !wrongCity && !hadGoodDeedInCase && diceRoll(),
+  shouldApprehend: (ctx) =>
+    ctx.cityIndex === ctx.totalCities - 1 && ctx.hadEncounterInCity,
+
+  shouldHenchman: (ctx) =>
+    ctx.cityIndex >= 1 &&
+    ctx.cityIndex < ctx.totalCities - 1 &&
+    !ctx.wrongCity &&
+    !ctx.hadEncounterInCity,
+
+  shouldAssassination: (ctx) =>
+    ctx.cityIndex === ctx.totalCities - 1 &&
+    !ctx.hadEncounterInCity,
+
+  shouldRogueActionAlone: (ctx) =>
+    ctx.pendingRogueAction &&
+    !ctx.rogueUsedInCity &&
+    // Only "alone" if no mandatory encounter was triggered
+    ctx.encounterQueue.length === 0,
+
+  shouldGoodDeed: (ctx) =>
+    ctx.investigatedLocations.length > 0 &&  // 2nd+ investigation
+    !ctx.wrongCity &&
+    !ctx.hadGoodDeedInCase &&
+    ctx.goodDeedRoll !== null &&
+    ctx.goodDeedRoll < 0.3,  // 30% chance, already rolled
 
   // Encounter resolution
-  hasStackedRogueAction: (ctx) => rogueActionSelected && !rogueUsedInCity && ctx.encounterType !== 'rogueAction',
+  hasStackedRogueAction: (ctx) =>
+    ctx.pendingRogueAction &&
+    !ctx.rogueUsedInCity &&
+    ctx.encounterType !== 'rogueAction',
+
   isApprehension: (ctx) => ctx.encounterType === 'apprehension',
   isTimeOut: (ctx) => ctx.encounterType === 'timeOut',
+
+  // Trial
+  hasNoWarrant: (ctx) => !ctx.warrantIssued,
+  hasWrongWarrant: (ctx) =>
+    ctx.warrantIssued &&
+    ctx.selectedWarrant?.id !== ctx.currentCase?.suspect.id,
+  hasCorrectWarrant: (ctx) =>
+    ctx.warrantIssued &&
+    ctx.selectedWarrant?.id === ctx.currentCase?.suspect.id,
 };
 ```
 
-### Actions
+### Actions (State Mutations)
 
 ```javascript
 const actions = {
-  saveGame: (ctx) => { /* persist state */ },
-  advanceTimeToMorning: (ctx) => {
-    const hoursUntil7am = currentHour >= 23
-      ? (24 - currentHour) + 7
-      : 7 - currentHour;
-    timeRemaining -= hoursUntil7am;
-    currentHour = 7;
-  },
-  showSleepMessage: (ctx) => {
-    lastSleepResult = { message: "You rested until 7am." };
+  // === Time Management (centralized) ===
+  advanceTime: assign((ctx, event) => {
+    const hours = event.hours || 0;
+    return {
+      currentHour: (ctx.currentHour + hours) % 24,
+      timeRemaining: ctx.timeRemaining - hours,
+    };
+  }),
+
+  advanceTimeToMorning: assign((ctx) => {
+    const hoursUntil7am = ctx.currentHour >= 23
+      ? (24 - ctx.currentHour) + 7
+      : 7 - ctx.currentHour;
+    return {
+      currentHour: 7,
+      timeRemaining: ctx.timeRemaining - hoursUntil7am,
+      lastSleepMessage: `You rested for ${hoursUntil7am} hours.`,
+    };
+  }),
+
+  advanceTimeForTravel: assign((ctx) => ({
+    currentHour: (ctx.currentHour + 4) % 24,  // 4 hours for travel
+    timeRemaining: ctx.timeRemaining - 4,
+  })),
+
+  advanceTimeForInvestigation: assign((ctx) => {
+    // Progressive cost: 2h, 4h, 8h based on investigation count in city
+    const count = ctx.investigatedLocations.filter(loc =>
+      loc.startsWith(`city${ctx.cityIndex}`)).length;
+    const hours = [2, 4, 8][Math.min(count, 2)];
+    return {
+      currentHour: (ctx.currentHour + hours) % 24,
+      timeRemaining: ctx.timeRemaining - hours,
+    };
+  }),
+
+  // === Dice Rolls (happen as actions, not guards) ===
+  rollGoodDeedDice: assign({
+    goodDeedRoll: () => Math.random(),
+  }),
+
+  // === Investigation Setup ===
+  setInvestigationParams: assign((ctx, event) => ({
+    pendingRogueAction: event.isRogueAction || false,
+  })),
+
+  // === Encounter Setup ===
+  setHenchmanEncounter: assign({
+    encounterType: 'henchman',
+    encounterQueue: (ctx) => ctx.pendingRogueAction ? ['rogueAction'] : [],
+  }),
+
+  setAssassinationEncounter: assign({
+    encounterType: 'assassination',
+    encounterQueue: (ctx) => ctx.pendingRogueAction ? ['rogueAction'] : [],
+  }),
+
+  setRogueEncounter: assign({
+    encounterType: 'rogueAction',
+    encounterQueue: [],
+    witnessClueVariant: 'rogue',
+  }),
+
+  setGoodDeedEncounter: assign({
+    encounterType: 'goodDeed',
+    encounterQueue: [],
+  }),
+
+  setApprehensionEncounter: assign({
+    encounterType: 'apprehension',
+  }),
+
+  setTimeOutEncounter: assign({
+    encounterType: 'timeOut',
+  }),
+
+  // === Encounter Resolution ===
+  markEncounterComplete: assign((ctx) => ({
+    hadEncounterInCity: ['henchman', 'assassination'].includes(ctx.encounterType)
+      ? true
+      : ctx.hadEncounterInCity,
+    hadGoodDeedInCase: ctx.encounterType === 'goodDeed'
+      ? true
+      : ctx.hadGoodDeedInCase,
+    rogueUsedInCity: ctx.encounterType === 'rogueAction'
+      ? true
+      : ctx.rogueUsedInCity,
+  })),
+
+  // === Witness Clue ===
+  setNormalClue: assign({
+    witnessClueVariant: 'normal',
+  }),
+
+  recordClue: assign((ctx, event) => ({
+    investigatedLocations: [...ctx.investigatedLocations, event.locationId],
+  })),
+
+  // === Location ===
+  updateLocation: assign((ctx, event) => ({
+    cityIndex: event.isCorrectDestination ? ctx.cityIndex + 1 : ctx.cityIndex,
+    wrongCity: !event.isCorrectDestination,
+  })),
+
+  resetCityFlags: assign({
+    hadEncounterInCity: false,
+    rogueUsedInCity: false,
+  }),
+
+  // === Trial ===
+  determineTrialOutcome: assign((ctx) => {
+    let outcome;
+    if (!ctx.warrantIssued) {
+      outcome = 'no_warrant';
+    } else if (ctx.selectedWarrant?.id !== ctx.currentCase?.suspect.id) {
+      outcome = 'wrong_warrant';
+    } else {
+      outcome = 'success';
+    }
+    return { debriefOutcome: outcome };
+  }),
+
+  setTimeOutOutcome: assign({
+    debriefOutcome: 'time_out',
+  }),
+
+  // === Cleanup ===
+  clearTransientState: assign({
+    encounterType: null,
+    encounterQueue: [],
+    witnessClueVariant: null,
+    pendingRogueAction: false,
+    goodDeedRoll: null,
+    lastSleepMessage: null,
+  }),
+
+  // === Persistence ===
+  saveGame: (ctx) => {
+    // Side effect: persist to localStorage/IndexedDB
+    saveToStorage(ctx);
   },
 };
+```
+
+### Key Architectural Improvements
+
+| Issue | Solution |
+|-------|----------|
+| Guards reference external state | All state in `context`, guards are pure `(ctx) => boolean` |
+| Two machines unclear connection | Single hierarchical machine, activity states nested in `playing` |
+| Side effect in guard (diceRoll) | `rollGoodDeedDice` action runs on INVESTIGATE, result in `goodDeedRoll` |
+| Time management scattered | All time changes via `advanceTime*` actions, centralized |
+| Sleep/idle order of operations | `checkingIdle` intermediate state handles sleep check cleanly |
+| No stacking mechanism | `encounterQueue` array holds pending encounters |
+| No error handling | Can add `onError` handlers and error states (not shown for brevity) |
+
+### Testing Strategy
+
+```javascript
+// Model-based testing with @xstate/test
+import { createModel } from '@xstate/test';
+
+const testModel = createModel(gameMachine).withEvents({
+  START_CASE: { exec: () => { /* click start */ } },
+  INVESTIGATE: {
+    exec: (ctx, event) => { /* click investigate spot */ },
+    cases: [
+      { spotIndex: 0, isRogueAction: false },
+      { spotIndex: 0, isRogueAction: true },
+    ]
+  },
+  // ... other events
+});
+
+// Generate test paths
+const testPlans = testModel.getSimplePathPlans();
+
+// Run tests
+testPlans.forEach(plan => {
+  plan.paths.forEach(path => {
+    it(path.description, async () => {
+      await path.test();
+    });
+  });
+});
 ```
 
 ---
