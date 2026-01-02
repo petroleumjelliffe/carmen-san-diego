@@ -645,28 +645,32 @@ Game saves automatically at these transitions:
 ```javascript
 {
   // Persistent (across cases)
-  karma,
-  notoriety,
-  solvedCases,
-  savedNPCs,
-  permanentInjuries,
+  karma: number,
+  notoriety: number,
+  solvedCases: string[],
 
-  // Active case
-  currentCase,
-  currentCityIndex,
-  timeRemaining,
-  currentHour,
-  collectedClues,
-  investigatedLocations,
-  selectedWarrant,
-  usedGadgets,
-  hadGoodDeedInCase,
-  hadEncounterInCity,
-  rogueUsedInCity,
-  wrongCity,
-  wrongCityData
+  // Active case (only if currentCase exists)
+  currentCase: CaseData,
+  cityIndex: number,
+  currentCityId: string,
+  wrongCity: boolean,
+  originCityId: string | null,
+  currentHour: number,
+  timeRemaining: number,
+  investigatedSpots: string[],        // Format: "cityId:spotIndex"
+  spotsUsedInCity: number,
+  hadEncounterInCity: boolean,
+  hadGoodDeedInCase: boolean,
+  rogueUsedInCity: boolean,
+  warrantIssued: boolean,
+  selectedWarrant: Suspect | null,
+  availableGadgets: Gadget[],
+  usedGadgets: Gadget[],
+  wounds: number,
 }
 ```
+
+**Note:** Transient state (`encounterType`, `encounterQueue`, `travelHours`, etc.) is NOT saved. Game always resumes in `idle` state.
 
 ### Load behavior:
 - Menu → playing (if valid save exists)
@@ -789,6 +793,20 @@ interface CityData {
   wrongDestinations: string[];   // Decoy city IDs
 }
 
+interface Suspect {
+  id: string;
+  name: string;
+  description: string;
+  traits: string[];              // Physical/behavioral traits for clues
+}
+
+interface Gadget {
+  id: string;
+  name: string;
+  description: string;
+  singleUse: boolean;            // Most gadgets are single-use
+}
+
 // Full context
 interface GameContext {
   // === Persistent (across cases) ===
@@ -809,11 +827,13 @@ interface GameContext {
   wrongCity: boolean;
   originCityId: string | null;   // Where we came from (for wrong city return)
   travelDestination: string | null;  // Where we're traveling to
+  isCorrectPath: boolean | null;     // Whether current travel is on correct path
 
   // === Investigation ===
   // Format: "cityId:spotIndex" e.g., "paris:0", "paris:1", "tokyo:0"
   investigatedSpots: string[];
   spotsUsedInCity: number;       // Count for current city
+  currentSpotIndex: number | null;  // Spot being investigated (transient)
 
   // === Progress flags ===
   hadEncounterInCity: boolean;
@@ -874,10 +894,12 @@ const gameMachine = createMachine({
     wrongCity: false,
     originCityId: null,
     travelDestination: null,
+    isCorrectPath: null,
 
     // Investigation
     investigatedSpots: [],
     spotsUsedInCity: 0,
+    currentSpotIndex: null,
 
     // Progress flags
     hadEncounterInCity: false,
@@ -1014,7 +1036,7 @@ const gameMachine = createMachine({
         },
 
         investigating: {
-          entry: 'advanceTimeForInvestigation',
+          entry: ['advanceTimeForInvestigation', 'recordInvestigation'],
           always: [
             // Priority 1: Apprehension (final city, assassination done)
             {
@@ -1130,8 +1152,8 @@ const gameMachine = createMachine({
         witnessClue: {
           on: {
             CONTINUE: {
-              target: 'checkingIdle',
-              actions: 'recordClue'
+              target: 'checkingIdle'
+              // NOTE: No recordClue action - spot already recorded on entering investigating
             }
           }
         }
@@ -1368,32 +1390,38 @@ const actions = {
   setTravelDestination: assign((ctx, event) => ({
     travelHours: event.travelHours,
     travelDestination: event.destinationId,
+    isCorrectPath: event.isCorrectPath,  // Store for updateLocation to use on ARRIVE
     // Store origin for wrong city return
     originCityId: ctx.currentCityId,
   })),
 
-  updateLocation: assign((ctx, event) => {
+  updateLocation: assign((ctx) => {
+    // NOTE: Reads from context, not event. ARRIVE event has no payload.
+    // Data was stored by setTravelDestination when TRAVEL was sent.
+
     // Determine if this is a return from wrong city
-    const isReturningFromWrongCity = ctx.wrongCity && event.destinationId === ctx.originCityId;
+    const isReturningFromWrongCity = ctx.wrongCity &&
+      ctx.travelDestination === ctx.originCityId;
 
     if (isReturningFromWrongCity) {
       // Returning to correct path - don't change cityIndex
       return {
-        currentCityId: event.destinationId,
+        currentCityId: ctx.travelDestination,
         wrongCity: false,
         travelHours: null,
         travelDestination: null,
+        isCorrectPath: null,
       };
     }
 
     // Normal travel
-    const isCorrectPath = event.isCorrectPath;
     return {
-      cityIndex: isCorrectPath ? ctx.cityIndex + 1 : ctx.cityIndex,
-      currentCityId: event.destinationId,
-      wrongCity: !isCorrectPath,
+      cityIndex: ctx.isCorrectPath ? ctx.cityIndex + 1 : ctx.cityIndex,
+      currentCityId: ctx.travelDestination,
+      wrongCity: !ctx.isCorrectPath,
       travelHours: null,
       travelDestination: null,
+      isCorrectPath: null,
     };
   }),
 
@@ -1408,14 +1436,17 @@ const actions = {
   // ============================================
   setInvestigationParams: assign((ctx, event) => ({
     pendingRogueAction: event.isRogueAction || false,
+    currentSpotIndex: event.spotIndex,  // Store for recordInvestigation
   })),
 
-  recordInvestigation: assign((ctx, event) => ({
+  recordInvestigation: assign((ctx) => ({
+    // NOTE: Uses ctx.currentSpotIndex set by setInvestigationParams
     investigatedSpots: [
       ...ctx.investigatedSpots,
-      `${ctx.currentCityId}:${event.spotIndex}`
+      `${ctx.currentCityId}:${ctx.currentSpotIndex}`
     ],
     spotsUsedInCity: ctx.spotsUsedInCity + 1,
+    currentSpotIndex: null,  // Clear after recording
   })),
 
   // ============================================
@@ -1504,12 +1535,8 @@ const actions = {
     witnessClueVariant: 'normal',
   }),
 
-  recordClue: assign((ctx, event) => ({
-    investigatedSpots: [
-      ...ctx.investigatedSpots,
-      `${ctx.currentCityId}:${event.spotIndex}`
-    ],
-  })),
+  // NOTE: recordClue removed - spots are now recorded by recordInvestigation
+  // when entering the investigating state, before encounter/clue flow
 
   // ============================================
   // TRIAL & DEBRIEF
@@ -1551,8 +1578,10 @@ const actions = {
     encounterChoice: null,
     witnessClueVariant: null,
     pendingRogueAction: false,
+    currentSpotIndex: null,
     travelHours: null,
     travelDestination: null,
+    isCorrectPath: null,
     goodDeedRoll: null,
     lastSleepMessage: null,
     sleepWouldTimeout: false,
@@ -1909,6 +1938,58 @@ states: {
   }
 }
 ```
+
+---
+
+## Known Issues & Implementation Notes
+
+Issues identified during review that should be addressed during implementation:
+
+### Must Fix Before Release
+
+| Issue | Location | Notes |
+|-------|----------|-------|
+| **CANCEL_SLEEP event missing** | `confirmingSleep` state | Player has no way to cancel after seeing timeout warning. Add `CANCEL_SLEEP` → `idle` transition. |
+| **No gadget validation guard** | `choosingAction` state | `CHOOSE_GADGET` transition should have `cond: 'hasAvailableGadget'` to prevent selecting non-existent gadget. |
+| **Rogue action missing notoriety** | `setRogueEncounter` action | Spec says rogue action increases notoriety, but no action for it. Add `notoriety: ctx.notoriety + 1` to action. |
+| **`hasAvailableSpots` guard unused** | `idle.on.INVESTIGATE` | Guard is defined but not used. Should prevent investigation when no spots available. |
+
+### Activity Diagram Outdated
+
+The activity diagram in "Activity States (within `playing`)" section (lines 114-128) shows the old flow without:
+- `sleepWarning` state
+- `confirmingSleep` state
+- `checkingIdle` intermediate state
+
+Should be updated to match the XState machine definition.
+
+### Helper Functions Needed
+
+```javascript
+// Referenced in Travel Time Calculation but not defined
+function toRad(degrees) {
+  return degrees * (Math.PI / 180);
+}
+```
+
+### Potential Edge Cases
+
+| Scenario | Current Behavior | Notes |
+|----------|------------------|-------|
+| No gadgets + henchman encounter | Player must choose ENDURE | UI should hide/disable gadget button |
+| Timeout during encounter resolution | Continues to timeOut encounter | Correct - let encounter finish first |
+| Sleep while in wrong city | Normal sleep behavior | Correct - time still passes |
+| Resume save at 11pm | Goes to sleepWarning | Verify this works correctly |
+
+### Testing Recommendations
+
+Priority test scenarios for the state machine:
+
+1. **The original bug**: Final city + exhausted spots → should still apprehend
+2. **Sleep timeout warning**: 11pm with 4h remaining → should warn
+3. **Wrong city return**: Wrong city → return → should maintain cityIndex
+4. **Rogue stacking**: Henchman city + rogue action → should see both encounters
+5. **Gadget exhaustion**: Use all gadgets → should only show ENDURE option
 
 ---
 
