@@ -112,13 +112,19 @@ menu → briefing → playing → apprehended → trial → debrief → menu
 These are mutually exclusive activities:
 
 ```
-idle ←──────────────────────────────────────────────────┐
-  │                                                     │
-  ├──► traveling ──► idle                               │
-  │                                                     │
-  └──► investigating ──┬──► encounter ──► witnessClue ──┤
-                       │                                │
-                       └──► witnessClue ────────────────┘
+idle ←───────────────────────────────────────────────────────────┐
+  │                                                              │
+  │ (on entry: if 11pm-7am → sleeping)                           │
+  │                                                              │
+  ├──► traveling ──► [idle check] ───────────────────────────────┤
+  │                                                              │
+  ├──► investigating ──┬──► encounter ──► witnessClue ──► [idle] │
+  │                    │                                         │
+  │                    └──► witnessClue ──► [idle] ──────────────┤
+  │                                                              │
+  └──► sleeping ──► idle ────────────────────────────────────────┘
+
+[idle check] = if currentHour >= 23 || currentHour < 7 → sleeping, else → idle
 ```
 
 - `idle` - Waiting for player action
@@ -126,6 +132,7 @@ idle ←────────────────────────
 - `investigating` - Started investigation, determining what happens
 - `encounter` - Resolving an encounter before clue
 - `witnessClue` - Revealing the clue from witness (formal state, see variants below)
+- `sleeping` - Automatic rest period (11pm-7am), advances time, returns to idle
 
 **Implementation:** Use XState or equivalent formal state machine library.
 
@@ -394,6 +401,70 @@ Player selects destination from travel options
 
 ---
 
+## Sleep Mechanic
+
+### Sleep Flow
+
+```
+Any action completes → attempting to enter idle
+            │
+            ▼
+   ┌─────────────────────────────────────┐
+   │  Check: currentHour >= 23           │
+   │         OR currentHour < 7?         │
+   └────────────────┬────────────────────┘
+                    │
+        ┌───────────┴───────────┐
+        │                       │
+        ▼                       ▼
+      YES                      NO
+        │                       │
+        ▼                       ▼
+   ┌──────────┐            ┌──────────┐
+   │ sleeping │            │   idle   │
+   │          │            │          │
+   │ Advance  │            │ (normal) │
+   │ time to  │            │          │
+   │  7am     │            │          │
+   └────┬─────┘            └──────────┘
+        │
+        │ Time advanced, show message
+        ▼
+   ┌──────────┐
+   │   idle   │
+   │ (+ save) │
+   └──────────┘
+```
+
+### Sleep Rules
+
+- **Trigger:** Entering idle when `currentHour >= 23 || currentHour < 7`
+- **Duration:** Advances time to 7am (variable hours depending on when sleep starts)
+- **Blocking:** No actions available from sleeping state - only WAKE transition
+- **Message:** "You rested until 7am" displayed
+- **Exit:** Automatically transitions to idle after time advancement
+
+### Sleep Time Calculation
+
+| Enter Sleep At | Hours Until 7am |
+|----------------|-----------------|
+| 11pm (23:00)   | 8 hours         |
+| Midnight       | 7 hours         |
+| 1am            | 6 hours         |
+| 2am            | 5 hours         |
+| 3am            | 4 hours         |
+| 4am            | 3 hours         |
+| 5am            | 2 hours         |
+| 6am            | 1 hour          |
+
+```javascript
+const hoursUntil7am = currentHour >= 23
+  ? (24 - currentHour) + 7  // e.g., 23:00 → 8 hours
+  : 7 - currentHour;         // e.g., 2:00 → 5 hours
+```
+
+---
+
 ## Final City Special Logic
 
 ```
@@ -575,6 +646,7 @@ Game saves automatically at these transitions:
 7. ✅ **Formal state machine** - Yes, use XState or equivalent for activity states
 8. ✅ **witnessClue** - Distinct formal state with 2 variants (normal: 1 clue, rogue: both + fear)
 9. ✅ **Time out mid-encounter** - Let encounter finish, then show timeOut
+10. ✅ **Sleep** - Formal state, entered from idle when 11pm-7am, advances time to 7am, returns to idle
 
 ---
 
@@ -605,15 +677,27 @@ const activityMachine = createMachine({
   states: {
     idle: {
       entry: ['saveGame'],
+      always: [
+        { target: 'sleeping', cond: 'isSleepTime' }
+      ],
       on: {
         INVESTIGATE: 'investigating',
         TRAVEL: 'traveling',
         TIME_OUT: 'encounter', // with encounterType: timeOut
       }
     },
+    sleeping: {
+      entry: ['advanceTimeToMorning', 'showSleepMessage'],
+      on: {
+        WAKE: 'idle'  // Auto-triggered after animation/message
+      }
+    },
     traveling: {
       on: {
-        ARRIVE: 'idle'
+        ARRIVE: [
+          { target: 'sleeping', cond: 'isSleepTime' },
+          { target: 'idle' }
+        ]
       }
     },
     investigating: {
@@ -639,7 +723,10 @@ const activityMachine = createMachine({
     witnessClue: {
       // variants: normal (1 clue) or rogue (both clues + fear)
       on: {
-        CONTINUE: 'idle'
+        CONTINUE: [
+          { target: 'sleeping', cond: 'isSleepTime' },
+          { target: 'idle' }
+        ]
       }
     }
   }
@@ -650,14 +737,38 @@ const activityMachine = createMachine({
 
 ```javascript
 const guards = {
+  // Sleep check
+  isSleepTime: (ctx) => currentHour >= 23 || currentHour < 7,
+
+  // Investigation routing
   shouldApprehend: (ctx) => isFinalCity && hadEncounterInCity,
   shouldHenchman: (ctx) => cityIndex >= 1 && cityIndex < finalIndex && !wrongCity && !hadEncounterInCity,
   shouldAssassination: (ctx) => isFinalCity && !hadEncounterInCity,
   shouldRogueAction: (ctx) => rogueActionSelected && !rogueUsedInCity,
   shouldGoodDeed: (ctx) => !isFirstInvestigation && !wrongCity && !hadGoodDeedInCase && diceRoll(),
+
+  // Encounter resolution
   hasStackedRogueAction: (ctx) => rogueActionSelected && !rogueUsedInCity && ctx.encounterType !== 'rogueAction',
   isApprehension: (ctx) => ctx.encounterType === 'apprehension',
   isTimeOut: (ctx) => ctx.encounterType === 'timeOut',
+};
+```
+
+### Actions
+
+```javascript
+const actions = {
+  saveGame: (ctx) => { /* persist state */ },
+  advanceTimeToMorning: (ctx) => {
+    const hoursUntil7am = currentHour >= 23
+      ? (24 - currentHour) + 7
+      : 7 - currentHour;
+    timeRemaining -= hoursUntil7am;
+    currentHour = 7;
+  },
+  showSleepMessage: (ctx) => {
+    lastSleepResult = { message: "You rested until 7am." };
+  },
 };
 ```
 
