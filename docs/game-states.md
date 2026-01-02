@@ -721,7 +721,16 @@ Game saves automatically at these transitions:
 type GameState = 'menu' | 'briefing' | 'playing' | 'apprehended' | 'trial' | 'debrief';
 
 // Activity states (within playing)
-type ActivityState = 'idle' | 'checkingIdle' | 'traveling' | 'investigating' | 'encounter' | 'witnessClue' | 'sleeping';
+type ActivityState =
+  | 'checkingIdle'
+  | 'idle'
+  | 'sleepWarning'
+  | 'confirmingSleep'
+  | 'sleeping'
+  | 'traveling'
+  | 'investigating'
+  | 'encounter'        // Has sub-states: presenting, choosingAction, choosingGoodDeed, resolving
+  | 'witnessClue';
 
 // Encounter types
 type EncounterType = 'henchman' | 'assassination' | 'goodDeed' | 'rogueAction' | 'apprehension' | 'timeOut' | null;
@@ -731,52 +740,109 @@ type WitnessClueVariant = 'normal' | 'rogue';
 
 // Events
 type GameEvent =
-  | { type: 'START_CASE' }
+  // Menu/Briefing
+  | { type: 'START_CASE'; caseData: CaseData }
+  | { type: 'LOAD_SAVE'; savedContext: Partial<GameContext> }
   | { type: 'ACCEPT_BRIEFING' }
+
+  // Travel
+  | { type: 'TRAVEL'; destinationId: string; travelHours: number; isCorrectPath: boolean }
+  | { type: 'ARRIVE' }  // Sent by: animation complete callback
+
+  // Investigation
   | { type: 'INVESTIGATE'; spotIndex: number; isRogueAction: boolean }
-  | { type: 'TRAVEL'; destination: string; travelHours: number }
-  | { type: 'RESOLVE_ENCOUNTER' }
-  | { type: 'CONTINUE' }
-  | { type: 'WAKE' }
+
+  // Encounter resolution
+  | { type: 'CHOOSE_GADGET'; gadgetId: string }  // Player uses gadget
+  | { type: 'CHOOSE_ENDURE' }                     // Player takes injury
+  | { type: 'RESOLVE_ENCOUNTER' }                 // Sent by: encounter UI dismiss
+  | { type: 'HELP_NPC' }                          // Good deed: help
+  | { type: 'IGNORE_NPC' }                        // Good deed: ignore
+
+  // Witness clue
+  | { type: 'CONTINUE' }  // Sent by: clue UI dismiss
+
+  // Sleep
+  | { type: 'WAKE' }      // Sent by: sleep UI dismiss
+  | { type: 'CONFIRM_SLEEP' }  // Player acknowledges timeout warning
+
+  // Trial flow
   | { type: 'PROCEED_TO_TRIAL' }
   | { type: 'COMPLETE_TRIAL' }
   | { type: 'RETURN_TO_MENU' };
 
+// Case data type
+interface CaseData {
+  id: string;
+  suspect: Suspect;
+  cities: CityData[];
+  totalCities: number;
+}
+
+interface CityData {
+  id: string;                    // e.g., "paris", "tokyo"
+  name: string;
+  lat: number;
+  lng: number;
+  investigationSpots: number;    // Total spots available (typically 3)
+  correctDestination: string | null;  // Next city ID, null if final
+  wrongDestinations: string[];   // Decoy city IDs
+}
+
 // Full context
 interface GameContext {
-  // Time
-  currentHour: number;
-  timeRemaining: number;
+  // === Persistent (across cases) ===
+  karma: number;
+  notoriety: number;
+  solvedCases: string[];         // Case IDs
 
-  // Location
-  cityIndex: number;
+  // === Case data ===
+  currentCase: CaseData | null;
+
+  // === Time ===
+  currentHour: number;           // 0-23
+  timeRemaining: number;         // Hours left in case
+
+  // === Location ===
+  cityIndex: number;             // Index in currentCase.cities
+  currentCityId: string | null;  // Current city ID for lookups
   wrongCity: boolean;
+  originCityId: string | null;   // Where we came from (for wrong city return)
+  travelDestination: string | null;  // Where we're traveling to
 
-  // Case data (set on case start)
-  totalCities: number;
+  // === Investigation ===
+  // Format: "cityId:spotIndex" e.g., "paris:0", "paris:1", "tokyo:0"
+  investigatedSpots: string[];
+  spotsUsedInCity: number;       // Count for current city
 
-  // Progress flags
+  // === Progress flags ===
   hadEncounterInCity: boolean;
   hadGoodDeedInCase: boolean;
   rogueUsedInCity: boolean;
-  investigatedLocations: string[];
   warrantIssued: boolean;
   selectedWarrant: Suspect | null;
 
-  // Activity state data
+  // === Gadgets & Health ===
+  availableGadgets: Gadget[];
+  usedGadgets: Gadget[];
+  wounds: number;                // Injury count
+
+  // === Activity state data ===
   encounterType: EncounterType;
   encounterQueue: EncounterType[];  // For stacking
+  encounterChoice: 'pending' | 'gadget' | 'endure' | null;  // Resolution choice
   witnessClueVariant: WitnessClueVariant | null;
   pendingRogueAction: boolean;
-  travelHours: number | null;  // Current travel duration (for animation)
+  travelHours: number | null;
 
-  // Pre-rolled values (dice rolls happen as actions, not in guards)
+  // === Pre-rolled values ===
   goodDeedRoll: number | null;
 
-  // UI state
+  // === UI state ===
   lastSleepMessage: string | null;
+  sleepWouldTimeout: boolean;    // Warning flag
 
-  // Debrief outcome
+  // === Outcome ===
   debriefOutcome: 'time_out' | 'no_warrant' | 'wrong_warrant' | 'success' | null;
 }
 ```
@@ -790,26 +856,45 @@ const gameMachine = createMachine({
   id: 'carmenSandiego',
   initial: 'menu',
   context: {
+    // Persistent
+    karma: 0,
+    notoriety: 0,
+    solvedCases: [],
+
+    // Case
+    currentCase: null,
+
     // Time
     currentHour: 8,
     timeRemaining: 72,
 
     // Location
     cityIndex: 0,
+    currentCityId: null,
     wrongCity: false,
-    totalCities: 5,
+    originCityId: null,
+    travelDestination: null,
+
+    // Investigation
+    investigatedSpots: [],
+    spotsUsedInCity: 0,
 
     // Progress flags
     hadEncounterInCity: false,
     hadGoodDeedInCase: false,
     rogueUsedInCity: false,
-    investigatedLocations: [],
     warrantIssued: false,
     selectedWarrant: null,
+
+    // Gadgets & Health
+    availableGadgets: [],
+    usedGadgets: [],
+    wounds: 0,
 
     // Activity state
     encounterType: null,
     encounterQueue: [],
+    encounterChoice: null,
     witnessClueVariant: null,
     pendingRogueAction: false,
     travelHours: null,
@@ -817,6 +902,7 @@ const gameMachine = createMachine({
 
     // UI
     lastSleepMessage: null,
+    sleepWouldTimeout: false,
     debriefOutcome: null,
   },
   states: {
@@ -839,21 +925,21 @@ const gameMachine = createMachine({
     playing: {
       initial: 'checkingIdle',
 
-      // Global handlers for playing state
-      on: {
-        // Time out can interrupt from any activity state
-        TIME_OUT: {
-          target: '.encounter',
-          actions: 'setTimeOutEncounter',
-          cond: 'isTimeExpired'
-        }
-      },
+      // Note: Timeout is checked automatically at checkingIdle and after travel/investigation
+      // No global TIME_OUT event needed - timeout is deterministic based on time-consuming actions
 
       states: {
         // Entry point - checks if we should sleep or go to idle
         checkingIdle: {
           always: [
-            { target: 'sleeping', cond: 'isSleepTime' },
+            // Check timeout first (after time-consuming action)
+            {
+              target: 'encounter',
+              cond: 'isTimeExpired',
+              actions: 'setTimeOutEncounter'
+            },
+            // Then check sleep time
+            { target: 'sleepWarning', cond: 'isSleepTime' },
             { target: 'idle' }
           ]
         },
@@ -873,25 +959,57 @@ const gameMachine = createMachine({
           }
         },
 
+        // Check if sleeping would cause timeout
+        sleepWarning: {
+          entry: 'calculateSleepTimeout',
+          always: [
+            // If sleep would timeout, show warning first
+            { target: 'confirmingSleep', cond: 'sleepWouldCauseTimeout' },
+            // Otherwise go straight to sleeping
+            { target: 'sleeping' }
+          ]
+        },
+
+        confirmingSleep: {
+          // UI shows: "Sleeping now will cause you to run out of time. Continue?"
+          on: {
+            CONFIRM_SLEEP: 'sleeping',
+            // Player can cancel and stay in idle (not implemented - would need CANCEL event)
+          }
+        },
+
         sleeping: {
           entry: ['advanceTimeToMorning', 'setSleepMessage'],
           on: {
             WAKE: [
               // After sleeping, check if time ran out
-              { target: '#carmenSandiego.debrief', cond: 'isTimeExpired', actions: 'setTimeOutOutcome' },
+              {
+                target: '#carmenSandiego.playing.encounter',
+                cond: 'isTimeExpired',
+                actions: 'setTimeOutEncounter'
+              },
               { target: 'idle' }
             ]
           }
         },
 
         traveling: {
-          // travelHours already stored in context by setTravelDestination
+          // travelHours stored in context by setTravelDestination
           entry: 'advanceTimeForTravel',
           on: {
-            ARRIVE: {
-              target: 'checkingIdle',
-              actions: ['updateLocation', 'resetCityFlags']
-            }
+            ARRIVE: [
+              // Check timeout first
+              {
+                target: '#carmenSandiego.playing.encounter',
+                cond: 'isTimeExpired',
+                actions: ['updateLocation', 'setTimeOutEncounter']
+              },
+              // Normal arrival
+              {
+                target: 'checkingIdle',
+                actions: ['updateLocation', 'resetCityFlags']
+              }
+            ]
           }
         },
 
@@ -936,31 +1054,76 @@ const gameMachine = createMachine({
         },
 
         encounter: {
-          on: {
-            RESOLVE_ENCOUNTER: [
-              // Check for stacked rogue action
-              {
-                target: 'encounter',
-                cond: 'hasStackedRogueAction',
-                actions: 'setRogueEncounter'
-              },
-              // Exit to parent states for terminal encounters
-              {
-                target: '#carmenSandiego.apprehended',
-                cond: 'isApprehension',
-                actions: 'saveGame'
-              },
-              {
-                target: '#carmenSandiego.debrief',
-                cond: 'isTimeOut',
-                actions: 'setTimeOutOutcome'
-              },
-              // Normal flow: proceed to witness clue
-              {
-                target: 'witnessClue',
-                actions: 'markEncounterComplete'
+          initial: 'presenting',
+          states: {
+            // Show encounter message, determine if choice needed
+            presenting: {
+              always: [
+                // Encounters requiring player choice
+                { target: 'choosingAction', cond: 'requiresGadgetChoice' },
+                { target: 'choosingGoodDeed', cond: 'isGoodDeed' },
+                // Non-interactive encounters
+                { target: 'resolving' }
+              ]
+            },
+
+            // Henchman/Assassination: choose gadget or endure
+            choosingAction: {
+              on: {
+                CHOOSE_GADGET: {
+                  target: 'resolving',
+                  actions: ['useGadget', 'setEncounterChoice']
+                },
+                CHOOSE_ENDURE: {
+                  target: 'resolving',
+                  actions: ['applyInjury', 'applyTimePenalty', 'setEncounterChoice']
+                }
               }
-            ]
+            },
+
+            // Good deed: help or ignore
+            choosingGoodDeed: {
+              on: {
+                HELP_NPC: {
+                  target: 'resolving',
+                  actions: ['increaseKarma', 'markGoodDeedComplete']
+                },
+                IGNORE_NPC: {
+                  target: 'resolving',
+                  actions: 'markGoodDeedComplete'
+                }
+              }
+            },
+
+            // Show resolution, wait for dismiss
+            resolving: {
+              on: {
+                RESOLVE_ENCOUNTER: [
+                  // Check for stacked rogue action
+                  {
+                    target: '#carmenSandiego.playing.encounter',
+                    cond: 'hasStackedRogueAction',
+                    actions: 'popRogueFromQueue'
+                  },
+                  // Terminal encounters exit playing
+                  {
+                    target: '#carmenSandiego.apprehended',
+                    cond: 'isApprehension',
+                    actions: 'saveGame'
+                  },
+                  {
+                    target: '#carmenSandiego.debrief',
+                    cond: 'isTimeOut',
+                    actions: 'setTimeOutOutcome'
+                  },
+                  // Normal flow: proceed to witness clue
+                  {
+                    target: '#carmenSandiego.playing.witnessClue',
+                    actions: 'markEncounterComplete'
+                  }
+                ]
+              }
+            }
           }
         },
 
@@ -1006,60 +1169,94 @@ const gameMachine = createMachine({
 
 ```javascript
 const guards = {
-  // Time checks
+  // === Time checks ===
   isSleepTime: (ctx) => ctx.currentHour >= 23 || ctx.currentHour < 7,
   isTimeExpired: (ctx) => ctx.timeRemaining <= 0,
 
-  // Location checks
-  isFinalCity: (ctx) => ctx.cityIndex === ctx.totalCities - 1,
+  sleepWouldCauseTimeout: (ctx) => {
+    const hoursUntil7am = ctx.currentHour >= 23
+      ? (24 - ctx.currentHour) + 7
+      : 7 - ctx.currentHour;
+    return ctx.timeRemaining <= hoursUntil7am;
+  },
+
+  // === Location checks ===
+  isFinalCity: (ctx) =>
+    ctx.currentCase && ctx.cityIndex === ctx.currentCase.totalCities - 1,
+
   isWrongCity: (ctx) => ctx.wrongCity,
   isCity1: (ctx) => ctx.cityIndex === 0,
-  isCities2ToNMinus1: (ctx) => ctx.cityIndex >= 1 && ctx.cityIndex < ctx.totalCities - 1,
 
-  // Investigation routing
+  isCities2ToNMinus1: (ctx) =>
+    ctx.currentCase &&
+    ctx.cityIndex >= 1 &&
+    ctx.cityIndex < ctx.currentCase.totalCities - 1,
+
+  // === Investigation spots ===
+  hasAvailableSpots: (ctx) => {
+    if (!ctx.currentCase) return false;
+    const city = ctx.currentCase.cities[ctx.cityIndex];
+    return ctx.spotsUsedInCity < city.investigationSpots;
+  },
+
+  // === Investigation routing ===
   shouldApprehend: (ctx) =>
-    ctx.cityIndex === ctx.totalCities - 1 && ctx.hadEncounterInCity,
+    ctx.currentCase &&
+    ctx.cityIndex === ctx.currentCase.totalCities - 1 &&
+    ctx.hadEncounterInCity,
 
   shouldHenchman: (ctx) =>
+    ctx.currentCase &&
     ctx.cityIndex >= 1 &&
-    ctx.cityIndex < ctx.totalCities - 1 &&
+    ctx.cityIndex < ctx.currentCase.totalCities - 1 &&
     !ctx.wrongCity &&
     !ctx.hadEncounterInCity,
 
   shouldAssassination: (ctx) =>
-    ctx.cityIndex === ctx.totalCities - 1 &&
+    ctx.currentCase &&
+    ctx.cityIndex === ctx.currentCase.totalCities - 1 &&
     !ctx.hadEncounterInCity,
 
   shouldRogueActionAlone: (ctx) =>
     ctx.pendingRogueAction &&
     !ctx.rogueUsedInCity &&
-    // Only "alone" if no mandatory encounter was triggered
     ctx.encounterQueue.length === 0,
 
   shouldGoodDeed: (ctx) =>
-    ctx.investigatedLocations.length > 0 &&  // 2nd+ investigation
+    ctx.spotsUsedInCity > 0 &&  // 2nd+ investigation in this city
     !ctx.wrongCity &&
     !ctx.hadGoodDeedInCase &&
     ctx.goodDeedRoll !== null &&
-    ctx.goodDeedRoll < 0.3,  // 30% chance, already rolled
+    ctx.goodDeedRoll < 0.3,
 
-  // Encounter resolution
-  hasStackedRogueAction: (ctx) =>
-    ctx.pendingRogueAction &&
-    !ctx.rogueUsedInCity &&
-    ctx.encounterType !== 'rogueAction',
+  // === Encounter types ===
+  requiresGadgetChoice: (ctx) =>
+    ['henchman', 'assassination'].includes(ctx.encounterType),
 
+  isGoodDeed: (ctx) => ctx.encounterType === 'goodDeed',
   isApprehension: (ctx) => ctx.encounterType === 'apprehension',
   isTimeOut: (ctx) => ctx.encounterType === 'timeOut',
 
-  // Trial
+  hasStackedRogueAction: (ctx) =>
+    ctx.encounterQueue.length > 0 &&
+    ctx.encounterQueue[0] === 'rogueAction',
+
+  // === Gadgets ===
+  hasAvailableGadget: (ctx, event) =>
+    ctx.availableGadgets.some(g => g.id === event.gadgetId),
+
+  // === Trial ===
   hasNoWarrant: (ctx) => !ctx.warrantIssued,
+
   hasWrongWarrant: (ctx) =>
     ctx.warrantIssued &&
-    ctx.selectedWarrant?.id !== ctx.currentCase?.suspect.id,
+    ctx.currentCase &&
+    ctx.selectedWarrant?.id !== ctx.currentCase.suspect.id,
+
   hasCorrectWarrant: (ctx) =>
     ctx.warrantIssued &&
-    ctx.selectedWarrant?.id === ctx.currentCase?.suspect.id,
+    ctx.currentCase &&
+    ctx.selectedWarrant?.id === ctx.currentCase.suspect.id,
 };
 ```
 
@@ -1067,15 +1264,48 @@ const guards = {
 
 ```javascript
 const actions = {
-  // === Time Management (centralized) ===
-  advanceTime: assign((ctx, event) => {
-    const hours = event.hours || 0;
-    return {
-      currentHour: (ctx.currentHour + hours) % 24,
-      timeRemaining: ctx.timeRemaining - hours,
-    };
-  }),
+  // ============================================
+  // CASE INITIALIZATION
+  // ============================================
+  initializeCase: assign((ctx, event) => ({
+    currentCase: event.caseData,
+    cityIndex: 0,
+    currentCityId: event.caseData.cities[0].id,
+    wrongCity: false,
+    originCityId: null,
+    travelDestination: null,
+    currentHour: 8,
+    timeRemaining: 72,
+    investigatedSpots: [],
+    spotsUsedInCity: 0,
+    hadEncounterInCity: false,
+    hadGoodDeedInCase: false,
+    rogueUsedInCity: false,
+    warrantIssued: false,
+    selectedWarrant: null,
+    availableGadgets: event.caseData.startingGadgets || [],
+    usedGadgets: [],
+    wounds: 0,
+    encounterType: null,
+    encounterQueue: [],
+    encounterChoice: null,
+    witnessClueVariant: null,
+    pendingRogueAction: false,
+    travelHours: null,
+    goodDeedRoll: null,
+    lastSleepMessage: null,
+    sleepWouldTimeout: false,
+    debriefOutcome: null,
+  })),
 
+  loadSavedState: assign((ctx, event) => ({
+    ...ctx,
+    ...event.savedContext,
+  })),
+
+  // ============================================
+  // TIME MANAGEMENT (centralized)
+  // ============================================
   advanceTimeToMorning: assign((ctx) => {
     const hoursUntil7am = ctx.currentHour >= 23
       ? (24 - ctx.currentHour) + 7
@@ -1088,7 +1318,6 @@ const actions = {
   }),
 
   advanceTimeForTravel: assign((ctx) => {
-    // Travel time proportional to distance (stored by setTravelDestination)
     const hours = ctx.travelHours || 4;
     return {
       currentHour: (ctx.currentHour + hours) % 24,
@@ -1097,36 +1326,112 @@ const actions = {
   }),
 
   advanceTimeForInvestigation: assign((ctx) => {
-    // Progressive cost: 2h, 4h, 8h based on investigation count in city
-    const count = ctx.investigatedLocations.filter(loc =>
-      loc.startsWith(`city${ctx.cityIndex}`)).length;
-    const hours = [2, 4, 8][Math.min(count, 2)];
+    // Progressive cost: 2h, 4h, 8h
+    const hours = [2, 4, 8][Math.min(ctx.spotsUsedInCity, 2)];
     return {
       currentHour: (ctx.currentHour + hours) % 24,
       timeRemaining: ctx.timeRemaining - hours,
     };
   }),
 
-  // === Dice Rolls (happen as actions, not guards) ===
+  // ============================================
+  // SLEEP
+  // ============================================
+  calculateSleepTimeout: assign((ctx) => {
+    const hoursUntil7am = ctx.currentHour >= 23
+      ? (24 - ctx.currentHour) + 7
+      : 7 - ctx.currentHour;
+    return {
+      sleepWouldTimeout: ctx.timeRemaining <= hoursUntil7am,
+    };
+  }),
+
+  setSleepMessage: assign((ctx) => {
+    const hoursUntil7am = ctx.currentHour >= 23
+      ? (24 - ctx.currentHour) + 7
+      : 7 - ctx.currentHour;
+    return {
+      lastSleepMessage: `You rested for ${hoursUntil7am} hours.`,
+    };
+  }),
+
+  // ============================================
+  // DICE ROLLS
+  // ============================================
   rollGoodDeedDice: assign({
     goodDeedRoll: () => Math.random(),
   }),
 
-  // === Investigation Setup ===
+  // ============================================
+  // TRAVEL
+  // ============================================
+  setTravelDestination: assign((ctx, event) => ({
+    travelHours: event.travelHours,
+    travelDestination: event.destinationId,
+    // Store origin for wrong city return
+    originCityId: ctx.currentCityId,
+  })),
+
+  updateLocation: assign((ctx, event) => {
+    // Determine if this is a return from wrong city
+    const isReturningFromWrongCity = ctx.wrongCity && event.destinationId === ctx.originCityId;
+
+    if (isReturningFromWrongCity) {
+      // Returning to correct path - don't change cityIndex
+      return {
+        currentCityId: event.destinationId,
+        wrongCity: false,
+        travelHours: null,
+        travelDestination: null,
+      };
+    }
+
+    // Normal travel
+    const isCorrectPath = event.isCorrectPath;
+    return {
+      cityIndex: isCorrectPath ? ctx.cityIndex + 1 : ctx.cityIndex,
+      currentCityId: event.destinationId,
+      wrongCity: !isCorrectPath,
+      travelHours: null,
+      travelDestination: null,
+    };
+  }),
+
+  resetCityFlags: assign({
+    hadEncounterInCity: false,
+    rogueUsedInCity: false,
+    spotsUsedInCity: 0,
+  }),
+
+  // ============================================
+  // INVESTIGATION
+  // ============================================
   setInvestigationParams: assign((ctx, event) => ({
     pendingRogueAction: event.isRogueAction || false,
   })),
 
-  // === Encounter Setup ===
-  setHenchmanEncounter: assign({
-    encounterType: 'henchman',
-    encounterQueue: (ctx) => ctx.pendingRogueAction ? ['rogueAction'] : [],
-  }),
+  recordInvestigation: assign((ctx, event) => ({
+    investigatedSpots: [
+      ...ctx.investigatedSpots,
+      `${ctx.currentCityId}:${event.spotIndex}`
+    ],
+    spotsUsedInCity: ctx.spotsUsedInCity + 1,
+  })),
 
-  setAssassinationEncounter: assign({
+  // ============================================
+  // ENCOUNTER SETUP
+  // ============================================
+  setHenchmanEncounter: assign((ctx) => ({
+    encounterType: 'henchman',
+    encounterChoice: 'pending',
+    encounterQueue: ctx.pendingRogueAction ? ['rogueAction'] : [],
+  })),
+
+  setAssassinationEncounter: assign((ctx) => ({
     encounterType: 'assassination',
-    encounterQueue: (ctx) => ctx.pendingRogueAction ? ['rogueAction'] : [],
-  }),
+    encounterChoice: 'pending',
+    encounterQueue: ctx.pendingRogueAction ? ['rogueAction'] : [],
+  })),
 
   setRogueEncounter: assign({
     encounterType: 'rogueAction',
@@ -1147,46 +1452,68 @@ const actions = {
     encounterType: 'timeOut',
   }),
 
-  // === Encounter Resolution ===
+  // ============================================
+  // ENCOUNTER RESOLUTION
+  // ============================================
+  setEncounterChoice: assign((ctx, event) => ({
+    encounterChoice: event.type === 'CHOOSE_GADGET' ? 'gadget' : 'endure',
+  })),
+
+  useGadget: assign((ctx, event) => ({
+    usedGadgets: [...ctx.usedGadgets, event.gadgetId],
+    availableGadgets: ctx.availableGadgets.filter(g => g.id !== event.gadgetId),
+  })),
+
+  applyInjury: assign((ctx) => ({
+    wounds: ctx.wounds + 1,
+  })),
+
+  applyTimePenalty: assign((ctx) => ({
+    // Lose 2 extra hours when taking injury
+    timeRemaining: ctx.timeRemaining - 2,
+    currentHour: (ctx.currentHour + 2) % 24,
+  })),
+
+  increaseKarma: assign((ctx) => ({
+    karma: ctx.karma + 1,
+  })),
+
+  markGoodDeedComplete: assign({
+    hadGoodDeedInCase: true,
+  }),
+
+  popRogueFromQueue: assign((ctx) => ({
+    encounterType: 'rogueAction',
+    encounterQueue: ctx.encounterQueue.slice(1),
+    witnessClueVariant: 'rogue',
+  })),
+
   markEncounterComplete: assign((ctx) => ({
     hadEncounterInCity: ['henchman', 'assassination'].includes(ctx.encounterType)
       ? true
       : ctx.hadEncounterInCity,
-    hadGoodDeedInCase: ctx.encounterType === 'goodDeed'
-      ? true
-      : ctx.hadGoodDeedInCase,
     rogueUsedInCity: ctx.encounterType === 'rogueAction'
       ? true
       : ctx.rogueUsedInCity,
   })),
 
-  // === Witness Clue ===
+  // ============================================
+  // WITNESS CLUE
+  // ============================================
   setNormalClue: assign({
     witnessClueVariant: 'normal',
   }),
 
   recordClue: assign((ctx, event) => ({
-    investigatedLocations: [...ctx.investigatedLocations, event.locationId],
+    investigatedSpots: [
+      ...ctx.investigatedSpots,
+      `${ctx.currentCityId}:${event.spotIndex}`
+    ],
   })),
 
-  // === Travel ===
-  setTravelDestination: assign((ctx, event) => ({
-    travelHours: event.travelHours,  // Store for animation & time advancement
-  })),
-
-  // === Location ===
-  updateLocation: assign((ctx, event) => ({
-    cityIndex: event.isCorrectDestination ? ctx.cityIndex + 1 : ctx.cityIndex,
-    wrongCity: !event.isCorrectDestination,
-    travelHours: null,  // Clear after arrival
-  })),
-
-  resetCityFlags: assign({
-    hadEncounterInCity: false,
-    rogueUsedInCity: false,
-  }),
-
-  // === Trial ===
+  // ============================================
+  // TRIAL & DEBRIEF
+  // ============================================
   determineTrialOutcome: assign((ctx) => {
     let outcome;
     if (!ctx.warrantIssued) {
@@ -1203,21 +1530,86 @@ const actions = {
     debriefOutcome: 'time_out',
   }),
 
-  // === Cleanup ===
+  updateStats: assign((ctx) => {
+    if (ctx.debriefOutcome === 'success') {
+      return {
+        solvedCases: [...ctx.solvedCases, ctx.currentCase?.id],
+        karma: ctx.karma + 5,  // Bonus for solving
+      };
+    }
+    return {
+      notoriety: ctx.notoriety + 1,  // Failed case increases notoriety
+    };
+  }),
+
+  // ============================================
+  // CLEANUP
+  // ============================================
   clearTransientState: assign({
     encounterType: null,
     encounterQueue: [],
+    encounterChoice: null,
     witnessClueVariant: null,
     pendingRogueAction: false,
     travelHours: null,
+    travelDestination: null,
     goodDeedRoll: null,
     lastSleepMessage: null,
+    sleepWouldTimeout: false,
   }),
 
-  // === Persistence ===
+  clearCaseState: assign({
+    currentCase: null,
+    cityIndex: 0,
+    currentCityId: null,
+    wrongCity: false,
+    originCityId: null,
+    investigatedSpots: [],
+    spotsUsedInCity: 0,
+    hadEncounterInCity: false,
+    hadGoodDeedInCase: false,
+    rogueUsedInCity: false,
+    warrantIssued: false,
+    selectedWarrant: null,
+    availableGadgets: [],
+    usedGadgets: [],
+    wounds: 0,
+    debriefOutcome: null,
+  }),
+
+  // ============================================
+  // PERSISTENCE
+  // ============================================
   saveGame: (ctx) => {
     // Side effect: persist to localStorage/IndexedDB
-    saveToStorage(ctx);
+    const saveData = {
+      // Persistent
+      karma: ctx.karma,
+      notoriety: ctx.notoriety,
+      solvedCases: ctx.solvedCases,
+
+      // Case state (only if in case)
+      ...(ctx.currentCase && {
+        currentCase: ctx.currentCase,
+        cityIndex: ctx.cityIndex,
+        currentCityId: ctx.currentCityId,
+        wrongCity: ctx.wrongCity,
+        originCityId: ctx.originCityId,
+        currentHour: ctx.currentHour,
+        timeRemaining: ctx.timeRemaining,
+        investigatedSpots: ctx.investigatedSpots,
+        spotsUsedInCity: ctx.spotsUsedInCity,
+        hadEncounterInCity: ctx.hadEncounterInCity,
+        hadGoodDeedInCase: ctx.hadGoodDeedInCase,
+        rogueUsedInCity: ctx.rogueUsedInCity,
+        warrantIssued: ctx.warrantIssued,
+        selectedWarrant: ctx.selectedWarrant,
+        availableGadgets: ctx.availableGadgets,
+        usedGadgets: ctx.usedGadgets,
+        wounds: ctx.wounds,
+      }),
+    };
+    localStorage.setItem('carmenSandiego_save', JSON.stringify(saveData));
   },
 };
 ```
@@ -1264,6 +1656,289 @@ testPlans.forEach(plan => {
   });
 });
 ```
+
+---
+
+## Event Sources
+
+Who sends each event and when:
+
+| Event | Source | Trigger |
+|-------|--------|---------|
+| `START_CASE` | Menu UI | Player clicks "New Case" button |
+| `LOAD_SAVE` | Menu UI | Player clicks "Continue" button (if save exists) |
+| `ACCEPT_BRIEFING` | Briefing UI | Player clicks "Accept Mission" button |
+| `TRAVEL` | Map UI | Player selects destination from travel options |
+| `ARRIVE` | Animation callback | Travel animation completes (flyTo `moveend` event) |
+| `INVESTIGATE` | Location UI | Player clicks investigation spot |
+| `CHOOSE_GADGET` | Encounter UI | Player selects gadget from inventory |
+| `CHOOSE_ENDURE` | Encounter UI | Player clicks "Endure" / "Take Hit" button |
+| `HELP_NPC` | Good Deed UI | Player clicks "Help" button |
+| `IGNORE_NPC` | Good Deed UI | Player clicks "Ignore" button |
+| `RESOLVE_ENCOUNTER` | Encounter UI | Player clicks "Continue" after encounter resolution |
+| `CONTINUE` | Witness Clue UI | Player clicks "Continue" after reading clue |
+| `WAKE` | Sleep UI | Player clicks "Continue" after sleep message |
+| `CONFIRM_SLEEP` | Sleep Warning UI | Player confirms sleeping despite timeout warning |
+| `PROCEED_TO_TRIAL` | Apprehension UI | Player clicks "Proceed to Trial" button |
+| `COMPLETE_TRIAL` | Trial UI | Player clicks "Continue" after verdict |
+| `RETURN_TO_MENU` | Debrief UI | Player clicks "Return to Menu" button |
+
+### Animation Integration
+
+```javascript
+// Travel animation sends ARRIVE when complete
+map.on('moveend', () => {
+  if (state.matches('playing.traveling')) {
+    send({ type: 'ARRIVE' });
+  }
+});
+
+// Calculate travel hours before sending TRAVEL
+const travelHours = getTravelHours(getDistanceKm(currentCity, destination));
+send({
+  type: 'TRAVEL',
+  destinationId: destination.id,
+  travelHours,
+  isCorrectPath: destination.id === currentCity.correctDestination
+});
+```
+
+---
+
+## Future Enhancements (Wishes)
+
+Planned improvements for future iterations:
+
+### 1. XState Services for Async Operations
+**Priority:** Medium
+**Benefit:** Proper async handling, cancellation, error recovery
+
+```javascript
+// Instead of side-effect in entry action
+saveGame: (ctx) => { localStorage.setItem(...) }
+
+// Use invoke for proper async handling
+states: {
+  saving: {
+    invoke: {
+      src: 'saveGameService',
+      onDone: 'idle',
+      onError: 'saveError'
+    }
+  }
+}
+```
+
+### 2. Parallel States for UI Overlays
+**Priority:** Low
+**Benefit:** Clean separation of game logic from UI modals
+
+```javascript
+playing: {
+  type: 'parallel',
+  states: {
+    activity: { /* existing activity states */ },
+    overlay: {
+      initial: 'none',
+      states: {
+        none: {},
+        settings: {},
+        evidence: {},
+        inventory: {}
+      }
+    }
+  }
+}
+```
+
+### 3. History States for Undo
+**Priority:** Low
+**Benefit:** Allow player to undo last action
+
+```javascript
+// Store history for undo
+playing: {
+  history: 'deep',  // Remember nested state
+}
+
+// Undo transitions back to history
+on: {
+  UNDO: { target: 'playing.hist' }
+}
+```
+
+### 4. Event Validation Guards
+**Priority:** Medium
+**Benefit:** Prevent invalid actions at state machine level
+
+```javascript
+idle: {
+  on: {
+    INVESTIGATE: {
+      target: 'investigating',
+      cond: 'hasAvailableSpots',  // Can't investigate if no spots
+      actions: [...]
+    },
+    TRAVEL: {
+      target: 'traveling',
+      cond: 'hasDestinations',  // Can't travel if no destinations
+      actions: [...]
+    }
+  }
+}
+```
+
+### 5. XState Visualizer Integration
+**Priority:** High (for development)
+**Benefit:** Visual debugging, state exploration
+
+```javascript
+// In development mode
+import { inspect } from '@xstate/inspect';
+
+if (process.env.NODE_ENV === 'development') {
+  inspect({
+    iframe: false,  // Opens in new window
+  });
+}
+
+// Use interpreted machine
+const service = interpret(gameMachine, { devTools: true });
+```
+
+### 6. Model-Based Test Generation
+**Priority:** Medium
+**Benefit:** Automatic test coverage of all state paths
+
+```javascript
+// Generate tests for all reachable states
+const model = createModel(gameMachine);
+const testPlans = model.getSimplePathPlans();
+
+describe('Game State Machine', () => {
+  testPlans.forEach(plan => {
+    describe(plan.description, () => {
+      plan.paths.forEach(path => {
+        it(path.description, async () => {
+          await path.test(renderGame());
+        });
+      });
+    });
+  });
+});
+```
+
+### 7. Clue Alternation Tracking
+**Priority:** High
+**Benefit:** Ensure clues alternate between suspect and location
+
+```javascript
+// Add to context
+lastClueType: 'suspect' | 'location' | null;
+
+// Alternate in witnessClue state
+entry: assign((ctx) => ({
+  currentClueType: ctx.lastClueType === 'suspect' ? 'location' : 'suspect',
+  lastClueType: ctx.lastClueType === 'suspect' ? 'location' : 'suspect',
+}));
+```
+
+### 8. Difficulty Scaling
+**Priority:** Low
+**Benefit:** Adjustable game difficulty
+
+```javascript
+// Add to context
+difficulty: 'easy' | 'normal' | 'hard';
+
+// Scale time costs based on difficulty
+const difficultyMultiplier = { easy: 0.75, normal: 1, hard: 1.5 };
+
+advanceTimeForInvestigation: assign((ctx) => {
+  const baseHours = [2, 4, 8][Math.min(ctx.spotsUsedInCity, 2)];
+  const hours = Math.ceil(baseHours * difficultyMultiplier[ctx.difficulty]);
+  return { ... };
+});
+```
+
+### 9. Achievement/Stats Tracking
+**Priority:** Low
+**Benefit:** Player engagement, replayability
+
+```javascript
+// Add to persistent context
+stats: {
+  casesAttempted: number;
+  casesSolved: number;
+  totalPlayTime: number;
+  citiesVisited: Set<string>;
+  gadgetsUsed: number;
+  perfectCases: number;  // No injuries, correct warrant
+}
+
+// Update on debrief
+updateStats: assign((ctx) => ({
+  stats: {
+    ...ctx.stats,
+    casesAttempted: ctx.stats.casesAttempted + 1,
+    casesSolved: ctx.debriefOutcome === 'success'
+      ? ctx.stats.casesSolved + 1
+      : ctx.stats.casesSolved,
+  }
+}));
+```
+
+### 10. Error Recovery States
+**Priority:** Medium
+**Benefit:** Graceful handling of save failures, network errors
+
+```javascript
+states: {
+  // Add error states at top level
+  saveError: {
+    on: {
+      RETRY_SAVE: { target: 'playing', actions: 'saveGame' },
+      DISMISS_ERROR: 'playing'
+    }
+  },
+  loadError: {
+    on: {
+      RETRY_LOAD: { target: 'menu', actions: 'loadSavedState' },
+      START_FRESH: 'menu'
+    }
+  }
+}
+```
+
+---
+
+## Implementation Checklist
+
+Before starting implementation:
+
+- [ ] All types defined in TypeScript
+- [ ] All guards are pure functions
+- [ ] All actions are defined
+- [ ] Event sources documented
+- [ ] Test cases identified
+
+During implementation:
+
+- [ ] Set up XState with React context
+- [ ] Implement guards
+- [ ] Implement actions
+- [ ] Connect UI events to machine events
+- [ ] Add XState Visualizer for debugging
+- [ ] Write model-based tests
+
+After implementation:
+
+- [ ] Verify original bug is fixed
+- [ ] Test all debrief outcomes
+- [ ] Test wrong city recovery
+- [ ] Test sleep timeout warning
+- [ ] Test gadget/injury choice
+- [ ] Performance testing (state machine overhead)
 
 ---
 
