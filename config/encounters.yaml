@@ -4,7 +4,6 @@ henchman_encounters:
     type: henchman
     name: Street Tailing
     description: A shadowy figure is following you through the crowded market...
-    correct_gadget: smoke_bomb
     time_penalty_wrong: 4
     time_penalty_none: 6
     success_text: You deploy the Smoke Bomb! The henchman loses sight of you in the thick cloud. You escape without losing any time!
@@ -15,7 +14,6 @@ henchman_encounters:
     type: henchman
     name: Alley Ambush
     description: Someone jumps out from the shadows! They're blocking your path!
-    correct_gadget: smoke_bomb
     time_penalty_wrong: 4
     time_penalty_none: 6
     success_text: You throw the Smoke Bomb at your feet! In the confusion, you slip past your attacker unseen.
@@ -26,7 +24,6 @@ henchman_encounters:
     type: henchman
     name: Booby Trap
     description: Your hotel room door is rigged with a trap... A tripwire glints in the dim light.
-    correct_gadget: xray_glasses
     time_penalty_wrong: 4
     time_penalty_none: 6
     success_text: Using the X-Ray Glasses, you spot the entire mechanism! You carefully disarm it without incident.
@@ -37,7 +34,6 @@ henchman_encounters:
     type: henchman
     name: Suspicious Package
     description: A package addressed to you arrives at the hotel desk. It's ticking...
-    correct_gadget: xray_glasses
     time_penalty_wrong: 4
     time_penalty_none: 6
     success_text: The X-Ray Glasses reveal it's a harmless clock attached to confetti! A distraction, but now you know.
@@ -48,7 +44,6 @@ henchman_encounters:
     type: henchman
     name: Surrounded by Goons
     description: Three burly henchmen corner you in an alley. They're cracking their knuckles menacingly.
-    correct_gadget: shoe_phone
     time_penalty_wrong: 4
     time_penalty_none: 6
     success_text: You activate the Shoe Phone! Backup arrives in minutes, and the goons scatter.
@@ -59,7 +54,6 @@ henchman_encounters:
     type: henchman
     name: Police Interrogation
     description: Corrupt local police have detained you for "questioning." They're working for the Syndicate!
-    correct_gadget: shoe_phone
     time_penalty_wrong: 4
     time_penalty_none: 6
     success_text: The Shoe Phone connects you to your agency. They apply diplomatic pressure and you're released immediately.
@@ -76,7 +70,6 @@ assassination_attempts:
     timer_duration: 5
     animation: crosshairs_zeroing
     animation_description: Sniper crosshairs slowly zeroing in, red laser dot on chest
-    correct_gadget: grappling_hook
     time_penalty_wrong: 6
     time_penalty_none: 8
     success_text: You fire the Grappling Hook and swing up to the roof! The sniper flees before you can reach them, but the threat is neutralized.
@@ -91,7 +84,6 @@ assassination_attempts:
     timer_duration: 6
     animation: poison_spreading
     animation_description: Dark poison visibly spreading through the liquid in slow motion
-    correct_gadget: antidote_pills
     time_penalty_wrong: 6
     time_penalty_none: 8
     success_text: You immediately swallow the Antidote Pills! The effects are reversed within minutes. Close call!
@@ -106,7 +98,6 @@ assassination_attempts:
     timer_duration: 7
     animation: gas_filling
     animation_description: Deadly gas slowly filling the room from floor to ceiling
-    correct_gadget: laser_watch
     time_penalty_wrong: 6
     time_penalty_none: 8
     success_text: The Laser Watch cuts through the lock mechanism like butter! You escape before the gas takes effect.
@@ -121,7 +112,6 @@ assassination_attempts:
     timer_duration: 5
     animation: safe_falling
     animation_description: Heavy safe falling from above with growing shadow beneath
-    correct_gadget: grappling_hook
     time_penalty_wrong: 6
     time_penalty_none: 8
     success_text: You fire the Grappling Hook and swing clear! The safe crashes where you were standing moments ago.
@@ -136,7 +126,6 @@ assassination_attempts:
     timer_duration: 5
     animation: burning_fuse
     animation_description: Sparking fuse burning toward explosive, digital timer counting down
-    correct_gadget: xray_glasses
     time_penalty_wrong: 6
     time_penalty_none: 8
     success_text: The X-Ray Glasses let you see which wire to cut! You defuse it with one second to spare!
@@ -151,7 +140,6 @@ assassination_attempts:
     timer_duration: 6
     animation: knife_arc
     animation_description: Knife slowly arcing through air toward player, assassin's silhouette
-    correct_gadget: smoke_bomb
     time_penalty_wrong: 6
     time_penalty_none: 8
     success_text: You deploy the Smoke Bomb! The assassin's blade cuts through empty smoke as you vanish!

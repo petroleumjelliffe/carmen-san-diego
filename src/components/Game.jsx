@@ -52,7 +52,7 @@ export function Game({ gameData }) {
     lastRogueAction,
     activeRogueAction,
     currentEncounter,
-    availableGadgets,
+    currentTriviaQuestion,
     selectedTraits,
     cycleSelectedTrait,
     resetSelectedTraits,
@@ -330,7 +330,8 @@ export function Game({ gameData }) {
                     onRogueAction={handleRogueAction}
                     notoriety={notoriety}
                     currentEncounter={currentEncounter}
-                    availableGadgets={availableGadgets}
+                    currentTriviaQuestion={currentTriviaQuestion}
+                    gameData={gameData}
                     onEncounterResolve={handleEncounterResolve}
                     isApprehended={gameState === 'apprehended'}
                     selectedWarrant={selectedWarrant}

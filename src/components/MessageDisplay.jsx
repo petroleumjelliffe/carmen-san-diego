@@ -64,6 +64,9 @@ export function MessageDisplay({
   // Optional setup (encounters only)
   setupText,
 
+  // Optional trivia stimulus (trivia encounters only)
+  triviaStimulus,
+
   // Optional timer (interactive encounters only)
   timerDuration,
   onTimeout,
@@ -280,6 +283,22 @@ export function MessageDisplay({
           showQuotes={showQuotes !== undefined ? showQuotes : (type !== 'encounter_henchman' && type !== 'encounter_assassination' && type !== 'encounter_good_deed')}
         />
 
+        {/* Trivia Stimulus */}
+        {triviaStimulus && (
+          <div className="text-center mb-6 px-2">
+            <div className="flex items-center gap-2 mb-3 justify-center">
+              {triviaStimulus.icon && <span className="text-2xl">{triviaStimulus.icon}</span>}
+              <p className="text-yellow-200 text-sm">{triviaStimulus.flavorText}</p>
+            </div>
+            <div className="bg-gray-800/50 rounded-lg p-8 inline-block min-w-[200px]">
+              <div className="text-8xl font-bold mb-2">{triviaStimulus.value}</div>
+              {triviaStimulus.subtext && (
+                <div className="text-xl text-gray-300">{triviaStimulus.subtext}</div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Choice Section with integrated timer */}
         {choices.length > 0 && (
           <div className="px-2">
@@ -456,18 +475,16 @@ function ChoiceSection({ choices, onChoice, hasTimedOut, type, timerPercent = 10
     );
   }
 
-  // Gadget encounters have grid of choices with timer on each
+  // Trivia encounters have 2x2 grid of country choices
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-2 gap-3">
       {choices.map((choice) => (
         <button
           key={choice.id}
           onClick={() => onChoice(choice.id)}
           disabled={choice.disabled || hasTimedOut}
-          className={`p-3 rounded-lg flex flex-col items-center gap-1 transition-all relative overflow-hidden ${
-            choice.disabled
-              ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-              : hasTimedOut
+          className={`p-4 rounded-lg flex flex-col items-center gap-2 transition-all relative overflow-hidden ${
+            choice.disabled || hasTimedOut
               ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
               : 'bg-blue-700 hover:bg-blue-600 text-white cursor-pointer'
           }`}
@@ -479,9 +496,12 @@ function ChoiceSection({ choices, onChoice, hasTimedOut, type, timerPercent = 10
               style={{ width: `${timerPercent}%` }}
             />
           )}
-          {choice.icon && <span className="text-2xl relative z-10">{choice.icon}</span>}
-          <span className="text-xs font-bold relative z-10">{choice.label}</span>
-          {choice.disabled && <span className="text-xs relative z-10">Used</span>}
+
+          {/* Flag emoji */}
+          {choice.icon && <span className="text-4xl relative z-10">{choice.icon}</span>}
+
+          {/* Country name */}
+          <span className="text-sm font-bold relative z-10 text-center">{choice.label}</span>
         </button>
       ))}
     </div>

@@ -1,4 +1,5 @@
 import { shuffle, pickRandom } from './helpers';
+import { generateTriviaQuestion } from './triviaGenerator';
 
 /**
  * Generate a complete mission with all data pre-defined
@@ -12,7 +13,8 @@ export function generateCase(gameData) {
     stolenItems,
     traitNames,
     settings,
-    gadgets,
+    countries,
+    challengeTypes,
     encounters,
     destinationClues,
     suspectClues,
@@ -35,22 +37,40 @@ export function generateCase(gameData) {
   // Shuffle trait reveal order (one trait revealed per city before final)
   const traitOrder = shuffle([...traitNames]);
 
-  // Pick 3 gadgets for this mission
-  const selectedGadgets = shuffle([...gadgets]).slice(0, 3);
+  // Generate unique trivia questions for encounters
+  const usedCountries = [];
 
-  // Pre-generate encounter sequence based on selected gadgets
-  const henchmanEncounters = encounters?.henchman_encounters || [];
-  const encounterSequence = shuffle(
-    selectedGadgets
-      .map(gadget => {
-        const matching = henchmanEncounters.filter(e => e.correct_gadget === gadget.id);
-        return matching.length > 0 ? pickRandom(matching) : null;
-      })
-      .filter(Boolean)
+  // Generate 2 henchman trivia questions
+  const henchmanTriviaQuestions = [];
+  for (let i = 0; i < 2; i++) {
+    const question = generateTriviaQuestion(countries, challengeTypes, usedCountries);
+    henchmanTriviaQuestions.push(question);
+    usedCountries.push(question.correctCountryId);
+  }
+
+  // Generate assassination trivia question
+  const assassinationTriviaQuestion = generateTriviaQuestion(
+    countries,
+    challengeTypes,
+    usedCountries
   );
 
-  // Pre-select assassination attempt for final city
-  const assassinationAttempt = pickRandom(encounters?.assassination_attempts || []);
+  // Select encounter templates (no gadget matching needed)
+  const henchmanEncounters = encounters?.henchman_encounters || [];
+  const encounterTemplates = shuffle([...henchmanEncounters]).slice(0, 2);
+
+  // Combine templates with trivia
+  const encounterSequence = encounterTemplates.map((template, idx) => ({
+    ...template,
+    triviaQuestion: henchmanTriviaQuestions[idx],
+  }));
+
+  // Assassination with trivia
+  const assassinationTemplate = pickRandom(encounters?.assassination_attempts || []);
+  const assassinationAttempt = {
+    ...assassinationTemplate,
+    triviaQuestion: assassinationTriviaQuestion,
+  };
 
   // Shuffle investigation rogue actions and assign one to each city
   const investigationRogueActions = rogueActions?.filter(ra => ra.type === 'investigation') || [];
@@ -152,7 +172,6 @@ export function generateCase(gameData) {
     suspect,
     stolenItem,
     traitOrder,
-    gadgets: selectedGadgets,
     encounterSequence,
     assassinationAttempt,
     cityData,
@@ -167,7 +186,10 @@ export function generateCase(gameData) {
     console.log('Stolen:', stolenItem.name);
     console.log('Trail:', caseCities.map(id => citiesById[id]?.name).join(' → '));
     console.log('Trait reveal order:', traitOrder);
-    console.log('Gadgets:', selectedGadgets.map(g => g.name));
+    console.log('Trivia Questions:', [
+      ...henchmanTriviaQuestions.map(q => `${q.challengeType.id}: ${q.correctCountry.name}`),
+      `Assassination: ${assassinationTriviaQuestion.challengeType.id}: ${assassinationTriviaQuestion.correctCountry.name}`
+    ]);
     console.log('Encounters:', encounterSequence.map(e => e?.name || 'none'));
     console.log('Assassination:', assassinationAttempt?.name);
     console.log('--- City Details ---');

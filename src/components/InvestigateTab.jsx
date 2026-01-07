@@ -28,7 +28,8 @@ export function InvestigateTab({
   onRogueAction,
   notoriety,
   currentEncounter,
-  availableGadgets,
+  currentTriviaQuestion,
+  gameData,
   onEncounterResolve,
   isApprehended,
   selectedWarrant,
@@ -213,7 +214,8 @@ export function InvestigateTab({
               type={encounterType}
               encounter={activeEncounter}
               timerDuration={getTimerDuration()}
-              availableGadgets={availableGadgets}
+              triviaQuestion={currentTriviaQuestion}
+              countries={gameData.countries}
               karma={karma}
               timeRemaining={timeRemaining}
               onResolve={onEncounterResolve}
@@ -291,8 +293,9 @@ export function InvestigateTab({
         </div>
       )}
 
-      {/* Option Tray - Always horizontal at bottom */}
-      <div className="absolute bottom-0 left-0 right-0 h-48 p-4 bg-gray-900/90 backdrop-blur-sm z-30">
+      {/* Option Tray - Hidden during encounters */}
+      {!currentEncounter && !currentGoodDeed && (
+        <div className="absolute bottom-0 left-0 right-0 h-48 p-4 bg-gray-900/90 backdrop-blur-sm z-30">
           <OptionTray orientation="horizontal">
             {/* Investigation Spots */}
             {cityClues.map((clue, i) => {
@@ -333,7 +336,8 @@ export function InvestigateTab({
               </div>
             )}
           </OptionTray>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

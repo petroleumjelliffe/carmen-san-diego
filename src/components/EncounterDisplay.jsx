@@ -3,13 +3,14 @@ import { MessageDisplay } from './MessageDisplay';
 
 /**
  * Wrapper for MessageDisplay that handles encounter game logic
- * (gadget checking, good deed outcomes, time penalties)
+ * (trivia checking, good deed outcomes, time penalties)
  */
 export function EncounterDisplay({
   type,
   encounter,
   timerDuration,
-  availableGadgets,
+  triviaQuestion,
+  countries,
   karma,
   timeRemaining,
   onResolve,
@@ -34,10 +35,9 @@ export function EncounterDisplay({
       };
     } else {
       newResult = {
-        message: encounter?.timeout_text || encounter?.no_gadget_text || 'Time ran out!',
+        message: encounter?.timeout_text || 'Time ran out! They escaped!',
         type: 'failure',
         outcome: 'timeout',
-        gadgetId: null,
         timeLost: noPenalty,
       };
     }
@@ -85,30 +85,38 @@ export function EncounterDisplay({
         };
       }
     } else {
-      // Gadget encounter (henchman/assassination)
-      const isCorrect = choiceId === encounter?.correct_gadget;
+      // Trivia encounter (henchman/assassination)
+      console.log('Trivia Answer Check:', {
+        choiceId,
+        correctCountryId: triviaQuestion?.correctCountryId,
+        isMatch: choiceId === triviaQuestion?.correctCountryId,
+        stimulus: triviaQuestion?.stimulus,
+        correctCountry: triviaQuestion?.correctCountry?.name,
+        allOptions: triviaQuestion?.mappedOptions?.map(c => ({ id: c.id, name: c.name }))
+      });
+
+      const isCorrect = choiceId === triviaQuestion?.correctCountryId;
 
       if (isCorrect) {
         newResult = {
-          message: encounter?.success_text || 'Perfect choice!',
+          message: encounter?.success_text || "Correct! You identified the country and thwarted their plan!",
           type: 'success',
           outcome: 'success',
-          gadgetId: choiceId,
           timeLost: 0,
         };
       } else {
+        const correctCountry = countries?.find(c => c.id === triviaQuestion?.correctCountryId);
         newResult = {
-          message: encounter?.failure_text || 'Wrong gadget!',
+          message: encounter?.failure_text || `Wrong! The answer was ${correctCountry?.name} ${correctCountry?.flag}. They escaped!`,
           type: 'failure',
-          outcome: 'wrong_gadget',
-          gadgetId: choiceId,
+          outcome: 'wrong_answer',
           timeLost: wrongPenalty,
         };
       }
     }
 
     setResult(newResult);
-  }, [type, encounter, isFakeGoodDeed, goodDeedTimeCost, wrongPenalty]);
+  }, [type, triviaQuestion, countries, encounter, isFakeGoodDeed, goodDeedTimeCost, wrongPenalty]);
 
   // Handle continue
   const handleContinue = useCallback(() => {
@@ -120,12 +128,12 @@ export function EncounterDisplay({
   // Build choices array
   const choices = type === 'good_deed'
     ? [{ id: 'help', label: 'HELP', type: 'continue' }]
-    : availableGadgets?.map(g => ({
-        id: g.id,
-        label: g.name,
-        icon: g.icon,
-        disabled: g.used,
-        type: 'gadget',
+    : triviaQuestion?.mappedOptions?.map(country => ({
+        id: country.id,
+        label: country.name,
+        icon: country.flag,
+        disabled: false,
+        type: 'trivia',
       })) || [];
 
   return (
@@ -137,6 +145,12 @@ export function EncounterDisplay({
         'witness'
       }
       quote={encounter?.description || encounter?.plea || ''}
+      triviaStimulus={triviaQuestion ? {
+        value: triviaQuestion.stimulus,
+        subtext: triviaQuestion.stimulusSubtext,
+        flavorText: triviaQuestion.flavorText,
+        icon: triviaQuestion.contextIcon,
+      } : null}
       timerDuration={timerDuration}
       onTimeout={handleTimeout}
       choices={choices}

@@ -44,9 +44,8 @@ export function useGameState(gameData) {
   const [lastRogueAction, setLastRogueAction] = useState(null); // Track last rogue action used
   const [lastVisitedLocation, setLastVisitedLocation] = useState(null); // Track last visited spot/location for travel animation
 
-  // Phase 4: Gadget Encounters (henchman & assassination)
+  // Phase 4: Trivia Encounters (henchman & assassination)
   const [currentEncounter, setCurrentEncounter] = useState(null); // Current henchman/assassination encounter
-  const [usedGadgets, setUsedGadgets] = useState([]); // Gadgets used in current case
   const [hadGoodDeedInCase, setHadGoodDeedInCase] = useState(false); // Only one good deed per case
 
   // Dossier trait selections (persists across tab switches)
@@ -130,7 +129,6 @@ export function useGameState(gameData) {
       setCollectedClues(activeCase.collectedClues);
       setInvestigatedLocations(activeCase.investigatedLocations);
       setSelectedWarrant(activeCase.selectedWarrant);
-      setUsedGadgets(activeCase.usedGadgets);
       setHadGoodDeedInCase(activeCase.hadGoodDeedInCase);
       setHadEncounterInCity(activeCase.hadEncounterInCity);
       setRogueUsedInCity(activeCase.rogueUsedInCity);
@@ -161,7 +159,6 @@ export function useGameState(gameData) {
       collectedClues,
       investigatedLocations,
       selectedWarrant,
-      usedGadgets,
       hadGoodDeedInCase,
       hadEncounterInCity,
       rogueUsedInCity,
@@ -184,7 +181,6 @@ export function useGameState(gameData) {
     collectedClues,
     investigatedLocations,
     selectedWarrant,
-    usedGadgets,
     hadGoodDeedInCase,
     hadEncounterInCity,
     rogueUsedInCity,
@@ -626,14 +622,13 @@ export function useGameState(gameData) {
     return getDestinations(gameData, currentCase, currentCityIndex);
   }, [gameData, currentCase, currentCityIndex, gameState]);
 
-  // Get available gadgets with used status (only the 3 pre-selected for this case)
-  const availableGadgets = useMemo(() => {
-    const caseGadgets = currentCase?.gadgets || [];
-    return caseGadgets.map(gadget => ({
-      ...gadget,
-      used: usedGadgets.includes(gadget.id)
-    }));
-  }, [currentCase?.gadgets, usedGadgets]);
+  // Get current trivia question from active encounter
+  const currentTriviaQuestion = useMemo(() => {
+    const encounter = currentEncounter || null;
+    if (!encounter?.triviaQuestion) return null;
+
+    return encounter.triviaQuestion;
+  }, [currentEncounter]);
 
   // Travel to a destination - starts animation, returns travel time
   const travel = useCallback((destination) => {
@@ -793,16 +788,11 @@ export function useGameState(gameData) {
   const handleEncounterResolve = useCallback((result) => {
     if (!result) return;
 
-    const { type, outcome, timeLost, gadgetId, karmaGain, isTrap, injuryChance, npcName } = result;
+    const { type, outcome, timeLost, karmaGain, isTrap, injuryChance, npcName } = result;
 
     // Apply time penalty
     if (timeLost > 0) {
       advanceTime(timeLost);
-    }
-
-    // Mark gadget as used (for gadget-based encounters)
-    if (gadgetId) {
-      setUsedGadgets(prev => [...prev, gadgetId]);
     }
 
     // Handle good deed specific effects
@@ -901,9 +891,9 @@ export function useGameState(gameData) {
     lastRogueAction,
     activeRogueAction,
 
-    // Phase 4: Gadget Encounters
+    // Phase 4: Trivia Encounters
     currentEncounter,
-    availableGadgets,
+    currentTriviaQuestion,
 
     // Dossier trait selections
     selectedTraits,

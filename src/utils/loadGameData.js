@@ -12,7 +12,8 @@ import finalCityClues from '../../config/final_city_clues.yaml';
 import goodDeeds from '../../config/good_deeds.yaml';
 import rogueActions from '../../config/rogue_actions.yaml';
 import encounters from '../../config/encounters.yaml';
-import gadgetsConfig from '../../config/gadgets.yaml';
+import countriesConfig from '../../config/countries.yaml';
+import triviaChallengesConfig from '../../config/trivia_challenges.yaml';
 import witnessPhrases from '../../config/witness-phrases.yaml';
 
 import { indexById, groupBy } from './helpers';
@@ -36,7 +37,8 @@ export function loadGameData() {
   const goodDeedsList = goodDeeds.good_deeds;
   const fakeGoodDeedsList = goodDeeds.fake_good_deeds;
   const rogueActionsList = rogueActions.rogue_actions;
-  const gadgetsList = gadgetsConfig.gadgets;
+  const countriesList = countriesConfig.countries;
+  const challengeTypesList = triviaChallengesConfig.challenge_types;
   const witnessPhrasesList = witnessPhrases.witness_closing_phrases;
   const gameSettings = settings.settings;
   const difficultySettings = settings.difficulty;
@@ -61,7 +63,8 @@ export function loadGameData() {
     goodDeeds: goodDeedsList,
     fakeGoodDeeds: fakeGoodDeedsList,
     rogueActions: rogueActionsList,
-    gadgets: gadgetsList,
+    countries: countriesList,
+    challengeTypes: challengeTypesList,
     encounters: encounters, // Contains henchman_encounters and assassination_attempts
 
     // Clue maps
@@ -72,6 +75,8 @@ export function loadGameData() {
     citiesById: indexById(citiesList),
     citiesByRegion: groupBy(citiesList, 'region'),
     cityIds: citiesList.map(c => c.id),
+    countriesById: indexById(countriesList),
+    countriesByContinent: groupBy(countriesList, 'continent'),
 
     // Trait names extracted from suspect clues
     traitNames: Object.keys(suspClues),

@@ -1,0 +1,12 @@
+challenge_types:
+  - id: flag_to_country
+    prompt_template: "You spot this flag on their luggage:"
+    stimulus_type: flag
+    answer_type: country_name
+    icon: 🧳
+
+  - id: currency_to_country
+    prompt_template: "They drop some coins. You recognize the symbol:"
+    stimulus_type: currency
+    answer_type: country_name
+    icon: 💰

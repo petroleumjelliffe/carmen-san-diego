@@ -1,0 +1,215 @@
+countries:
+  # Europe (10 countries)
+  - id: uk
+    name: United Kingdom
+    flag: 🇬🇧
+    continent: europe
+    currencySymbol: £
+    currencyName: Pound Sterling
+
+  - id: france
+    name: France
+    flag: 🇫🇷
+    continent: europe
+    currencySymbol: €
+    currencyName: Euro
+
+  - id: germany
+    name: Germany
+    flag: 🇩🇪
+    continent: europe
+    currencySymbol: €
+    currencyName: Euro
+
+  - id: italy
+    name: Italy
+    flag: 🇮🇹
+    continent: europe
+    currencySymbol: €
+    currencyName: Euro
+
+  - id: spain
+    name: Spain
+    flag: 🇪🇸
+    continent: europe
+    currencySymbol: €
+    currencyName: Euro
+
+  - id: russia
+    name: Russia
+    flag: 🇷🇺
+    continent: europe
+    currencySymbol: ₽
+    currencyName: Ruble
+
+  - id: turkey
+    name: Turkey
+    flag: 🇹🇷
+    continent: europe
+    currencySymbol: ₺
+    currencyName: Lira
+
+  - id: sweden
+    name: Sweden
+    flag: 🇸🇪
+    continent: europe
+    currencySymbol: kr
+    currencyName: Krona
+
+  - id: norway
+    name: Norway
+    flag: 🇳🇴
+    continent: europe
+    currencySymbol: kr
+    currencyName: Krone
+
+  - id: greece
+    name: Greece
+    flag: 🇬🇷
+    continent: europe
+    currencySymbol: €
+    currencyName: Euro
+
+  # Asia (8 countries)
+  - id: japan
+    name: Japan
+    flag: 🇯🇵
+    continent: asia
+    currencySymbol: ¥
+    currencyName: Yen
+
+  - id: china
+    name: China
+    flag: 🇨🇳
+    continent: asia
+    currencySymbol: ¥
+    currencyName: Yuan
+
+  - id: india
+    name: India
+    flag: 🇮🇳
+    continent: asia
+    currencySymbol: ₹
+    currencyName: Rupee
+
+  - id: thailand
+    name: Thailand
+    flag: 🇹🇭
+    continent: asia
+    currencySymbol: ฿
+    currencyName: Baht
+
+  - id: south_korea
+    name: South Korea
+    flag: 🇰🇷
+    continent: asia
+    currencySymbol: ₩
+    currencyName: Won
+
+  - id: vietnam
+    name: Vietnam
+    flag: 🇻🇳
+    continent: asia
+    currencySymbol: ₫
+    currencyName: Dong
+
+  - id: indonesia
+    name: Indonesia
+    flag: 🇮🇩
+    continent: asia
+    currencySymbol: Rp
+    currencyName: Rupiah
+
+  - id: singapore
+    name: Singapore
+    flag: 🇸🇬
+    continent: asia
+    currencySymbol: S$
+    currencyName: Dollar
+
+  # Americas (6 countries)
+  - id: brazil
+    name: Brazil
+    flag: 🇧🇷
+    continent: americas
+    currencySymbol: R$
+    currencyName: Real
+
+  - id: usa
+    name: United States
+    flag: 🇺🇸
+    continent: americas
+    currencySymbol: $
+    currencyName: Dollar
+
+  - id: canada
+    name: Canada
+    flag: 🇨🇦
+    continent: americas
+    currencySymbol: C$
+    currencyName: Dollar
+
+  - id: mexico
+    name: Mexico
+    flag: 🇲🇽
+    continent: americas
+    currencySymbol: $
+    currencyName: Peso
+
+  - id: argentina
+    name: Argentina
+    flag: 🇦🇷
+    continent: americas
+    currencySymbol: $
+    currencyName: Peso
+
+  - id: chile
+    name: Chile
+    flag: 🇨🇱
+    continent: americas
+    currencySymbol: $
+    currencyName: Peso
+
+  # Africa (4 countries)
+  - id: egypt
+    name: Egypt
+    flag: 🇪🇬
+    continent: africa
+    currencySymbol: E£
+    currencyName: Pound
+
+  - id: south_africa
+    name: South Africa
+    flag: 🇿🇦
+    continent: africa
+    currencySymbol: R
+    currencyName: Rand
+
+  - id: kenya
+    name: Kenya
+    flag: 🇰🇪
+    continent: africa
+    currencySymbol: KSh
+    currencyName: Shilling
+
+  - id: morocco
+    name: Morocco
+    flag: 🇲🇦
+    continent: africa
+    currencySymbol: DH
+    currencyName: Dirham
+
+  # Oceania (2 countries)
+  - id: australia
+    name: Australia
+    flag: 🇦🇺
+    continent: oceania
+    currencySymbol: A$
+    currencyName: Dollar
+
+  - id: new_zealand
+    name: New Zealand
+    flag: 🇳🇿
+    continent: oceania
+    currencySymbol: NZ$
+    currencyName: Dollar
