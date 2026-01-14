@@ -401,3 +401,1434 @@ cities:
         lat: 55.7507
         lon: 37.5878
         time_cost: 3
+
+  - id: barcelona
+    name: Barcelona
+    country: Spain
+    region: europe
+    lat: 41.3888
+    lon: 2.1590
+    icon: 🏛️
+    fact: "Barcelona is home to nine UNESCO World Heritage Sites, more than any other city in the world."
+    background_image: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=1920&q=80"
+    landmarks:
+      - id: hotel_arts_barcelona
+        name: Hotel Arts Barcelona
+        type: hotel
+        neighborhood: Vila Olímpica
+        icon: 🏨
+        lat: 41.3870
+        lon: 2.1967
+      - id: sagrada_familia
+        name: Sagrada Família
+        type: investigation
+        neighborhood: Eixample
+        icon: ⛪
+        lat: 41.4036
+        lon: 2.1744
+        time_cost: 3
+
+      - id: park_guell
+        name: Park Güell
+        type: investigation
+        neighborhood: Gràcia
+        icon: 🎨
+        lat: 41.4145
+        lon: 2.1527
+        time_cost: 3
+
+      - id: la_rambla
+        name: La Rambla
+        type: investigation
+        neighborhood: Ciutat Vella
+        icon: 🚶
+        lat: 41.3818
+        lon: 2.1731
+        time_cost: 2
+
+      - id: el_raval
+        name: El Raval Quarter
+        type: rogue
+        neighborhood: Ciutat Vella
+        icon: 🌃
+        lat: 41.3792
+        lon: 2.1679
+        time_cost: 2
+
+  - id: amsterdam
+    name: Amsterdam
+    country: Netherlands
+    region: europe
+    lat: 52.3740
+    lon: 4.8897
+    icon: 🚲
+    fact: "Amsterdam has more bicycles than residents and over 165 canals."
+    background_image: "https://images.unsplash.com/photo-1534351590666-13e3e96b5017?w=1920&q=80"
+    landmarks:
+      - id: waldorf_astoria_amsterdam
+        name: Waldorf Astoria Amsterdam
+        type: hotel
+        neighborhood: Canal Ring
+        icon: 🏨
+        lat: 52.3699
+        lon: 4.8842
+      - id: anne_frank_house
+        name: Anne Frank House
+        type: investigation
+        neighborhood: Jordaan
+        icon: 🏠
+        lat: 52.3752
+        lon: 4.8840
+        time_cost: 3
+
+      - id: rijksmuseum
+        name: Rijksmuseum
+        type: investigation
+        neighborhood: Museumplein
+        icon: 🖼️
+        lat: 52.3600
+        lon: 4.8852
+        time_cost: 3
+
+      - id: dam_square
+        name: Dam Square
+        type: investigation
+        neighborhood: Centrum
+        icon: 🏛️
+        lat: 52.3730
+        lon: 4.8930
+        time_cost: 2
+
+      - id: red_light_district
+        name: Red Light District
+        type: rogue
+        neighborhood: De Wallen
+        icon: 🔴
+        lat: 52.3736
+        lon: 4.8978
+        time_cost: 2
+
+  - id: prague
+    name: Prague
+    country: Czech Republic
+    region: europe
+    lat: 50.0755
+    lon: 14.4378
+    icon: 🏰
+    fact: "Prague's astronomical clock has been working since 1410, making it the oldest working clock of its kind."
+    background_image: "https://images.unsplash.com/photo-1541849546-216549ae216d?w=1920&q=80"
+    landmarks:
+      - id: four_seasons_prague
+        name: Four Seasons Hotel Prague
+        type: hotel
+        neighborhood: Old Town
+        icon: 🏨
+        lat: 50.0865
+        lon: 14.4141
+      - id: charles_bridge
+        name: Charles Bridge
+        type: investigation
+        neighborhood: Old Town
+        icon: 🌉
+        lat: 50.0865
+        lon: 14.4114
+        time_cost: 2
+
+      - id: prague_castle
+        name: Prague Castle
+        type: investigation
+        neighborhood: Hradčany
+        icon: 🏰
+        lat: 50.0909
+        lon: 14.4009
+        time_cost: 3
+
+      - id: old_town_square
+        name: Old Town Square
+        type: investigation
+        neighborhood: Old Town
+        icon: 🕰️
+        lat: 50.0875
+        lon: 14.4210
+        time_cost: 2
+
+      - id: zizkov_tv_tower
+        name: Žižkov TV Tower
+        type: rogue
+        neighborhood: Žižkov
+        icon: 📡
+        lat: 50.0870
+        lon: 14.4503
+        time_cost: 2
+
+  - id: istanbul
+    name: Istanbul
+    country: Turkey
+    region: europe
+    lat: 41.0082
+    lon: 28.9784
+    icon: 🕌
+    fact: "Istanbul is the only city in the world that spans two continents: Europe and Asia."
+    background_image: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=1920&q=80"
+    landmarks:
+      - id: ciragan_palace_kempinski
+        name: Çırağan Palace Kempinski
+        type: hotel
+        neighborhood: Beşiktaş
+        icon: 🏨
+        lat: 41.0418
+        lon: 29.0026
+      - id: hagia_sophia
+        name: Hagia Sophia
+        type: investigation
+        neighborhood: Sultanahmet
+        icon: 🕌
+        lat: 41.0086
+        lon: 28.9802
+        time_cost: 3
+
+      - id: grand_bazaar
+        name: Grand Bazaar
+        type: investigation
+        neighborhood: Fatih
+        icon: 🏪
+        lat: 41.0108
+        lon: 28.9680
+        time_cost: 3
+
+      - id: bosphorus_strait
+        name: Bosphorus Strait
+        type: investigation
+        neighborhood: Beşiktaş
+        icon: 🌊
+        lat: 41.0403
+        lon: 29.0061
+        time_cost: 2
+
+      - id: balat_neighborhood
+        name: Balat Neighborhood
+        type: rogue
+        neighborhood: Fatih
+        icon: 🎨
+        lat: 41.0277
+        lon: 28.9453
+        time_cost: 2
+
+  - id: dubrovnik
+    name: Dubrovnik
+    country: Croatia
+    region: europe
+    lat: 42.6507
+    lon: 18.0944
+    icon: 🏰
+    fact: "Dubrovnik's Old City walls are 1,940 meters long and have protected the city since the 13th century."
+    background_image: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=1920&q=80"
+    landmarks:
+      - id: hotel_excelsior_dubrovnik
+        name: Hotel Excelsior Dubrovnik
+        type: hotel
+        neighborhood: Ploče
+        icon: 🏨
+        lat: 42.6407
+        lon: 18.1136
+      - id: old_city_walls
+        name: Old City Walls
+        type: investigation
+        neighborhood: Old Town
+        icon: 🏰
+        lat: 42.6413
+        lon: 18.1083
+        time_cost: 3
+
+      - id: stradun
+        name: Stradun (Main Street)
+        type: investigation
+        neighborhood: Old Town
+        icon: 🚶
+        lat: 42.6414
+        lon: 18.1084
+        time_cost: 2
+
+      - id: cable_car
+        name: Mount Srđ Cable Car
+        type: investigation
+        neighborhood: Ploče
+        icon: 🚡
+        lat: 42.6486
+        lon: 18.1122
+        time_cost: 2
+
+      - id: lokrum_island
+        name: Lokrum Island
+        type: rogue
+        neighborhood: Adriatic Sea
+        icon: 🏝️
+        lat: 42.6255
+        lon: 18.1222
+        time_cost: 2
+
+  - id: andorra_la_vella
+    name: Andorra la Vella
+    country: Andorra
+    region: europe
+    lat: 42.5078
+    lon: 1.5211
+    icon: ⛰️
+    fact: "Andorra la Vella is the highest capital city in Europe at 1,023 meters above sea level."
+    background_image: "https://images.unsplash.com/photo-1582719366090-0c3e49e86b8e?w=1920&q=80"
+    landmarks:
+      - id: hotel_plaza_andorra
+        name: Hotel Plaza Andorra
+        type: hotel
+        neighborhood: Andorra la Vella
+        icon: 🏨
+        lat: 42.5082
+        lon: 1.5279
+      - id: casa_de_la_vall
+        name: Casa de la Vall
+        type: investigation
+        neighborhood: Andorra la Vella
+        icon: 🏛️
+        lat: 42.5070
+        lon: 1.5218
+        time_cost: 2
+
+      - id: caldea_spa
+        name: Caldea Spa
+        type: investigation
+        neighborhood: Escaldes-Engordany
+        icon: 💦
+        lat: 42.5090
+        lon: 1.5339
+        time_cost: 3
+
+      - id: shopping_district
+        name: Shopping District
+        type: investigation
+        neighborhood: Andorra la Vella
+        icon: 🛍️
+        lat: 42.5067
+        lon: 1.5212
+        time_cost: 2
+
+      - id: tobacco_museum
+        name: Tobacco Museum
+        type: rogue
+        neighborhood: Sant Julià de Lòria
+        icon: 🏭
+        lat: 42.4637
+        lon: 1.4912
+        time_cost: 2
+
+  - id: monaco
+    name: Monaco
+    country: Monaco
+    region: europe
+    lat: 43.7333
+    lon: 7.4167
+    icon: 🎰
+    fact: "Monaco is the second smallest country in the world and has the highest GDP per capita."
+    background_image: "https://images.unsplash.com/photo-1605548075541-0c4aac4f4aad?w=1920&q=80"
+    landmarks:
+      - id: hotel_de_paris_monte_carlo
+        name: Hôtel de Paris Monte-Carlo
+        type: hotel
+        neighborhood: Monte Carlo
+        icon: 🏨
+        lat: 43.7398
+        lon: 7.4275
+      - id: casino_monte_carlo
+        name: Casino de Monte-Carlo
+        type: investigation
+        neighborhood: Monte Carlo
+        icon: 🎰
+        lat: 43.7397
+        lon: 7.4281
+        time_cost: 3
+
+      - id: princes_palace
+        name: Prince's Palace
+        type: investigation
+        neighborhood: Monaco-Ville
+        icon: 🏰
+        lat: 43.7314
+        lon: 7.4197
+        time_cost: 2
+
+      - id: port_hercules
+        name: Port Hercules
+        type: investigation
+        neighborhood: La Condamine
+        icon: ⛵
+        lat: 43.7347
+        lon: 7.4244
+        time_cost: 2
+
+      - id: larvotto_beach
+        name: Larvotto Beach
+        type: rogue
+        neighborhood: Larvotto
+        icon: 🏖️
+        lat: 43.7444
+        lon: 7.4325
+        time_cost: 2
+
+  - id: hong_kong
+    name: Hong Kong
+    country: China
+    region: asia
+    lat: 22.3193
+    lon: 114.1694
+    icon: 🏙️
+    fact: "Hong Kong has more skyscrapers than any other city in the world, with over 500 towers taller than 150 meters."
+    background_image: "https://images.unsplash.com/photo-1536599018102-9f803c140fc1?w=1920&q=80"
+    landmarks:
+      - id: peninsula_hong_kong
+        name: The Peninsula Hong Kong
+        type: hotel
+        neighborhood: Tsim Sha Tsui
+        icon: 🏨
+        lat: 22.2952
+        lon: 114.1722
+      - id: victoria_peak
+        name: Victoria Peak
+        type: investigation
+        neighborhood: Central & Western
+        icon: ⛰️
+        lat: 22.2711
+        lon: 114.1489
+        time_cost: 3
+
+      - id: star_ferry
+        name: Star Ferry
+        type: investigation
+        neighborhood: Victoria Harbour
+        icon: ⛴️
+        lat: 22.2928
+        lon: 114.1681
+        time_cost: 2
+
+      - id: temple_street_market
+        name: Temple Street Night Market
+        type: investigation
+        neighborhood: Kowloon
+        icon: 🏮
+        lat: 22.3088
+        lon: 114.1714
+        time_cost: 2
+
+      - id: chungking_mansions
+        name: Chungking Mansions
+        type: rogue
+        neighborhood: Tsim Sha Tsui
+        icon: 🏢
+        lat: 22.2971
+        lon: 114.1722
+        time_cost: 2
+
+  - id: singapore
+    name: Singapore
+    country: Singapore
+    region: asia
+    lat: 1.3521
+    lon: 103.8198
+    icon: 🦁
+    fact: "Singapore is a city, state, and country all in one, and chewing gum is heavily restricted."
+    background_image: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=1920&q=80"
+    landmarks:
+      - id: raffles_singapore
+        name: Raffles Hotel Singapore
+        type: hotel
+        neighborhood: Civic District
+        icon: 🏨
+        lat: 1.2946
+        lon: 103.8521
+      - id: marina_bay_sands
+        name: Marina Bay Sands
+        type: investigation
+        neighborhood: Marina Bay
+        icon: 🏨
+        lat: 1.2834
+        lon: 103.8607
+        time_cost: 3
+
+      - id: gardens_by_bay
+        name: Gardens by the Bay
+        type: investigation
+        neighborhood: Marina Bay
+        icon: 🌳
+        lat: 1.2816
+        lon: 103.8636
+        time_cost: 3
+
+      - id: hawker_centres
+        name: Hawker Centres
+        type: investigation
+        neighborhood: Various
+        icon: 🍜
+        lat: 1.2876
+        lon: 103.8476
+        time_cost: 2
+
+      - id: haw_par_villa
+        name: Haw Par Villa
+        type: rogue
+        neighborhood: Pasir Panjang
+        icon: 🐉
+        lat: 1.2822
+        lon: 103.7819
+        time_cost: 2
+
+  - id: bangkok
+    name: Bangkok
+    country: Thailand
+    region: asia
+    lat: 13.7563
+    lon: 100.5018
+    icon: 🛕
+    fact: "Bangkok's full ceremonial name is the longest city name in the world at 168 letters."
+    background_image: "https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=1920&q=80"
+    landmarks:
+      - id: mandarin_oriental_bangkok
+        name: Mandarin Oriental Bangkok
+        type: hotel
+        neighborhood: Bang Rak
+        icon: 🏨
+        lat: 13.7243
+        lon: 100.5158
+      - id: grand_palace
+        name: Grand Palace
+        type: investigation
+        neighborhood: Phra Nakhon
+        icon: 🏛️
+        lat: 13.7500
+        lon: 100.4915
+        time_cost: 3
+
+      - id: wat_arun
+        name: Wat Arun
+        type: investigation
+        neighborhood: Bangkok Yai
+        icon: 🛕
+        lat: 13.7437
+        lon: 100.4887
+        time_cost: 3
+
+      - id: floating_market
+        name: Floating Market
+        type: investigation
+        neighborhood: Damnoen Saduak
+        icon: 🚣
+        lat: 13.5165
+        lon: 99.9556
+        time_cost: 2
+
+      - id: khao_san_road
+        name: Khao San Road
+        type: rogue
+        neighborhood: Phra Nakhon
+        icon: 🎉
+        lat: 13.7589
+        lon: 100.4975
+        time_cost: 2
+
+  - id: mumbai
+    name: Mumbai
+    country: India
+    region: asia
+    lat: 19.0760
+    lon: 72.8777
+    icon: 🎬
+    fact: "Mumbai is home to Bollywood, producing over 1,000 films per year—more than Hollywood."
+    background_image: "https://images.unsplash.com/photo-1566552881560-0be862a7c445?w=1920&q=80"
+    landmarks:
+      - id: taj_mahal_palace_mumbai
+        name: Taj Mahal Palace Mumbai
+        type: hotel
+        neighborhood: Colaba
+        icon: 🏨
+        lat: 18.9220
+        lon: 72.8332
+      - id: gateway_of_india
+        name: Gateway of India
+        type: investigation
+        neighborhood: Colaba
+        icon: 🏛️
+        lat: 18.9220
+        lon: 72.8347
+        time_cost: 2
+
+      - id: marine_drive
+        name: Marine Drive
+        type: investigation
+        neighborhood: South Mumbai
+        icon: 🌊
+        lat: 18.9432
+        lon: 72.8236
+        time_cost: 2
+
+      - id: crawford_market
+        name: Crawford Market
+        type: investigation
+        neighborhood: South Mumbai
+        icon: 🏪
+        lat: 18.9477
+        lon: 72.8327
+        time_cost: 3
+
+      - id: dharavi_slum
+        name: Dharavi
+        type: rogue
+        neighborhood: Central Mumbai
+        icon: 🏘️
+        lat: 19.0434
+        lon: 72.8529
+        time_cost: 2
+
+  - id: seoul
+    name: Seoul
+    country: South Korea
+    region: asia
+    lat: 37.5665
+    lon: 126.9780
+    icon: 🏯
+    fact: "Seoul has the fastest average internet connection speed in the world."
+    background_image: "https://images.unsplash.com/photo-1551652741-21141c1dc441?w=1920&q=80"
+    landmarks:
+      - id: signiel_seoul
+        name: Signiel Seoul
+        type: hotel
+        neighborhood: Jamsil
+        icon: 🏨
+        lat: 37.5125
+        lon: 127.1025
+      - id: gyeongbokgung_palace
+        name: Gyeongbokgung Palace
+        type: investigation
+        neighborhood: Jongno
+        icon: 🏯
+        lat: 37.5788
+        lon: 126.9770
+        time_cost: 3
+
+      - id: n_seoul_tower
+        name: N Seoul Tower
+        type: investigation
+        neighborhood: Yongsan
+        icon: 🗼
+        lat: 37.5512
+        lon: 126.9882
+        time_cost: 3
+
+      - id: myeongdong
+        name: Myeongdong Shopping District
+        type: investigation
+        neighborhood: Jung-gu
+        icon: 🛍️
+        lat: 37.5633
+        lon: 126.9844
+        time_cost: 2
+
+      - id: hongdae
+        name: Hongdae District
+        type: rogue
+        neighborhood: Mapo
+        icon: 🎨
+        lat: 37.5569
+        lon: 126.9239
+        time_cost: 2
+
+  - id: marrakech
+    name: Marrakech
+    country: Morocco
+    region: africa
+    lat: 31.6295
+    lon: -7.9811
+    icon: 🕌
+    fact: "Marrakech is known as the 'Red City' due to its distinctive red sandstone buildings."
+    background_image: "https://images.unsplash.com/photo-1558447453-3d0b3b8e89a5?w=1920&q=80"
+    landmarks:
+      - id: la_mamounia
+        name: La Mamounia
+        type: hotel
+        neighborhood: Medina
+        icon: 🏨
+        lat: 31.6222
+        lon: -8.0048
+      - id: jemaa_el_fnaa
+        name: Jemaa el-Fnaa
+        type: investigation
+        neighborhood: Medina
+        icon: 🎪
+        lat: 31.6259
+        lon: -7.9893
+        time_cost: 3
+
+      - id: majorelle_garden
+        name: Majorelle Garden
+        type: investigation
+        neighborhood: Ville Nouvelle
+        icon: 🌺
+        lat: 31.6407
+        lon: -8.0034
+        time_cost: 3
+
+      - id: koutoubia_mosque
+        name: Koutoubia Mosque
+        type: investigation
+        neighborhood: Medina
+        icon: 🕌
+        lat: 31.6236
+        lon: -7.9930
+        time_cost: 2
+
+      - id: tanneries
+        name: Tanneries Quarter
+        type: rogue
+        neighborhood: Medina
+        icon: 🏭
+        lat: 31.6378
+        lon: -7.9877
+        time_cost: 2
+
+  - id: cape_town
+    name: Cape Town
+    country: South Africa
+    region: africa
+    lat: -33.9249
+    lon: 18.4241
+    icon: 🏔️
+    fact: "Cape Town is the only city in the world with a national park within its borders—Table Mountain National Park."
+    background_image: "https://images.unsplash.com/photo-1563656353898-febc9270a0f7?w=1920&q=80"
+    landmarks:
+      - id: one_and_only_cape_town
+        name: One&Only Cape Town
+        type: hotel
+        neighborhood: Waterfront
+        icon: 🏨
+        lat: -33.9038
+        lon: 18.4167
+      - id: table_mountain
+        name: Table Mountain
+        type: investigation
+        neighborhood: City Bowl
+        icon: ⛰️
+        lat: -33.9628
+        lon: 18.4098
+        time_cost: 3
+
+      - id: v_and_a_waterfront
+        name: V&A Waterfront
+        type: investigation
+        neighborhood: Waterfront
+        icon: ⛵
+        lat: -33.9025
+        lon: 18.4187
+        time_cost: 2
+
+      - id: boulders_beach
+        name: Boulders Beach
+        type: investigation
+        neighborhood: Simon's Town
+        icon: 🐧
+        lat: -34.1975
+        lon: 18.4503
+        time_cost: 3
+
+      - id: district_six
+        name: District Six
+        type: rogue
+        neighborhood: City Bowl
+        icon: 🏛️
+        lat: -33.9352
+        lon: 18.4345
+        time_cost: 2
+
+  - id: zanzibar
+    name: Zanzibar
+    country: Tanzania
+    region: africa
+    lat: -6.1659
+    lon: 39.2026
+    icon: 🏝️
+    fact: "Zanzibar produces 90% of the world's cloves and was once the world's largest producer."
+    background_image: "https://images.unsplash.com/photo-1568625365746-14e04f53fdf3?w=1920&q=80"
+    landmarks:
+      - id: park_hyatt_zanzibar
+        name: Park Hyatt Zanzibar
+        type: hotel
+        neighborhood: Stone Town
+        icon: 🏨
+        lat: -6.1627
+        lon: 39.1905
+      - id: stone_town
+        name: Stone Town
+        type: investigation
+        neighborhood: Stone Town
+        icon: 🏛️
+        lat: -6.1630
+        lon: 39.1933
+        time_cost: 3
+
+      - id: spice_farms
+        name: Spice Farms
+        type: investigation
+        neighborhood: Central Unguja
+        icon: 🌿
+        lat: -6.1200
+        lon: 39.2600
+        time_cost: 3
+
+      - id: beaches
+        name: Nungwi Beach
+        type: investigation
+        neighborhood: Northern Unguja
+        icon: 🏖️
+        lat: -5.7283
+        lon: 39.2944
+        time_cost: 2
+
+      - id: prison_island
+        name: Prison Island
+        type: rogue
+        neighborhood: Changuu Island
+        icon: 🐢
+        lat: -6.1403
+        lon: 39.1714
+        time_cost: 2
+
+  - id: rio_de_janeiro
+    name: Rio de Janeiro
+    country: Brazil
+    region: south_america
+    lat: -22.9068
+    lon: -43.1729
+    icon: 🏖️
+    fact: "Rio de Janeiro hosts the world's largest Carnival celebration, attracting over 2 million people per day."
+    background_image: "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=1920&q=80"
+    landmarks:
+      - id: copacabana_palace
+        name: Belmond Copacabana Palace
+        type: hotel
+        neighborhood: Copacabana
+        icon: 🏨
+        lat: -22.9675
+        lon: -43.1802
+      - id: christ_redeemer
+        name: Christ the Redeemer
+        type: investigation
+        neighborhood: Corcovado
+        icon: 🗿
+        lat: -22.9519
+        lon: -43.2105
+        time_cost: 3
+
+      - id: sugarloaf_mountain
+        name: Sugarloaf Mountain
+        type: investigation
+        neighborhood: Urca
+        icon: 🏔️
+        lat: -22.9489
+        lon: -43.1575
+        time_cost: 3
+
+      - id: copacabana_beach
+        name: Copacabana Beach
+        type: investigation
+        neighborhood: Copacabana
+        icon: 🏖️
+        lat: -22.9711
+        lon: -43.1822
+        time_cost: 2
+
+      - id: favela_rocinha
+        name: Rocinha Favela
+        type: rogue
+        neighborhood: São Conrado
+        icon: 🏘️
+        lat: -22.9878
+        lon: -43.2477
+        time_cost: 2
+
+  - id: buenos_aires
+    name: Buenos Aires
+    country: Argentina
+    region: south_america
+    lat: -34.6037
+    lon: -58.3816
+    icon: 💃
+    fact: "Buenos Aires has more bookstores per capita than any other city in the world."
+    background_image: "https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=1920&q=80"
+    landmarks:
+      - id: alvear_palace_hotel
+        name: Alvear Palace Hotel
+        type: hotel
+        neighborhood: Recoleta
+        icon: 🏨
+        lat: -34.5943
+        lon: -58.3823
+      - id: la_boca
+        name: La Boca
+        type: investigation
+        neighborhood: La Boca
+        icon: 🎨
+        lat: -34.6345
+        lon: -58.3634
+        time_cost: 2
+
+      - id: recoleta_cemetery
+        name: Recoleta Cemetery
+        type: investigation
+        neighborhood: Recoleta
+        icon: ⚰️
+        lat: -34.5875
+        lon: -58.3932
+        time_cost: 3
+
+      - id: plaza_de_mayo
+        name: Plaza de Mayo
+        type: investigation
+        neighborhood: Monserrat
+        icon: 🏛️
+        lat: -34.6083
+        lon: -58.3712
+        time_cost: 2
+
+      - id: villa_31
+        name: Villa 31
+        type: rogue
+        neighborhood: Retiro
+        icon: 🏘️
+        lat: -34.5833
+        lon: -58.3764
+        time_cost: 2
+
+  - id: cusco
+    name: Cusco
+    country: Peru
+    region: south_america
+    lat: -13.5319
+    lon: -71.9675
+    icon: 🏔️
+    fact: "Cusco was the historic capital of the Inca Empire and sits at 3,400 meters elevation."
+    background_image: "https://images.unsplash.com/photo-1587595431973-160d0d94add1?w=1920&q=80"
+    landmarks:
+      - id: palacio_del_inka
+        name: Palacio del Inka
+        type: hotel
+        neighborhood: Centro Histórico
+        icon: 🏨
+        lat: -13.5186
+        lon: -71.9775
+      - id: machu_picchu
+        name: Machu Picchu
+        type: investigation
+        neighborhood: Urubamba Valley
+        icon: 🏛️
+        lat: -13.1631
+        lon: -72.5450
+        time_cost: 3
+
+      - id: plaza_de_armas
+        name: Plaza de Armas
+        type: investigation
+        neighborhood: Centro Histórico
+        icon: 🏛️
+        lat: -13.5165
+        lon: -71.9787
+        time_cost: 2
+
+      - id: sacsayhuaman
+        name: Sacsayhuamán
+        type: investigation
+        neighborhood: North Cusco
+        icon: 🗿
+        lat: -13.5089
+        lon: -71.9812
+        time_cost: 3
+
+      - id: san_blas
+        name: San Blas District
+        type: rogue
+        neighborhood: San Blas
+        icon: 🎨
+        lat: -13.5140
+        lon: -71.9760
+        time_cost: 2
+
+  - id: bogota
+    name: Bogotá
+    country: Colombia
+    region: south_america
+    lat: 4.7110
+    lon: -74.0721
+    icon: 🏔️
+    fact: "Bogotá is the third-highest capital city in the world at 2,640 meters above sea level."
+    background_image: "https://images.unsplash.com/photo-1568632234157-ce7aecd03d0d?w=1920&q=80"
+    landmarks:
+      - id: four_seasons_bogota
+        name: Four Seasons Hotel Bogotá
+        type: hotel
+        neighborhood: Chapinero Alto
+        icon: 🏨
+        lat: 4.6679
+        lon: -74.0531
+      - id: monserrate
+        name: Monserrate
+        type: investigation
+        neighborhood: Chapinero
+        icon: ⛰️
+        lat: 4.6052
+        lon: -74.0563
+        time_cost: 3
+
+      - id: plaza_bolivar
+        name: Plaza Bolívar
+        type: investigation
+        neighborhood: La Candelaria
+        icon: 🏛️
+        lat: 4.5981
+        lon: -74.0758
+        time_cost: 2
+
+      - id: gold_museum
+        name: Gold Museum
+        type: investigation
+        neighborhood: La Candelaria
+        icon: 👑
+        lat: 4.6017
+        lon: -74.0726
+        time_cost: 3
+
+      - id: ciudad_bolivar
+        name: Ciudad Bolívar
+        type: rogue
+        neighborhood: South Bogotá
+        icon: 🏘️
+        lat: 4.5733
+        lon: -74.1667
+        time_cost: 2
+
+  - id: vancouver
+    name: Vancouver
+    country: Canada
+    region: north_america
+    lat: 49.2827
+    lon: -123.1207
+    icon: 🏔️
+    fact: "Vancouver is consistently ranked as one of the world's most liveable cities."
+    background_image: "https://images.unsplash.com/photo-1559511260-66a654ae982a?w=1920&q=80"
+    landmarks:
+      - id: fairmont_pacific_rim
+        name: Fairmont Pacific Rim
+        type: hotel
+        neighborhood: Coal Harbour
+        icon: 🏨
+        lat: 49.2887
+        lon: -123.1196
+      - id: stanley_park
+        name: Stanley Park
+        type: investigation
+        neighborhood: West End
+        icon: 🌲
+        lat: 49.3044
+        lon: -123.1441
+        time_cost: 3
+
+      - id: granville_island
+        name: Granville Island
+        type: investigation
+        neighborhood: Fairview
+        icon: 🎨
+        lat: 49.2712
+        lon: -123.1344
+        time_cost: 2
+
+      - id: capilano_bridge
+        name: Capilano Suspension Bridge
+        type: investigation
+        neighborhood: North Vancouver
+        icon: 🌉
+        lat: 49.3429
+        lon: -123.1149
+        time_cost: 3
+
+      - id: downtown_eastside
+        name: Downtown Eastside
+        type: rogue
+        neighborhood: Strathcona
+        icon: 🏚️
+        lat: 49.2819
+        lon: -123.0989
+        time_cost: 2
+
+  - id: new_orleans
+    name: New Orleans
+    country: United States
+    region: north_america
+    lat: 29.9511
+    lon: -90.0715
+    icon: 🎷
+    fact: "New Orleans is the birthplace of jazz music and celebrates over 130 festivals annually."
+    background_image: "https://images.unsplash.com/photo-1563624522027-f0b54fd04c3a?w=1920&q=80"
+    landmarks:
+      - id: hotel_monteleone
+        name: Hotel Monteleone
+        type: hotel
+        neighborhood: French Quarter
+        icon: 🏨
+        lat: 29.9567
+        lon: -90.0675
+      - id: french_quarter
+        name: French Quarter
+        type: investigation
+        neighborhood: Vieux Carré
+        icon: 🎭
+        lat: 29.9584
+        lon: -90.0644
+        time_cost: 3
+
+      - id: jackson_square
+        name: Jackson Square
+        type: investigation
+        neighborhood: French Quarter
+        icon: 🏛️
+        lat: 29.9577
+        lon: -90.0629
+        time_cost: 2
+
+      - id: garden_district
+        name: Garden District
+        type: investigation
+        neighborhood: Uptown
+        icon: 🌳
+        lat: 29.9271
+        lon: -90.0852
+        time_cost: 2
+
+      - id: ninth_ward
+        name: Lower Ninth Ward
+        type: rogue
+        neighborhood: Bywater
+        icon: 🏘️
+        lat: 29.9647
+        lon: -90.0116
+        time_cost: 2
+
+  - id: havana
+    name: Havana
+    country: Cuba
+    region: north_america
+    lat: 23.1136
+    lon: -82.3666
+    icon: 🚗
+    fact: "Havana has the largest number of 1950s American cars still in daily use anywhere in the world."
+    background_image: "https://images.unsplash.com/photo-1520339838845-f452f9497ce1?w=1920&q=80"
+    landmarks:
+      - id: hotel_nacional_cuba
+        name: Hotel Nacional de Cuba
+        type: hotel
+        neighborhood: Vedado
+        icon: 🏨
+        lat: 23.1420
+        lon: -82.3801
+      - id: malecon
+        name: Malecón
+        type: investigation
+        neighborhood: Centro Habana
+        icon: 🌊
+        lat: 23.1426
+        lon: -82.3738
+        time_cost: 2
+
+      - id: old_havana
+        name: Old Havana
+        type: investigation
+        neighborhood: Habana Vieja
+        icon: 🏛️
+        lat: 23.1367
+        lon: -82.3589
+        time_cost: 3
+
+      - id: revolution_square
+        name: Revolution Square
+        type: investigation
+        neighborhood: Plaza de la Revolución
+        icon: 🏛️
+        lat: 23.1128
+        lon: -82.3940
+        time_cost: 2
+
+      - id: fusterlandia
+        name: Fusterlandia
+        type: rogue
+        neighborhood: Jaimanitas
+        icon: 🎨
+        lat: 23.1003
+        lon: -82.4761
+        time_cost: 2
+
+  - id: dubai
+    name: Dubai
+    country: United Arab Emirates
+    region: middle_east
+    lat: 25.2048
+    lon: 55.2708
+    icon: 🏙️
+    fact: "Dubai's Burj Khalifa is the tallest building in the world at 828 meters."
+    background_image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1920&q=80"
+    landmarks:
+      - id: burj_al_arab
+        name: Burj Al Arab
+        type: hotel
+        neighborhood: Umm Suqeim
+        icon: 🏨
+        lat: 25.1413
+        lon: 55.1853
+      - id: burj_khalifa
+        name: Burj Khalifa
+        type: investigation
+        neighborhood: Downtown Dubai
+        icon: 🏙️
+        lat: 25.1972
+        lon: 55.2744
+        time_cost: 3
+
+      - id: dubai_mall
+        name: Dubai Mall
+        type: investigation
+        neighborhood: Downtown Dubai
+        icon: 🛍️
+        lat: 25.1972
+        lon: 55.2796
+        time_cost: 3
+
+      - id: gold_souk
+        name: Gold Souk
+        type: investigation
+        neighborhood: Deira
+        icon: 👑
+        lat: 25.2692
+        lon: 55.2993
+        time_cost: 2
+
+      - id: old_dubai
+        name: Old Dubai (Al Fahidi)
+        type: rogue
+        neighborhood: Bur Dubai
+        icon: 🏚️
+        lat: 25.2633
+        lon: 55.2972
+        time_cost: 2
+
+  - id: jerusalem
+    name: Jerusalem
+    country: Israel
+    region: middle_east
+    lat: 31.7683
+    lon: 35.2137
+    icon: 🕍
+    fact: "Jerusalem is considered holy by three major religions: Judaism, Christianity, and Islam."
+    background_image: "https://images.unsplash.com/photo-1509447870-bb0c31bb5249?w=1920&q=80"
+    landmarks:
+      - id: king_david_hotel
+        name: The King David Hotel
+        type: hotel
+        neighborhood: King David Street
+        icon: 🏨
+        lat: 31.7739
+        lon: 35.2213
+      - id: western_wall
+        name: Western Wall
+        type: investigation
+        neighborhood: Old City
+        icon: 🕍
+        lat: 31.7767
+        lon: 35.2345
+        time_cost: 3
+
+      - id: dome_of_rock
+        name: Dome of the Rock
+        type: investigation
+        neighborhood: Old City
+        icon: 🕌
+        lat: 31.7780
+        lon: 35.2354
+        time_cost: 3
+
+      - id: church_holy_sepulchre
+        name: Church of Holy Sepulchre
+        type: investigation
+        neighborhood: Christian Quarter
+        icon: ⛪
+        lat: 31.7784
+        lon: 35.2295
+        time_cost: 2
+
+      - id: machane_yehuda
+        name: Mahane Yehuda Market
+        type: rogue
+        neighborhood: West Jerusalem
+        icon: 🏪
+        lat: 31.7851
+        lon: 35.2120
+        time_cost: 2
+
+  - id: auckland
+    name: Auckland
+    country: New Zealand
+    region: oceania
+    lat: -36.8485
+    lon: 174.7633
+    icon: ⛵
+    fact: "Auckland has more boats per capita than any other city in the world."
+    background_image: "https://images.unsplash.com/photo-1507699622108-4be3abd695ad?w=1920&q=80"
+    landmarks:
+      - id: sofitel_auckland
+        name: Sofitel Auckland Viaduct Harbour
+        type: hotel
+        neighborhood: Viaduct Harbour
+        icon: 🏨
+        lat: -36.8426
+        lon: 174.7614
+      - id: sky_tower
+        name: Sky Tower
+        type: investigation
+        neighborhood: Auckland CBD
+        icon: 🗼
+        lat: -36.8485
+        lon: 174.7633
+        time_cost: 3
+
+      - id: waitemata_harbour
+        name: Waitematā Harbour
+        type: investigation
+        neighborhood: Waterfront
+        icon: ⛵
+        lat: -36.8408
+        lon: 174.7697
+        time_cost: 2
+
+      - id: mount_eden
+        name: Mount Eden
+        type: investigation
+        neighborhood: Mount Eden
+        icon: 🌋
+        lat: -36.8762
+        lon: 174.7642
+        time_cost: 2
+
+      - id: karangahape_road
+        name: Karangahape Road
+        type: rogue
+        neighborhood: Newton
+        icon: 🎨
+        lat: -36.8607
+        lon: 174.7602
+        time_cost: 2
+
+  - id: melbourne
+    name: Melbourne
+    country: Australia
+    region: oceania
+    lat: -37.8136
+    lon: 144.9631
+    icon: ☕
+    fact: "Melbourne has been voted the world's most liveable city multiple times and has more cafes per capita than any city."
+    background_image: "https://images.unsplash.com/photo-1514395462725-fb4566210144?w=1920&q=80"
+    landmarks:
+      - id: park_hyatt_melbourne
+        name: Park Hyatt Melbourne
+        type: hotel
+        neighborhood: East Melbourne
+        icon: 🏨
+        lat: -37.8155
+        lon: 144.9783
+      - id: federation_square
+        name: Federation Square
+        type: investigation
+        neighborhood: CBD
+        icon: 🏛️
+        lat: -37.8180
+        lon: 144.9685
+        time_cost: 2
+
+      - id: royal_botanic_gardens
+        name: Royal Botanic Gardens
+        type: investigation
+        neighborhood: South Yarra
+        icon: 🌺
+        lat: -37.8304
+        lon: 144.9800
+        time_cost: 3
+
+      - id: queen_victoria_market
+        name: Queen Victoria Market
+        type: investigation
+        neighborhood: CBD
+        icon: 🏪
+        lat: -37.8076
+        lon: 144.9568
+        time_cost: 2
+
+      - id: fitzroy
+        name: Fitzroy District
+        type: rogue
+        neighborhood: Fitzroy
+        icon: 🎨
+        lat: -37.7992
+        lon: 144.9789
+        time_cost: 2
+
+  - id: suva
+    name: Suva
+    country: Fiji
+    region: oceania
+    lat: -18.1416
+    lon: 178.4415
+    icon: 🏝️
+    fact: "Suva is one of the largest cities in the South Pacific and has a deep natural harbor."
+    background_image: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1920&q=80"
+    landmarks:
+      - id: grand_pacific_hotel
+        name: Grand Pacific Hotel
+        type: hotel
+        neighborhood: Central Suva
+        icon: 🏨
+        lat: -18.1410
+        lon: 178.4234
+      - id: thurston_gardens
+        name: Thurston Gardens
+        type: investigation
+        neighborhood: Central Suva
+        icon: 🌺
+        lat: -18.1449
+        lon: 178.4298
+        time_cost: 2
+
+      - id: fiji_museum
+        name: Fiji Museum
+        type: investigation
+        neighborhood: Central Suva
+        icon: 🏛️
+        lat: -18.1447
+        lon: 178.4295
+        time_cost: 3
+
+      - id: suva_municipal_market
+        name: Suva Municipal Market
+        type: investigation
+        neighborhood: Central Suva
+        icon: 🏪
+        lat: -18.1393
+        lon: 178.4231
+        time_cost: 2
+
+      - id: colo_i_suva
+        name: Colo-i-Suva Forest Park
+        type: rogue
+        neighborhood: Outskirts
+        icon: 🌳
+        lat: -18.0742
+        lon: 178.4425
+        time_cost: 2
