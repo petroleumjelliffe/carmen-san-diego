@@ -1,6 +1,5 @@
 import settings from '../../config/settings.yaml';
 import cities from '../../config/cities.yaml';
-import destinationClues from '../../config/destination_clues.yaml';
 import suspectClues from '../../config/suspect_clues.yaml';
 import investigationSpots from '../../config/investigation_spots.yaml';
 import suspects from '../../config/suspects.yaml';

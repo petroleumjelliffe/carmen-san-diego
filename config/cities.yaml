@@ -10,7 +10,15 @@ cities:
     lon: 2.3522
     icon: 🗼
     fact: "The Eiffel Tower was originally intended to be a temporary structure, built for the 1889 World's Fair."
-    background_image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1920&q=80"  # Eiffel Tower at dusk
+    background_image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1920&q=80"
+    clues:
+      - text: "They asked about flights to the city of lights"
+      - text: "They asked about TGV trains across the Channel"
+      - text: "They asked about the Eiffel Tower's viewing deck"
+      - text: "They asked about the Moulin Rouge"
+      - text: "They asked about the Musée d'Orsay"
+      - text: "They asked about the Arc de Triomphe"
+      - text: "They asked about the Palace of Versailles"
     landmarks:
       - id: plaza_athenee
         name: Plaza Athénée
@@ -60,7 +68,15 @@ cities:
     lon: 139.6503
     icon: 🗾
     fact: "Tokyo's Shibuya Crossing is the busiest pedestrian intersection in the world, with up to 3,000 people crossing at once."
-    background_image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1920&q=80"  # Tokyo night
+    background_image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1920&q=80"
+    clues:
+      - text: "They asked about bullet trains to a city with cherry blossoms"
+      - text: "They were reading about samurai history"
+      - text: "They were interested in Mount Fuji excursions"
+      - text: "They were interested in Shinjuku's nightlife"
+      - text: "They were interested in the Tsukiji fish market"
+      - text: "They were interested in robot restaurants"
+      - text: "They were researching the Imperial Palace"
     landmarks:
       - id: park_hyatt_tokyo
         name: Park Hyatt Tokyo
@@ -110,7 +126,15 @@ cities:
     lon: 31.2357
     icon: 🔺
     fact: "The Great Pyramid of Giza was the tallest man-made structure in the world for over 3,800 years."
-    background_image: "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?w=1920&q=80"  # Pyramids
+    background_image: "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?w=1920&q=80"
+    clues:
+      - text: "They were reading about pyramids and the Nile"
+      - text: "They mentioned wanting to see the Sphinx"
+      - text: "They mentioned the Valley of the Kings"
+      - text: "They mentioned cruising the Nile"
+      - text: "They mentioned the Aswan High Dam"
+      - text: "They mentioned the Egyptian Museum"
+      - text: "They were studying hieroglyphics at a bookstore"
     landmarks:
       - id: mena_house
         name: Marriott Mena House
@@ -160,7 +184,15 @@ cities:
     lon: -0.1278
     icon: 🏰
     fact: "Big Ben is actually the name of the bell inside the tower, not the tower itself."
-    background_image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1920&q=80"  # London skyline
+    background_image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1920&q=80"
+    clues:
+      - text: "They mentioned crossing the Channel to see Big Ben"
+      - text: "They wanted to visit the British Museum"
+      - text: "They mentioned the Thames and Tower Bridge"
+      - text: "They wanted to see Shakespeare's Globe Theatre"
+      - text: "They wanted to see the changing of the guard"
+      - text: "They wanted to ride the London Eye"
+      - text: "They mentioned wanting to see Buckingham Palace"
     landmarks:
       - id: the_savoy
         name: The Savoy
@@ -210,7 +242,15 @@ cities:
     lon: 12.4964
     icon: 🏛️
     fact: "The Trevi Fountain collects roughly 3,000 euros in coins every day, which goes to charity."
-    background_image: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1920&q=80"  # Colosseum
+    background_image: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1920&q=80"
+    clues:
+      - text: "They booked a flight to see the Colosseum"
+      - text: "They booked a flight to Leonardo da Vinci airport"
+      - text: "They wanted to visit the Trevi Fountain"
+      - text: "They asked about the Vatican Museums"
+      - text: "They asked about the Spanish Steps"
+      - text: "They asked about the Sistine Chapel"
+      - text: "They booked tickets to see Vatican City"
     landmarks:
       - id: hotel_hassler
         name: Hotel Hassler
@@ -260,7 +300,15 @@ cities:
     lon: 13.4050
     icon: 🚪
     fact: "Berlin has more bridges than Venice — over 1,700 compared to Venice's 400."
-    background_image: "https://images.unsplash.com/photo-1560969184-10fe8719e047?w=1920&q=80"  # Brandenburg Gate
+    background_image: "https://images.unsplash.com/photo-1560969184-10fe8719e047?w=1920&q=80"
+    clues:
+      - text: "They asked about the Brandenburg Gate"
+      - text: "They asked about Checkpoint Charlie"
+      - text: "They asked about Museum Island"
+      - text: "They were researching the Reichstag building"
+      - text: "They were researching the Pergamon Museum"
+      - text: "They asked about remnants of a famous wall"
+      - text: "They were learning German phrases"
     landmarks:
       - id: hotel_adlon
         name: Hotel Adlon Kempinski
@@ -310,7 +358,15 @@ cities:
     lon: 151.2093
     icon: 🎭
     fact: "The Sydney Opera House's roof is covered with over 1 million tiles that were made in Sweden."
-    background_image: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=1920&q=80"  # Opera House
+    background_image: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=1920&q=80"
+    clues:
+      - text: "They were researching the Opera House down under"
+      - text: "They were researching the Great Barrier Reef"
+      - text: "They asked about kangaroos and the outback"
+      - text: "They were looking at flights to the Southern Hemisphere"
+      - text: "They were interested in Sydney Harbour Bridge"
+      - text: "They were looking at maps of Bondi Beach"
+      - text: "They mentioned the Blue Mountains"
     landmarks:
       - id: park_hyatt_sydney
         name: Park Hyatt Sydney
@@ -360,7 +416,15 @@ cities:
     lon: 37.6173
     icon: 🏰
     fact: "Moscow's metro system is so deep that some stations double as nuclear bunkers."
-    background_image: "https://images.unsplash.com/photo-1513326738677-b964603b136d?w=1920&q=80"  # Red Square
+    background_image: "https://images.unsplash.com/photo-1513326738677-b964603b136d?w=1920&q=80"
+    clues:
+      - text: "They mentioned Red Square and the Kremlin"
+      - text: "They mentioned wanting to see Saint Basil's Cathedral"
+      - text: "They mentioned the Bolshoi Theatre"
+      - text: "They mentioned the Moscow Metro's ornate stations"
+      - text: "They mentioned wanting to see the Hermitage"
+      - text: "They mentioned the GUM department store"
+      - text: "They mentioned the Arbat Street"
     landmarks:
       - id: hotel_national
         name: Hotel National
@@ -411,6 +475,14 @@ cities:
     icon: 🏛️
     fact: "Barcelona is home to nine UNESCO World Heritage Sites, more than any other city in the world."
     background_image: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=1920&q=80"
+    clues:
+      - text: "They were researching Gaudí's unfinished masterpiece"
+      - text: "They asked about flights to Catalonia"
+      - text: "They were interested in La Rambla street markets"
+      - text: "They mentioned Park Güell's colorful mosaics"
+      - text: "They were looking at FC Barcelona tickets"
+      - text: "They asked about the Gothic Quarter"
+      - text: "They were learning Catalan phrases"
     landmarks:
       - id: hotel_arts_barcelona
         name: Hotel Arts Barcelona
@@ -427,7 +499,6 @@ cities:
         lat: 41.4036
         lon: 2.1744
         time_cost: 3
-
       - id: park_guell
         name: Park Güell
         type: investigation
@@ -436,7 +507,6 @@ cities:
         lat: 41.4145
         lon: 2.1527
         time_cost: 3
-
       - id: la_rambla
         name: La Rambla
         type: investigation
@@ -445,7 +515,6 @@ cities:
         lat: 41.3818
         lon: 2.1731
         time_cost: 2
-
       - id: el_raval
         name: El Raval Quarter
         type: rogue
@@ -464,6 +533,14 @@ cities:
     icon: 🚲
     fact: "Amsterdam has more bicycles than residents and over 165 canals."
     background_image: "https://images.unsplash.com/photo-1534351590666-13e3e96b5017?w=1920&q=80"
+    clues:
+      - text: "They were researching canal boat tours"
+      - text: "They asked about Anne Frank's hiding place"
+      - text: "They mentioned wanting to rent a bicycle"
+      - text: "They were interested in the Rijksmuseum's Dutch masters"
+      - text: "They asked about the tulip markets"
+      - text: "They mentioned Dam Square and the Royal Palace"
+      - text: "They were looking at flights to Schiphol Airport"
     landmarks:
       - id: waldorf_astoria_amsterdam
         name: Waldorf Astoria Amsterdam
@@ -480,7 +557,6 @@ cities:
         lat: 52.3752
         lon: 4.8840
         time_cost: 3
-
       - id: rijksmuseum
         name: Rijksmuseum
         type: investigation
@@ -489,7 +565,6 @@ cities:
         lat: 52.3600
         lon: 4.8852
         time_cost: 3
-
       - id: dam_square
         name: Dam Square
         type: investigation
@@ -498,7 +573,6 @@ cities:
         lat: 52.3730
         lon: 4.8930
         time_cost: 2
-
       - id: red_light_district
         name: Red Light District
         type: rogue
@@ -517,6 +591,14 @@ cities:
     icon: 🏰
     fact: "Prague's astronomical clock has been working since 1410, making it the oldest working clock of its kind."
     background_image: "https://images.unsplash.com/photo-1541849546-216549ae216d?w=1920&q=80"
+    clues:
+      - text: "They were researching the city of a hundred spires"
+      - text: "They asked about walking across Charles Bridge"
+      - text: "They mentioned the astronomical clock in Old Town"
+      - text: "They were interested in Prague Castle tours"
+      - text: "They asked about Czech beer halls"
+      - text: "They mentioned wanting to see the Vltava River"
+      - text: "They were learning Czech phrases"
     landmarks:
       - id: four_seasons_prague
         name: Four Seasons Hotel Prague
@@ -533,7 +615,6 @@ cities:
         lat: 50.0865
         lon: 14.4114
         time_cost: 2
-
       - id: prague_castle
         name: Prague Castle
         type: investigation
@@ -542,7 +623,6 @@ cities:
         lat: 50.0909
         lon: 14.4009
         time_cost: 3
-
       - id: old_town_square
         name: Old Town Square
         type: investigation
@@ -551,7 +631,6 @@ cities:
         lat: 50.0875
         lon: 14.4210
         time_cost: 2
-
       - id: zizkov_tv_tower
         name: Žižkov TV Tower
         type: rogue
@@ -570,6 +649,14 @@ cities:
     icon: 🕌
     fact: "Istanbul is the only city in the world that spans two continents: Europe and Asia."
     background_image: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=1920&q=80"
+    clues:
+      - text: "They mentioned the city that bridges two continents"
+      - text: "They were researching Hagia Sophia's history"
+      - text: "They asked about the Grand Bazaar's spice markets"
+      - text: "They wanted to take a Bosphorus cruise"
+      - text: "They mentioned the Blue Mosque"
+      - text: "They were interested in Turkish baths"
+      - text: "They were learning Turkish phrases"
     landmarks:
       - id: ciragan_palace_kempinski
         name: Çırağan Palace Kempinski
@@ -586,7 +673,6 @@ cities:
         lat: 41.0086
         lon: 28.9802
         time_cost: 3
-
       - id: grand_bazaar
         name: Grand Bazaar
         type: investigation
@@ -595,7 +681,6 @@ cities:
         lat: 41.0108
         lon: 28.9680
         time_cost: 3
-
       - id: bosphorus_strait
         name: Bosphorus Strait
         type: investigation
@@ -604,7 +689,6 @@ cities:
         lat: 41.0403
         lon: 29.0061
         time_cost: 2
-
       - id: balat_neighborhood
         name: Balat Neighborhood
         type: rogue
@@ -623,6 +707,14 @@ cities:
     icon: 🏰
     fact: "Dubrovnik's Old City walls are 1,940 meters long and have protected the city since the 13th century."
     background_image: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=1920&q=80"
+    clues:
+      - text: "They mentioned the Pearl of the Adriatic"
+      - text: "They were researching Game of Thrones filming locations"
+      - text: "They asked about walking the medieval city walls"
+      - text: "They wanted to take a cable car to Mount Srđ"
+      - text: "They mentioned the marble-paved Stradun"
+      - text: "They were interested in Lokrum Island"
+      - text: "They were learning Croatian phrases"
     landmarks:
       - id: hotel_excelsior_dubrovnik
         name: Hotel Excelsior Dubrovnik
@@ -639,7 +731,6 @@ cities:
         lat: 42.6413
         lon: 18.1083
         time_cost: 3
-
       - id: stradun
         name: Stradun (Main Street)
         type: investigation
@@ -648,7 +739,6 @@ cities:
         lat: 42.6414
         lon: 18.1084
         time_cost: 2
-
       - id: cable_car
         name: Mount Srđ Cable Car
         type: investigation
@@ -657,7 +747,6 @@ cities:
         lat: 42.6486
         lon: 18.1122
         time_cost: 2
-
       - id: lokrum_island
         name: Lokrum Island
         type: rogue
@@ -676,6 +765,14 @@ cities:
     icon: ⛰️
     fact: "Andorra la Vella is the highest capital city in Europe at 1,023 meters above sea level."
     background_image: "https://images.unsplash.com/photo-1582719366090-0c3e49e86b8e?w=1920&q=80"
+    clues:
+      - text: "They mentioned Europe's highest capital city"
+      - text: "They were researching duty-free shopping in the Pyrenees"
+      - text: "They asked about skiing in a tiny country"
+      - text: "They wanted to visit the Caldea thermal spa"
+      - text: "They mentioned Casa de la Vall parliament building"
+      - text: "They were interested in the Romanesque churches"
+      - text: "They asked about driving through mountain passes"
     landmarks:
       - id: hotel_plaza_andorra
         name: Hotel Plaza Andorra
@@ -692,7 +789,6 @@ cities:
         lat: 42.5070
         lon: 1.5218
         time_cost: 2
-
       - id: caldea_spa
         name: Caldea Spa
         type: investigation
@@ -701,7 +797,6 @@ cities:
         lat: 42.5090
         lon: 1.5339
         time_cost: 3
-
       - id: shopping_district
         name: Shopping District
         type: investigation
@@ -710,7 +805,6 @@ cities:
         lat: 42.5067
         lon: 1.5212
         time_cost: 2
-
       - id: tobacco_museum
         name: Tobacco Museum
         type: rogue
@@ -729,6 +823,14 @@ cities:
     icon: 🎰
     fact: "Monaco is the second smallest country in the world and has the highest GDP per capita."
     background_image: "https://images.unsplash.com/photo-1605548075541-0c4aac4f4aad?w=1920&q=80"
+    clues:
+      - text: "They asked about the Monte Carlo Casino"
+      - text: "They were researching Formula 1 street circuits"
+      - text: "They mentioned the Prince's Palace and royal family"
+      - text: "They wanted to see the yachts in Port Hercules"
+      - text: "They were interested in the world's second smallest country"
+      - text: "They asked about the Oceanographic Museum"
+      - text: "They mentioned tax-free living on the French Riviera"
     landmarks:
       - id: hotel_de_paris_monte_carlo
         name: Hôtel de Paris Monte-Carlo
@@ -745,7 +847,6 @@ cities:
         lat: 43.7397
         lon: 7.4281
         time_cost: 3
-
       - id: princes_palace
         name: Prince's Palace
         type: investigation
@@ -754,7 +855,6 @@ cities:
         lat: 43.7314
         lon: 7.4197
         time_cost: 2
-
       - id: port_hercules
         name: Port Hercules
         type: investigation
@@ -763,7 +863,6 @@ cities:
         lat: 43.7347
         lon: 7.4244
         time_cost: 2
-
       - id: larvotto_beach
         name: Larvotto Beach
         type: rogue
@@ -782,6 +881,14 @@ cities:
     icon: 🏙️
     fact: "Hong Kong has more skyscrapers than any other city in the world, with over 500 towers taller than 150 meters."
     background_image: "https://images.unsplash.com/photo-1536599018102-9f803c140fc1?w=1920&q=80"
+    clues:
+      - text: "They were researching the Peak Tram to Victoria Peak"
+      - text: "They asked about dim sum in a city of skyscrapers"
+      - text: "They wanted to ride the Star Ferry across the harbor"
+      - text: "They mentioned Temple Street Night Market"
+      - text: "They were interested in the skyline light show"
+      - text: "They asked about flights to a Special Administrative Region"
+      - text: "They were learning Cantonese phrases"
     landmarks:
       - id: peninsula_hong_kong
         name: The Peninsula Hong Kong
@@ -798,7 +905,6 @@ cities:
         lat: 22.2711
         lon: 114.1489
         time_cost: 3
-
       - id: star_ferry
         name: Star Ferry
         type: investigation
@@ -807,7 +913,6 @@ cities:
         lat: 22.2928
         lon: 114.1681
         time_cost: 2
-
       - id: temple_street_market
         name: Temple Street Night Market
         type: investigation
@@ -816,7 +921,6 @@ cities:
         lat: 22.3088
         lon: 114.1714
         time_cost: 2
-
       - id: chungking_mansions
         name: Chungking Mansions
         type: rogue
@@ -835,6 +939,14 @@ cities:
     icon: 🦁
     fact: "Singapore is a city, state, and country all in one, and chewing gum is heavily restricted."
     background_image: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=1920&q=80"
+    clues:
+      - text: "They asked about the Marina Bay Sands infinity pool"
+      - text: "They were researching Gardens by the Bay's Supertrees"
+      - text: "They mentioned the Lion City's strict laws"
+      - text: "They wanted to try hawker centre food"
+      - text: "They asked about Changi Airport's attractions"
+      - text: "They were interested in the Night Safari"
+      - text: "They mentioned sentosa Island beaches"
     landmarks:
       - id: raffles_singapore
         name: Raffles Hotel Singapore
@@ -851,7 +963,6 @@ cities:
         lat: 1.2834
         lon: 103.8607
         time_cost: 3
-
       - id: gardens_by_bay
         name: Gardens by the Bay
         type: investigation
@@ -860,7 +971,6 @@ cities:
         lat: 1.2816
         lon: 103.8636
         time_cost: 3
-
       - id: hawker_centres
         name: Hawker Centres
         type: investigation
@@ -869,7 +979,6 @@ cities:
         lat: 1.2876
         lon: 103.8476
         time_cost: 2
-
       - id: haw_par_villa
         name: Haw Par Villa
         type: rogue
@@ -888,6 +997,14 @@ cities:
     icon: 🛕
     fact: "Bangkok's full ceremonial name is the longest city name in the world at 168 letters."
     background_image: "https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=1920&q=80"
+    clues:
+      - text: "They were researching the Grand Palace and Emerald Buddha"
+      - text: "They asked about Wat Arun temple on the river"
+      - text: "They wanted to visit floating markets"
+      - text: "They mentioned Khao San Road backpacker area"
+      - text: "They were interested in Thai street food"
+      - text: "They asked about tuk-tuk rides"
+      - text: "They were learning Thai phrases"
     landmarks:
       - id: mandarin_oriental_bangkok
         name: Mandarin Oriental Bangkok
@@ -904,7 +1021,6 @@ cities:
         lat: 13.7500
         lon: 100.4915
         time_cost: 3
-
       - id: wat_arun
         name: Wat Arun
         type: investigation
@@ -913,7 +1029,6 @@ cities:
         lat: 13.7437
         lon: 100.4887
         time_cost: 3
-
       - id: floating_market
         name: Floating Market
         type: investigation
@@ -922,7 +1037,6 @@ cities:
         lat: 13.5165
         lon: 99.9556
         time_cost: 2
-
       - id: khao_san_road
         name: Khao San Road
         type: rogue
@@ -941,6 +1055,14 @@ cities:
     icon: 🎬
     fact: "Mumbai is home to Bollywood, producing over 1,000 films per year—more than Hollywood."
     background_image: "https://images.unsplash.com/photo-1566552881560-0be862a7c445?w=1920&q=80"
+    clues:
+      - text: "They were researching Bollywood film studios"
+      - text: "They asked about the Gateway of India monument"
+      - text: "They wanted to walk along Marine Drive promenade"
+      - text: "They mentioned Crawford Market's spices"
+      - text: "They were interested in the Taj Mahal Palace hotel"
+      - text: "They asked about the dabbawalas lunch delivery system"
+      - text: "They were learning Hindi phrases"
     landmarks:
       - id: taj_mahal_palace_mumbai
         name: Taj Mahal Palace Mumbai
@@ -957,7 +1079,6 @@ cities:
         lat: 18.9220
         lon: 72.8347
         time_cost: 2
-
       - id: marine_drive
         name: Marine Drive
         type: investigation
@@ -966,7 +1087,6 @@ cities:
         lat: 18.9432
         lon: 72.8236
         time_cost: 2
-
       - id: crawford_market
         name: Crawford Market
         type: investigation
@@ -975,7 +1095,6 @@ cities:
         lat: 18.9477
         lon: 72.8327
         time_cost: 3
-
       - id: dharavi_slum
         name: Dharavi
         type: rogue
@@ -994,6 +1113,14 @@ cities:
     icon: 🏯
     fact: "Seoul has the fastest average internet connection speed in the world."
     background_image: "https://images.unsplash.com/photo-1551652741-21141c1dc441?w=1920&q=80"
+    clues:
+      - text: "They were researching Gyeongbokgung Palace"
+      - text: "They asked about N Seoul Tower views"
+      - text: "They wanted to shop in Myeongdong district"
+      - text: "They mentioned K-pop and the Gangnam district"
+      - text: "They were interested in Korean BBQ restaurants"
+      - text: "They asked about the DMZ tours"
+      - text: "They were learning Korean phrases"
     landmarks:
       - id: signiel_seoul
         name: Signiel Seoul
@@ -1010,7 +1137,6 @@ cities:
         lat: 37.5788
         lon: 126.9770
         time_cost: 3
-
       - id: n_seoul_tower
         name: N Seoul Tower
         type: investigation
@@ -1019,7 +1145,6 @@ cities:
         lat: 37.5512
         lon: 126.9882
         time_cost: 3
-
       - id: myeongdong
         name: Myeongdong Shopping District
         type: investigation
@@ -1028,7 +1153,6 @@ cities:
         lat: 37.5633
         lon: 126.9844
         time_cost: 2
-
       - id: hongdae
         name: Hongdae District
         type: rogue
@@ -1047,6 +1171,14 @@ cities:
     icon: 🕌
     fact: "Marrakech is known as the 'Red City' due to its distinctive red sandstone buildings."
     background_image: "https://images.unsplash.com/photo-1558447453-3d0b3b8e89a5?w=1920&q=80"
+    clues:
+      - text: "They mentioned the Red City's ancient medina"
+      - text: "They were researching Jemaa el-Fnaa square's snake charmers"
+      - text: "They asked about Majorelle Garden's blue buildings"
+      - text: "They wanted to visit the Koutoubia Mosque"
+      - text: "They were interested in staying in a traditional riad"
+      - text: "They asked about the souks and spice markets"
+      - text: "They were learning Arabic phrases"
     landmarks:
       - id: la_mamounia
         name: La Mamounia
@@ -1063,7 +1195,6 @@ cities:
         lat: 31.6259
         lon: -7.9893
         time_cost: 3
-
       - id: majorelle_garden
         name: Majorelle Garden
         type: investigation
@@ -1072,7 +1203,6 @@ cities:
         lat: 31.6407
         lon: -8.0034
         time_cost: 3
-
       - id: koutoubia_mosque
         name: Koutoubia Mosque
         type: investigation
@@ -1081,7 +1211,6 @@ cities:
         lat: 31.6236
         lon: -7.9930
         time_cost: 2
-
       - id: tanneries
         name: Tanneries Quarter
         type: rogue
@@ -1100,6 +1229,14 @@ cities:
     icon: 🏔️
     fact: "Cape Town is the only city in the world with a national park within its borders—Table Mountain National Park."
     background_image: "https://images.unsplash.com/photo-1563656353898-febc9270a0f7?w=1920&q=80"
+    clues:
+      - text: "They were researching Table Mountain cable car rides"
+      - text: "They asked about the V&A Waterfront"
+      - text: "They wanted to see penguins at Boulders Beach"
+      - text: "They mentioned Cape Point and the Cape of Good Hope"
+      - text: "They were interested in Robben Island tours"
+      - text: "They asked about wine tasting in nearby Stellenbosch"
+      - text: "They mentioned the city at Africa's southern tip"
     landmarks:
       - id: one_and_only_cape_town
         name: One&Only Cape Town
@@ -1116,7 +1253,6 @@ cities:
         lat: -33.9628
         lon: 18.4098
         time_cost: 3
-
       - id: v_and_a_waterfront
         name: V&A Waterfront
         type: investigation
@@ -1125,7 +1261,6 @@ cities:
         lat: -33.9025
         lon: 18.4187
         time_cost: 2
-
       - id: boulders_beach
         name: Boulders Beach
         type: investigation
@@ -1134,7 +1269,6 @@ cities:
         lat: -34.1975
         lon: 18.4503
         time_cost: 3
-
       - id: district_six
         name: District Six
         type: rogue
@@ -1153,6 +1287,14 @@ cities:
     icon: 🏝️
     fact: "Zanzibar produces 90% of the world's cloves and was once the world's largest producer."
     background_image: "https://images.unsplash.com/photo-1568625365746-14e04f53fdf3?w=1920&q=80"
+    clues:
+      - text: "They were researching the Spice Islands of Africa"
+      - text: "They asked about Stone Town's winding alleys"
+      - text: "They wanted to tour spice farms and plantations"
+      - text: "They mentioned Nungwi Beach's white sand"
+      - text: "They were interested in Prison Island's giant tortoises"
+      - text: "They asked about dhow sailing trips"
+      - text: "They mentioned Swahili culture and architecture"
     landmarks:
       - id: park_hyatt_zanzibar
         name: Park Hyatt Zanzibar
@@ -1169,7 +1311,6 @@ cities:
         lat: -6.1630
         lon: 39.1933
         time_cost: 3
-
       - id: spice_farms
         name: Spice Farms
         type: investigation
@@ -1178,7 +1319,6 @@ cities:
         lat: -6.1200
         lon: 39.2600
         time_cost: 3
-
       - id: beaches
         name: Nungwi Beach
         type: investigation
@@ -1187,7 +1327,6 @@ cities:
         lat: -5.7283
         lon: 39.2944
         time_cost: 2
-
       - id: prison_island
         name: Prison Island
         type: rogue
@@ -1206,6 +1345,14 @@ cities:
     icon: 🏖️
     fact: "Rio de Janeiro hosts the world's largest Carnival celebration, attracting over 2 million people per day."
     background_image: "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=1920&q=80"
+    clues:
+      - text: "They were researching Christ the Redeemer statue"
+      - text: "They asked about Sugarloaf Mountain cable car"
+      - text: "They wanted to visit Copacabana Beach"
+      - text: "They mentioned Carnival and samba schools"
+      - text: "They were interested in favela tours"
+      - text: "They asked about flights to the Marvelous City"
+      - text: "They were learning Portuguese phrases"
     landmarks:
       - id: copacabana_palace
         name: Belmond Copacabana Palace
@@ -1222,7 +1369,6 @@ cities:
         lat: -22.9519
         lon: -43.2105
         time_cost: 3
-
       - id: sugarloaf_mountain
         name: Sugarloaf Mountain
         type: investigation
@@ -1231,7 +1377,6 @@ cities:
         lat: -22.9489
         lon: -43.1575
         time_cost: 3
-
       - id: copacabana_beach
         name: Copacabana Beach
         type: investigation
@@ -1240,7 +1385,6 @@ cities:
         lat: -22.9711
         lon: -43.1822
         time_cost: 2
-
       - id: favela_rocinha
         name: Rocinha Favela
         type: rogue
@@ -1259,6 +1403,14 @@ cities:
     icon: 💃
     fact: "Buenos Aires has more bookstores per capita than any other city in the world."
     background_image: "https://images.unsplash.com/photo-1589909202802-8f4aadce1849?w=1920&q=80"
+    clues:
+      - text: "They were researching tango shows in La Boca"
+      - text: "They asked about Recoleta Cemetery and Evita's tomb"
+      - text: "They wanted to visit Plaza de Mayo"
+      - text: "They mentioned Argentine steakhouses and parrillas"
+      - text: "They were interested in the Paris of South America"
+      - text: "They asked about football at La Bombonera stadium"
+      - text: "They were learning Spanish phrases with Argentine accent"
     landmarks:
       - id: alvear_palace_hotel
         name: Alvear Palace Hotel
@@ -1275,7 +1427,6 @@ cities:
         lat: -34.6345
         lon: -58.3634
         time_cost: 2
-
       - id: recoleta_cemetery
         name: Recoleta Cemetery
         type: investigation
@@ -1284,7 +1435,6 @@ cities:
         lat: -34.5875
         lon: -58.3932
         time_cost: 3
-
       - id: plaza_de_mayo
         name: Plaza de Mayo
         type: investigation
@@ -1293,7 +1443,6 @@ cities:
         lat: -34.6083
         lon: -58.3712
         time_cost: 2
-
       - id: villa_31
         name: Villa 31
         type: rogue
@@ -1312,6 +1461,14 @@ cities:
     icon: 🏔️
     fact: "Cusco was the historic capital of the Inca Empire and sits at 3,400 meters elevation."
     background_image: "https://images.unsplash.com/photo-1587595431973-160d0d94add1?w=1920&q=80"
+    clues:
+      - text: "They were researching Machu Picchu day trips"
+      - text: "They asked about the ancient Inca capital"
+      - text: "They wanted to visit Plaza de Armas"
+      - text: "They mentioned Sacsayhuamán fortress ruins"
+      - text: "They were interested in altitude sickness prevention"
+      - text: "They asked about the Sacred Valley tours"
+      - text: "They were learning Quechua phrases"
     landmarks:
       - id: palacio_del_inka
         name: Palacio del Inka
@@ -1328,7 +1485,6 @@ cities:
         lat: -13.1631
         lon: -72.5450
         time_cost: 3
-
       - id: plaza_de_armas
         name: Plaza de Armas
         type: investigation
@@ -1337,7 +1493,6 @@ cities:
         lat: -13.5165
         lon: -71.9787
         time_cost: 2
-
       - id: sacsayhuaman
         name: Sacsayhuamán
         type: investigation
@@ -1346,7 +1501,6 @@ cities:
         lat: -13.5089
         lon: -71.9812
         time_cost: 3
-
       - id: san_blas
         name: San Blas District
         type: rogue
@@ -1365,6 +1519,14 @@ cities:
     icon: 🏔️
     fact: "Bogotá is the third-highest capital city in the world at 2,640 meters above sea level."
     background_image: "https://images.unsplash.com/photo-1568632234157-ce7aecd03d0d?w=1920&q=80"
+    clues:
+      - text: "They were researching Monserrate mountain funicular"
+      - text: "They asked about Plaza Bolívar and government buildings"
+      - text: "They wanted to visit the Gold Museum's treasures"
+      - text: "They mentioned La Candelaria's colonial architecture"
+      - text: "They were interested in Colombian coffee tours"
+      - text: "They asked about the Ciclovía Sunday bike routes"
+      - text: "They were learning Colombian Spanish slang"
     landmarks:
       - id: four_seasons_bogota
         name: Four Seasons Hotel Bogotá
@@ -1381,7 +1543,6 @@ cities:
         lat: 4.6052
         lon: -74.0563
         time_cost: 3
-
       - id: plaza_bolivar
         name: Plaza Bolívar
         type: investigation
@@ -1390,7 +1551,6 @@ cities:
         lat: 4.5981
         lon: -74.0758
         time_cost: 2
-
       - id: gold_museum
         name: Gold Museum
         type: investigation
@@ -1399,7 +1559,6 @@ cities:
         lat: 4.6017
         lon: -74.0726
         time_cost: 3
-
       - id: ciudad_bolivar
         name: Ciudad Bolívar
         type: rogue
@@ -1418,6 +1577,14 @@ cities:
     icon: 🏔️
     fact: "Vancouver is consistently ranked as one of the world's most liveable cities."
     background_image: "https://images.unsplash.com/photo-1559511260-66a654ae982a?w=1920&q=80"
+    clues:
+      - text: "They were researching Stanley Park's seawall"
+      - text: "They asked about Granville Island public market"
+      - text: "They wanted to cross the Capilano Suspension Bridge"
+      - text: "They mentioned Whistler ski resort nearby"
+      - text: "They were interested in the city between mountains and ocean"
+      - text: "They asked about Gastown's steam clock"
+      - text: "They mentioned filming locations for Hollywood movies"
     landmarks:
       - id: fairmont_pacific_rim
         name: Fairmont Pacific Rim
@@ -1434,7 +1601,6 @@ cities:
         lat: 49.3044
         lon: -123.1441
         time_cost: 3
-
       - id: granville_island
         name: Granville Island
         type: investigation
@@ -1443,7 +1609,6 @@ cities:
         lat: 49.2712
         lon: -123.1344
         time_cost: 2
-
       - id: capilano_bridge
         name: Capilano Suspension Bridge
         type: investigation
@@ -1452,7 +1617,6 @@ cities:
         lat: 49.3429
         lon: -123.1149
         time_cost: 3
-
       - id: downtown_eastside
         name: Downtown Eastside
         type: rogue
@@ -1471,6 +1635,14 @@ cities:
     icon: 🎷
     fact: "New Orleans is the birthplace of jazz music and celebrates over 130 festivals annually."
     background_image: "https://images.unsplash.com/photo-1563624522027-f0b54fd04c3a?w=1920&q=80"
+    clues:
+      - text: "They were researching French Quarter jazz clubs"
+      - text: "They asked about Jackson Square street performers"
+      - text: "They wanted to visit the Garden District mansions"
+      - text: "They mentioned beignets at Café du Monde"
+      - text: "They were interested in Mardi Gras celebrations"
+      - text: "They asked about swamp tours and bayous"
+      - text: "They mentioned the birthplace of jazz"
     landmarks:
       - id: hotel_monteleone
         name: Hotel Monteleone
@@ -1487,7 +1659,6 @@ cities:
         lat: 29.9584
         lon: -90.0644
         time_cost: 3
-
       - id: jackson_square
         name: Jackson Square
         type: investigation
@@ -1496,7 +1667,6 @@ cities:
         lat: 29.9577
         lon: -90.0629
         time_cost: 2
-
       - id: garden_district
         name: Garden District
         type: investigation
@@ -1505,7 +1675,6 @@ cities:
         lat: 29.9271
         lon: -90.0852
         time_cost: 2
-
       - id: ninth_ward
         name: Lower Ninth Ward
         type: rogue
@@ -1524,6 +1693,14 @@ cities:
     icon: 🚗
     fact: "Havana has the largest number of 1950s American cars still in daily use anywhere in the world."
     background_image: "https://images.unsplash.com/photo-1520339838845-f452f9497ce1?w=1920&q=80"
+    clues:
+      - text: "They were researching vintage American cars from the 1950s"
+      - text: "They asked about the Malecón seaside promenade"
+      - text: "They wanted to visit Old Havana's colonial buildings"
+      - text: "They mentioned Revolution Square and Che Guevara"
+      - text: "They were interested in Cuban cigars and rum"
+      - text: "They asked about salsa dancing venues"
+      - text: "They were learning Cuban Spanish"
     landmarks:
       - id: hotel_nacional_cuba
         name: Hotel Nacional de Cuba
@@ -1540,7 +1717,6 @@ cities:
         lat: 23.1426
         lon: -82.3738
         time_cost: 2
-
       - id: old_havana
         name: Old Havana
         type: investigation
@@ -1549,7 +1725,6 @@ cities:
         lat: 23.1367
         lon: -82.3589
         time_cost: 3
-
       - id: revolution_square
         name: Revolution Square
         type: investigation
@@ -1558,7 +1733,6 @@ cities:
         lat: 23.1128
         lon: -82.3940
         time_cost: 2
-
       - id: fusterlandia
         name: Fusterlandia
         type: rogue
@@ -1577,6 +1751,14 @@ cities:
     icon: 🏙️
     fact: "Dubai's Burj Khalifa is the tallest building in the world at 828 meters."
     background_image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1920&q=80"
+    clues:
+      - text: "They were researching the world's tallest building"
+      - text: "They asked about the Dubai Mall's aquarium"
+      - text: "They wanted to visit the Gold Souk markets"
+      - text: "They mentioned indoor skiing in the desert"
+      - text: "They were interested in the Palm Jumeirah island"
+      - text: "They asked about the Burj Al Arab hotel"
+      - text: "They were learning Arabic phrases"
     landmarks:
       - id: burj_al_arab
         name: Burj Al Arab
@@ -1593,7 +1775,6 @@ cities:
         lat: 25.1972
         lon: 55.2744
         time_cost: 3
-
       - id: dubai_mall
         name: Dubai Mall
         type: investigation
@@ -1602,7 +1783,6 @@ cities:
         lat: 25.1972
         lon: 55.2796
         time_cost: 3
-
       - id: gold_souk
         name: Gold Souk
         type: investigation
@@ -1611,7 +1791,6 @@ cities:
         lat: 25.2692
         lon: 55.2993
         time_cost: 2
-
       - id: old_dubai
         name: Old Dubai (Al Fahidi)
         type: rogue
@@ -1630,6 +1809,14 @@ cities:
     icon: 🕍
     fact: "Jerusalem is considered holy by three major religions: Judaism, Christianity, and Islam."
     background_image: "https://images.unsplash.com/photo-1509447870-bb0c31bb5249?w=1920&q=80"
+    clues:
+      - text: "They were researching the Western Wall"
+      - text: "They asked about the Dome of the Rock"
+      - text: "They wanted to visit the Church of the Holy Sepulchre"
+      - text: "They mentioned the Old City's four quarters"
+      - text: "They were interested in walking the Via Dolorosa"
+      - text: "They asked about Yad Vashem Holocaust memorial"
+      - text: "They mentioned the city holy to three religions"
     landmarks:
       - id: king_david_hotel
         name: The King David Hotel
@@ -1646,7 +1833,6 @@ cities:
         lat: 31.7767
         lon: 35.2345
         time_cost: 3
-
       - id: dome_of_rock
         name: Dome of the Rock
         type: investigation
@@ -1655,7 +1841,6 @@ cities:
         lat: 31.7780
         lon: 35.2354
         time_cost: 3
-
       - id: church_holy_sepulchre
         name: Church of Holy Sepulchre
         type: investigation
@@ -1664,7 +1849,6 @@ cities:
         lat: 31.7784
         lon: 35.2295
         time_cost: 2
-
       - id: machane_yehuda
         name: Mahane Yehuda Market
         type: rogue
@@ -1683,6 +1867,14 @@ cities:
     icon: ⛵
     fact: "Auckland has more boats per capita than any other city in the world."
     background_image: "https://images.unsplash.com/photo-1507699622108-4be3abd695ad?w=1920&q=80"
+    clues:
+      - text: "They were researching the Sky Tower's observation deck"
+      - text: "They asked about the City of Sails"
+      - text: "They wanted to visit Waitematā Harbour"
+      - text: "They mentioned Mount Eden volcanic cone"
+      - text: "They were interested in Waiheke Island wineries"
+      - text: "They asked about Hobbiton movie set tours"
+      - text: "They were learning Māori phrases"
     landmarks:
       - id: sofitel_auckland
         name: Sofitel Auckland Viaduct Harbour
@@ -1699,7 +1891,6 @@ cities:
         lat: -36.8485
         lon: 174.7633
         time_cost: 3
-
       - id: waitemata_harbour
         name: Waitematā Harbour
         type: investigation
@@ -1708,7 +1899,6 @@ cities:
         lat: -36.8408
         lon: 174.7697
         time_cost: 2
-
       - id: mount_eden
         name: Mount Eden
         type: investigation
@@ -1717,7 +1907,6 @@ cities:
         lat: -36.8762
         lon: 174.7642
         time_cost: 2
-
       - id: karangahape_road
         name: Karangahape Road
         type: rogue
@@ -1736,6 +1925,14 @@ cities:
     icon: ☕
     fact: "Melbourne has been voted the world's most liveable city multiple times and has more cafes per capita than any city."
     background_image: "https://images.unsplash.com/photo-1514395462725-fb4566210144?w=1920&q=80"
+    clues:
+      - text: "They were researching the coffee capital of Australia"
+      - text: "They asked about Federation Square art galleries"
+      - text: "They wanted to visit the Royal Botanic Gardens"
+      - text: "They mentioned Queen Victoria Market"
+      - text: "They were interested in the Great Ocean Road drive"
+      - text: "They asked about Australian Rules Football matches"
+      - text: "They mentioned Melbourne's laneway culture"
     landmarks:
       - id: park_hyatt_melbourne
         name: Park Hyatt Melbourne
@@ -1752,7 +1949,6 @@ cities:
         lat: -37.8180
         lon: 144.9685
         time_cost: 2
-
       - id: royal_botanic_gardens
         name: Royal Botanic Gardens
         type: investigation
@@ -1761,7 +1957,6 @@ cities:
         lat: -37.8304
         lon: 144.9800
         time_cost: 3
-
       - id: queen_victoria_market
         name: Queen Victoria Market
         type: investigation
@@ -1770,7 +1965,6 @@ cities:
         lat: -37.8076
         lon: 144.9568
         time_cost: 2
-
       - id: fitzroy
         name: Fitzroy District
         type: rogue
@@ -1789,6 +1983,14 @@ cities:
     icon: 🏝️
     fact: "Suva is one of the largest cities in the South Pacific and has a deep natural harbor."
     background_image: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1920&q=80"
+    clues:
+      - text: "They were researching the South Pacific's largest city"
+      - text: "They asked about Thurston Gardens botanical park"
+      - text: "They wanted to visit the Fiji Museum"
+      - text: "They mentioned Suva Municipal Market"
+      - text: "They were interested in Colo-i-Suva Forest Park"
+      - text: "They asked about kava ceremonies"
+      - text: "They were learning Fijian phrases"
     landmarks:
       - id: grand_pacific_hotel
         name: Grand Pacific Hotel
@@ -1805,7 +2007,6 @@ cities:
         lat: -18.1449
         lon: 178.4298
         time_cost: 2
-
       - id: fiji_museum
         name: Fiji Museum
         type: investigation
@@ -1814,7 +2015,6 @@ cities:
         lat: -18.1447
         lon: 178.4295
         time_cost: 3
-
       - id: suva_municipal_market
         name: Suva Municipal Market
         type: investigation
@@ -1823,7 +2023,6 @@ cities:
         lat: -18.1393
         lon: 178.4231
         time_cost: 2
-
       - id: colo_i_suva
         name: Colo-i-Suva Forest Park
         type: rogue
