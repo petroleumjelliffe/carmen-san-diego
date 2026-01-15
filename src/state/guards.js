@@ -1,109 +1,111 @@
 /**
  * Pure guard functions for the game state machine
- * All guards are (context) => boolean or (context, event) => boolean
+ *
+ * XState v5 signature: ({ context, event }) => boolean
  */
 
 // === Time checks ===
 
-export const isSleepTime = (ctx) => ctx.currentHour >= 23 || ctx.currentHour < 7;
+export const isSleepTime = ({ context }) =>
+  context.currentHour >= 23 || context.currentHour < 7;
 
-export const isTimeExpired = (ctx) => ctx.timeRemaining <= 0;
+export const isTimeExpired = ({ context }) => context.timeRemaining <= 0;
 
-export const sleepWouldCauseTimeout = (ctx) => {
+export const sleepWouldCauseTimeout = ({ context }) => {
   const hoursUntil7am =
-    ctx.currentHour >= 23
-      ? 24 - ctx.currentHour + 7
-      : 7 - ctx.currentHour;
-  return ctx.timeRemaining <= hoursUntil7am;
+    context.currentHour >= 23
+      ? 24 - context.currentHour + 7
+      : 7 - context.currentHour;
+  return context.timeRemaining <= hoursUntil7am;
 };
 
 // === Location checks ===
 
-export const isFinalCity = (ctx) =>
-  ctx.currentCase && ctx.cityIndex === ctx.currentCase.totalCities - 1;
+export const isFinalCity = ({ context }) =>
+  !!(context.currentCase && context.cityIndex === context.currentCase.totalCities - 1);
 
-export const isWrongCity = (ctx) => ctx.wrongCity;
+export const isWrongCity = ({ context }) => context.wrongCity;
 
-export const isCity1 = (ctx) => ctx.cityIndex === 0;
+export const isCity1 = ({ context }) => context.cityIndex === 0;
 
-export const isCities2ToNMinus1 = (ctx) =>
-  ctx.currentCase &&
-  ctx.cityIndex >= 1 &&
-  ctx.cityIndex < ctx.currentCase.totalCities - 1;
+export const isCities2ToNMinus1 = ({ context }) =>
+  context.currentCase &&
+  context.cityIndex >= 1 &&
+  context.cityIndex < context.currentCase.totalCities - 1;
 
 // === Investigation spots ===
 
-export const hasAvailableSpots = (ctx) => {
-  if (!ctx.currentCase) return false;
-  const city = ctx.currentCase.cities[ctx.cityIndex];
-  return ctx.spotsUsedInCity < city.investigationSpots;
+export const hasAvailableSpots = ({ context }) => {
+  if (!context.currentCase) return false;
+  const city = context.currentCase.cities[context.cityIndex];
+  return context.spotsUsedInCity < city.investigationSpots;
 };
 
 // === Investigation routing ===
 
-export const shouldApprehend = (ctx) =>
-  ctx.currentCase &&
-  ctx.cityIndex === ctx.currentCase.totalCities - 1 &&
-  ctx.hadEncounterInCity;
+export const shouldApprehend = ({ context }) =>
+  context.currentCase &&
+  context.cityIndex === context.currentCase.totalCities - 1 &&
+  context.hadEncounterInCity;
 
-export const shouldHenchman = (ctx) =>
-  ctx.currentCase &&
-  ctx.cityIndex >= 1 &&
-  ctx.cityIndex < ctx.currentCase.totalCities - 1 &&
-  !ctx.wrongCity &&
-  !ctx.hadEncounterInCity;
+export const shouldHenchman = ({ context }) =>
+  context.currentCase &&
+  context.cityIndex >= 1 &&
+  context.cityIndex < context.currentCase.totalCities - 1 &&
+  !context.wrongCity &&
+  !context.hadEncounterInCity;
 
-export const shouldAssassination = (ctx) =>
-  ctx.currentCase &&
-  ctx.cityIndex === ctx.currentCase.totalCities - 1 &&
-  !ctx.hadEncounterInCity;
+export const shouldAssassination = ({ context }) =>
+  context.currentCase &&
+  context.cityIndex === context.currentCase.totalCities - 1 &&
+  !context.hadEncounterInCity;
 
-export const shouldRogueActionAlone = (ctx) =>
-  ctx.pendingRogueAction &&
-  !ctx.rogueUsedInCity &&
-  ctx.encounterQueue.length === 0;
+export const shouldRogueActionAlone = ({ context }) =>
+  context.pendingRogueAction &&
+  !context.rogueUsedInCity &&
+  context.encounterQueue.length === 0;
 
-export const shouldGoodDeed = (ctx) =>
-  ctx.spotsUsedInCity > 0 && // 2nd+ investigation in this city
-  !ctx.wrongCity &&
-  !ctx.hadGoodDeedInCase &&
-  ctx.goodDeedRoll !== null &&
-  ctx.goodDeedRoll < 0.3; // 30% chance
+export const shouldGoodDeed = ({ context }) =>
+  context.spotsUsedInCity > 1 && // 2nd+ investigation (checked AFTER increment)
+  !context.wrongCity &&
+  !context.hadGoodDeedInCase &&
+  context.goodDeedRoll !== null &&
+  context.goodDeedRoll < 0.3; // 30% chance
 
 // === Encounter types ===
 
-export const requiresGadgetChoice = (ctx) =>
-  ['henchman', 'assassination'].includes(ctx.encounterType);
+export const requiresGadgetChoice = ({ context }) =>
+  ['henchman', 'assassination'].includes(context.encounterType);
 
-export const isGoodDeed = (ctx) => ctx.encounterType === 'goodDeed';
+export const isGoodDeed = ({ context }) => context.encounterType === 'goodDeed';
 
-export const isApprehension = (ctx) => ctx.encounterType === 'apprehension';
+export const isApprehension = ({ context }) => context.encounterType === 'apprehension';
 
-export const isTimeOut = (ctx) => ctx.encounterType === 'timeOut';
+export const isTimeOut = ({ context }) => context.encounterType === 'timeOut';
 
-export const hasStackedRogueAction = (ctx) =>
-  ctx.encounterQueue.length > 0 && ctx.encounterQueue[0] === 'rogueAction';
+export const hasStackedRogueAction = ({ context }) =>
+  context.encounterQueue.length > 0 && context.encounterQueue[0] === 'rogueAction';
 
 // === Gadgets ===
 
-export const hasAvailableGadget = (ctx, event) =>
-  ctx.availableGadgets.some((g) => g.id === event.gadgetId);
+export const hasAvailableGadget = ({ context, event }) =>
+  context.availableGadgets.some((g) => g.id === event.gadgetId);
 
-export const hasAnyGadgets = (ctx) => ctx.availableGadgets.length > 0;
+export const hasAnyGadgets = ({ context }) => context.availableGadgets.length > 0;
 
 // === Trial ===
 
-export const hasNoWarrant = (ctx) => !ctx.warrantIssued;
+export const hasNoWarrant = ({ context }) => !context.warrantIssued;
 
-export const hasWrongWarrant = (ctx) =>
-  ctx.warrantIssued &&
-  ctx.currentCase &&
-  ctx.selectedWarrant?.id !== ctx.currentCase.suspect.id;
+export const hasWrongWarrant = ({ context }) =>
+  context.warrantIssued &&
+  context.currentCase &&
+  context.selectedWarrant?.id !== context.currentCase.suspect.id;
 
-export const hasCorrectWarrant = (ctx) =>
-  ctx.warrantIssued &&
-  ctx.currentCase &&
-  ctx.selectedWarrant?.id === ctx.currentCase.suspect.id;
+export const hasCorrectWarrant = ({ context }) =>
+  context.warrantIssued &&
+  context.currentCase &&
+  context.selectedWarrant?.id === context.currentCase.suspect.id;
 
 /**
  * All guards as an object for XState machine config

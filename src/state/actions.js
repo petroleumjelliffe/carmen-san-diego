@@ -1,6 +1,8 @@
 /**
  * Action functions for the game state machine
- * Uses XState's assign() for state mutations
+ * Uses XState v5's assign() for state mutations
+ *
+ * XState v5 signature: assign(({ context, event }) => ({ ... }))
  */
 import { assign } from 'xstate';
 
@@ -8,7 +10,7 @@ import { assign } from 'xstate';
 // CASE INITIALIZATION
 // ============================================
 
-export const initializeCase = assign((ctx, event) => ({
+export const initializeCase = assign(({ event }) => ({
   currentCase: event.caseData,
   cityIndex: 0,
   currentCityId: event.caseData.cities[0].id,
@@ -41,8 +43,8 @@ export const initializeCase = assign((ctx, event) => ({
   debriefOutcome: null,
 }));
 
-export const loadSavedState = assign((ctx, event) => ({
-  ...ctx,
+export const loadSavedState = assign(({ context, event }) => ({
+  ...context,
   ...event.savedContext,
 }));
 
@@ -50,32 +52,32 @@ export const loadSavedState = assign((ctx, event) => ({
 // TIME MANAGEMENT (centralized)
 // ============================================
 
-export const advanceTimeToMorning = assign((ctx) => {
+export const advanceTimeToMorning = assign(({ context }) => {
   const hoursUntil7am =
-    ctx.currentHour >= 23
-      ? 24 - ctx.currentHour + 7
-      : 7 - ctx.currentHour;
+    context.currentHour >= 23
+      ? 24 - context.currentHour + 7
+      : 7 - context.currentHour;
   return {
     currentHour: 7,
-    timeRemaining: ctx.timeRemaining - hoursUntil7am,
+    timeRemaining: context.timeRemaining - hoursUntil7am,
     lastSleepMessage: `You rested for ${hoursUntil7am} hours.`,
   };
 });
 
-export const advanceTimeForTravel = assign((ctx) => {
-  const hours = ctx.travelHours || 4;
+export const advanceTimeForTravel = assign(({ context }) => {
+  const hours = context.travelHours || 4;
   return {
-    currentHour: (ctx.currentHour + hours) % 24,
-    timeRemaining: ctx.timeRemaining - hours,
+    currentHour: (context.currentHour + hours) % 24,
+    timeRemaining: context.timeRemaining - hours,
   };
 });
 
-export const advanceTimeForInvestigation = assign((ctx) => {
+export const advanceTimeForInvestigation = assign(({ context }) => {
   // Progressive cost: 2h, 4h, 8h
-  const hours = [2, 4, 8][Math.min(ctx.spotsUsedInCity, 2)];
+  const hours = [2, 4, 8][Math.min(context.spotsUsedInCity, 2)];
   return {
-    currentHour: (ctx.currentHour + hours) % 24,
-    timeRemaining: ctx.timeRemaining - hours,
+    currentHour: (context.currentHour + hours) % 24,
+    timeRemaining: context.timeRemaining - hours,
   };
 });
 
@@ -83,21 +85,21 @@ export const advanceTimeForInvestigation = assign((ctx) => {
 // SLEEP
 // ============================================
 
-export const calculateSleepTimeout = assign((ctx) => {
+export const calculateSleepTimeout = assign(({ context }) => {
   const hoursUntil7am =
-    ctx.currentHour >= 23
-      ? 24 - ctx.currentHour + 7
-      : 7 - ctx.currentHour;
+    context.currentHour >= 23
+      ? 24 - context.currentHour + 7
+      : 7 - context.currentHour;
   return {
-    sleepWouldTimeout: ctx.timeRemaining <= hoursUntil7am,
+    sleepWouldTimeout: context.timeRemaining <= hoursUntil7am,
   };
 });
 
-export const setSleepMessage = assign((ctx) => {
+export const setSleepMessage = assign(({ context }) => {
   const hoursUntil7am =
-    ctx.currentHour >= 23
-      ? 24 - ctx.currentHour + 7
-      : 7 - ctx.currentHour;
+    context.currentHour >= 23
+      ? 24 - context.currentHour + 7
+      : 7 - context.currentHour;
   return {
     lastSleepMessage: `You rested for ${hoursUntil7am} hours.`,
   };
@@ -115,26 +117,26 @@ export const rollGoodDeedDice = assign({
 // TRAVEL
 // ============================================
 
-export const setTravelDestination = assign((ctx, event) => ({
+export const setTravelDestination = assign(({ context, event }) => ({
   travelHours: event.travelHours,
   travelDestination: event.destinationId,
   isCorrectPath: event.isCorrectPath,
   // Store origin for wrong city return
-  originCityId: ctx.currentCityId,
+  originCityId: context.currentCityId,
 }));
 
-export const updateLocation = assign((ctx) => {
+export const updateLocation = assign(({ context }) => {
   // NOTE: Reads from context, not event. ARRIVE event has no payload.
   // Data was stored by setTravelDestination when TRAVEL was sent.
 
   // Determine if this is a return from wrong city
   const isReturningFromWrongCity =
-    ctx.wrongCity && ctx.travelDestination === ctx.originCityId;
+    context.wrongCity && context.travelDestination === context.originCityId;
 
   if (isReturningFromWrongCity) {
     // Returning to correct path - don't change cityIndex
     return {
-      currentCityId: ctx.travelDestination,
+      currentCityId: context.travelDestination,
       wrongCity: false,
       travelHours: null,
       travelDestination: null,
@@ -144,9 +146,9 @@ export const updateLocation = assign((ctx) => {
 
   // Normal travel
   return {
-    cityIndex: ctx.isCorrectPath ? ctx.cityIndex + 1 : ctx.cityIndex,
-    currentCityId: ctx.travelDestination,
-    wrongCity: !ctx.isCorrectPath,
+    cityIndex: context.isCorrectPath ? context.cityIndex + 1 : context.cityIndex,
+    currentCityId: context.travelDestination,
+    wrongCity: !context.isCorrectPath,
     travelHours: null,
     travelDestination: null,
     isCorrectPath: null,
@@ -163,18 +165,18 @@ export const resetCityFlags = assign({
 // INVESTIGATION
 // ============================================
 
-export const setInvestigationParams = assign((ctx, event) => ({
+export const setInvestigationParams = assign(({ event }) => ({
   pendingRogueAction: event.isRogueAction || false,
   currentSpotIndex: event.spotIndex,
 }));
 
-export const recordInvestigation = assign((ctx) => ({
-  // NOTE: Uses ctx.currentSpotIndex set by setInvestigationParams
+export const recordInvestigation = assign(({ context }) => ({
+  // NOTE: Uses context.currentSpotIndex set by setInvestigationParams
   investigatedSpots: [
-    ...ctx.investigatedSpots,
-    `${ctx.currentCityId}:${ctx.currentSpotIndex}`,
+    ...context.investigatedSpots,
+    `${context.currentCityId}:${context.currentSpotIndex}`,
   ],
-  spotsUsedInCity: ctx.spotsUsedInCity + 1,
+  spotsUsedInCity: context.spotsUsedInCity + 1,
   currentSpotIndex: null,
 }));
 
@@ -182,25 +184,25 @@ export const recordInvestigation = assign((ctx) => ({
 // ENCOUNTER SETUP
 // ============================================
 
-export const setHenchmanEncounter = assign((ctx) => ({
+export const setHenchmanEncounter = assign(({ context }) => ({
   encounterType: 'henchman',
   encounterChoice: 'pending',
-  encounterQueue: ctx.pendingRogueAction ? ['rogueAction'] : [],
+  encounterQueue: context.pendingRogueAction ? ['rogueAction'] : [],
 }));
 
-export const setAssassinationEncounter = assign((ctx) => ({
+export const setAssassinationEncounter = assign(({ context }) => ({
   encounterType: 'assassination',
   encounterChoice: 'pending',
-  encounterQueue: ctx.pendingRogueAction ? ['rogueAction'] : [],
+  encounterQueue: context.pendingRogueAction ? ['rogueAction'] : [],
 }));
 
-export const setRogueEncounter = assign({
+export const setRogueEncounter = assign(({ context }) => ({
   encounterType: 'rogueAction',
   encounterQueue: [],
   witnessClueVariant: 'rogue',
   // Rogue action increases notoriety
-  notoriety: (ctx) => ctx.notoriety + 1,
-});
+  notoriety: context.notoriety + 1,
+}));
 
 export const setGoodDeedEncounter = assign({
   encounterType: 'goodDeed',
@@ -219,45 +221,45 @@ export const setTimeOutEncounter = assign({
 // ENCOUNTER RESOLUTION
 // ============================================
 
-export const setEncounterChoice = assign((ctx, event) => ({
+export const setEncounterChoice = assign(({ event }) => ({
   encounterChoice: event.type === 'CHOOSE_GADGET' ? 'gadget' : 'endure',
 }));
 
-export const useGadget = assign((ctx, event) => ({
-  usedGadgets: [...ctx.usedGadgets, event.gadgetId],
-  availableGadgets: ctx.availableGadgets.filter((g) => g.id !== event.gadgetId),
+export const useGadget = assign(({ context, event }) => ({
+  usedGadgets: [...context.usedGadgets, event.gadgetId],
+  availableGadgets: context.availableGadgets.filter((g) => g.id !== event.gadgetId),
 }));
 
-export const applyInjury = assign((ctx) => ({
-  wounds: ctx.wounds + 1,
+export const applyInjury = assign(({ context }) => ({
+  wounds: context.wounds + 1,
 }));
 
-export const applyTimePenalty = assign((ctx) => ({
+export const applyTimePenalty = assign(({ context }) => ({
   // Lose 2 extra hours when taking injury
-  timeRemaining: ctx.timeRemaining - 2,
-  currentHour: (ctx.currentHour + 2) % 24,
+  timeRemaining: context.timeRemaining - 2,
+  currentHour: (context.currentHour + 2) % 24,
 }));
 
-export const increaseKarma = assign((ctx) => ({
-  karma: ctx.karma + 1,
+export const increaseKarma = assign(({ context }) => ({
+  karma: context.karma + 1,
 }));
 
 export const markGoodDeedComplete = assign({
   hadGoodDeedInCase: true,
 });
 
-export const popRogueFromQueue = assign((ctx) => ({
+export const popRogueFromQueue = assign(({ context }) => ({
   encounterType: 'rogueAction',
-  encounterQueue: ctx.encounterQueue.slice(1),
+  encounterQueue: context.encounterQueue.slice(1),
   witnessClueVariant: 'rogue',
 }));
 
-export const markEncounterComplete = assign((ctx) => ({
-  hadEncounterInCity: ['henchman', 'assassination'].includes(ctx.encounterType)
+export const markEncounterComplete = assign(({ context }) => ({
+  hadEncounterInCity: ['henchman', 'assassination'].includes(context.encounterType)
     ? true
-    : ctx.hadEncounterInCity,
+    : context.hadEncounterInCity,
   rogueUsedInCity:
-    ctx.encounterType === 'rogueAction' ? true : ctx.rogueUsedInCity,
+    context.encounterType === 'rogueAction' ? true : context.rogueUsedInCity,
 }));
 
 // ============================================
@@ -272,11 +274,11 @@ export const setNormalClue = assign({
 // TRIAL & DEBRIEF
 // ============================================
 
-export const determineTrialOutcome = assign((ctx) => {
+export const determineTrialOutcome = assign(({ context }) => {
   let outcome;
-  if (!ctx.warrantIssued) {
+  if (!context.warrantIssued) {
     outcome = 'no_warrant';
-  } else if (ctx.selectedWarrant?.id !== ctx.currentCase?.suspect.id) {
+  } else if (context.selectedWarrant?.id !== context.currentCase?.suspect.id) {
     outcome = 'wrong_warrant';
   } else {
     outcome = 'success';
@@ -288,15 +290,15 @@ export const setTimeOutOutcome = assign({
   debriefOutcome: 'time_out',
 });
 
-export const updateStats = assign((ctx) => {
-  if (ctx.debriefOutcome === 'success') {
+export const updateStats = assign(({ context }) => {
+  if (context.debriefOutcome === 'success') {
     return {
-      solvedCases: [...ctx.solvedCases, ctx.currentCase?.id],
-      karma: ctx.karma + 5, // Bonus for solving
+      solvedCases: [...context.solvedCases, context.currentCase?.id],
+      karma: context.karma + 5, // Bonus for solving
     };
   }
   return {
-    notoriety: ctx.notoriety + 1, // Failed case increases notoriety
+    notoriety: context.notoriety + 1, // Failed case increases notoriety
   };
 });
 
@@ -343,33 +345,33 @@ export const clearCaseState = assign({
 // PERSISTENCE
 // ============================================
 
-export const saveGame = (ctx) => {
+export const saveGame = ({ context }) => {
   // Side effect: persist to localStorage
   const saveData = {
     // Persistent
-    karma: ctx.karma,
-    notoriety: ctx.notoriety,
-    solvedCases: ctx.solvedCases,
+    karma: context.karma,
+    notoriety: context.notoriety,
+    solvedCases: context.solvedCases,
 
     // Case state (only if in case)
-    ...(ctx.currentCase && {
-      currentCase: ctx.currentCase,
-      cityIndex: ctx.cityIndex,
-      currentCityId: ctx.currentCityId,
-      wrongCity: ctx.wrongCity,
-      originCityId: ctx.originCityId,
-      currentHour: ctx.currentHour,
-      timeRemaining: ctx.timeRemaining,
-      investigatedSpots: ctx.investigatedSpots,
-      spotsUsedInCity: ctx.spotsUsedInCity,
-      hadEncounterInCity: ctx.hadEncounterInCity,
-      hadGoodDeedInCase: ctx.hadGoodDeedInCase,
-      rogueUsedInCity: ctx.rogueUsedInCity,
-      warrantIssued: ctx.warrantIssued,
-      selectedWarrant: ctx.selectedWarrant,
-      availableGadgets: ctx.availableGadgets,
-      usedGadgets: ctx.usedGadgets,
-      wounds: ctx.wounds,
+    ...(context.currentCase && {
+      currentCase: context.currentCase,
+      cityIndex: context.cityIndex,
+      currentCityId: context.currentCityId,
+      wrongCity: context.wrongCity,
+      originCityId: context.originCityId,
+      currentHour: context.currentHour,
+      timeRemaining: context.timeRemaining,
+      investigatedSpots: context.investigatedSpots,
+      spotsUsedInCity: context.spotsUsedInCity,
+      hadEncounterInCity: context.hadEncounterInCity,
+      hadGoodDeedInCase: context.hadGoodDeedInCase,
+      rogueUsedInCity: context.rogueUsedInCity,
+      warrantIssued: context.warrantIssued,
+      selectedWarrant: context.selectedWarrant,
+      availableGadgets: context.availableGadgets,
+      usedGadgets: context.usedGadgets,
+      wounds: context.wounds,
     }),
   };
   try {
