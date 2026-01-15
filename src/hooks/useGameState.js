@@ -127,16 +127,16 @@ export function useGameState(gameData) {
       setCurrentCityIndex(activeCase.currentCityIndex);
       setTimeRemaining(activeCase.timeRemaining);
       setCurrentHour(activeCase.currentHour);
-      setCollectedClues(activeCase.collectedClues);
-      setInvestigatedLocations(activeCase.investigatedLocations);
+      setCollectedClues(activeCase.collectedClues || []);
+      setInvestigatedLocations(activeCase.investigatedLocations || []);
       setSelectedWarrant(activeCase.selectedWarrant);
-      setUsedGadgets(activeCase.usedGadgets);
-      setHadGoodDeedInCase(activeCase.hadGoodDeedInCase);
-      setHadEncounterInCity(activeCase.hadEncounterInCity);
-      setRogueUsedInCity(activeCase.rogueUsedInCity);
-      setSelectedTraits(activeCase.selectedTraits);
-      setWrongCity(activeCase.wrongCity);
-      setWrongCityData(activeCase.wrongCityData);
+      setUsedGadgets(activeCase.usedGadgets || []);
+      setHadGoodDeedInCase(activeCase.hadGoodDeedInCase || false);
+      setHadEncounterInCity(activeCase.hadEncounterInCity || {});
+      setRogueUsedInCity(activeCase.rogueUsedInCity || {});
+      setSelectedTraits(activeCase.selectedTraits || []);
+      setWrongCity(activeCase.wrongCity || null);
+      setWrongCityData(activeCase.wrongCityData || null);
       setGameState('playing');
     }
 
