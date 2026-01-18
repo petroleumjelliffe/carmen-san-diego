@@ -13,7 +13,8 @@ import { assign } from 'xstate';
 export const initializeCase = assign(({ event }) => ({
   currentCase: event.caseData,
   cityIndex: 0,
-  currentCityId: event.caseData.cities[0].id,
+  // Note: cities is an array of city ID strings, not objects
+  currentCityId: event.caseData.cities[0],
   wrongCity: false,
   originCityId: null,
   travelDestination: null,

@@ -250,8 +250,8 @@ export function Game({ gameData }) {
     setLastRogueAction(null);
     setLastSleepResult(null);
 
-    // Send to state machine
-    investigate(context.spotsUsedInCity, false);
+    // Send to state machine - use locationIndex, not spotsUsedInCity
+    investigate(locationIndex, false);
 
     // Return action config for queue
     return {
