@@ -19,7 +19,7 @@ const sampleCaseData = {
       name: 'Paris',
       lat: 48.8566,
       lng: 2.3522,
-      investigationSpots: 3,
+      investigationSpots: 4,
       correctDestination: 'london',
       wrongDestinations: ['berlin'],
     },
@@ -28,7 +28,7 @@ const sampleCaseData = {
       name: 'London',
       lat: 51.5074,
       lng: -0.1278,
-      investigationSpots: 3,
+      investigationSpots: 4,
       correctDestination: 'tokyo',
       wrongDestinations: ['moscow'],
     },
@@ -37,7 +37,7 @@ const sampleCaseData = {
       name: 'Tokyo',
       lat: 35.6762,
       lng: 139.6503,
-      investigationSpots: 3,
+      investigationSpots: 4,
       correctDestination: null,
       wrongDestinations: [],
     },
@@ -143,16 +143,16 @@ export function StateMachineDebug() {
         {isIdle && (
           <>
             <button
-              onClick={() => investigate(0)}
+              onClick={() => investigate(context.spotsUsedInCity)}
               className="bg-green-600 px-2 py-1 rounded mr-1"
             >
-              Investigate (0)
+              Investigate ({context.spotsUsedInCity})
             </button>
             <button
-              onClick={() => investigate(0, true)}
+              onClick={() => investigate(context.spotsUsedInCity, true)}
               className="bg-purple-600 px-2 py-1 rounded mr-1"
             >
-              Rogue Action
+              Rogue ({context.spotsUsedInCity})
             </button>
             {context.currentCase?.cities[context.cityIndex]?.correctDestination && (
               <button
