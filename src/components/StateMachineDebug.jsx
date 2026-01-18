@@ -1,10 +1,5 @@
 /**
  * Debug component for testing the XState game machine
- *
- * This component provides a simple UI to test state machine transitions
- * without affecting the main game. Enable by setting VITE_DEBUG_STATE_MACHINE=true
- *
- * Usage: Add <StateMachineDebug /> anywhere inside GameMachineProvider
  */
 import { useGameMachine } from '../hooks/useGameMachine.jsx';
 
@@ -66,9 +61,13 @@ export function StateMachineDebug() {
     isEncounter,
     isWitnessClue,
     isSleeping,
+    isConfirmingSleep,
     isApprehended,
     isTrial,
     isDebrief,
+    isChoosingAction,
+    isChoosingGoodDeed,
+    isResolvingEncounter,
     startCase,
     acceptBriefing,
     investigate,
@@ -81,6 +80,7 @@ export function StateMachineDebug() {
     resolveEncounter,
     continueAfterClue,
     wake,
+    confirmSleep,
     proceedToTrial,
     completeTrial,
     returnToMenu,
@@ -92,7 +92,7 @@ export function StateMachineDebug() {
     : JSON.stringify(state.value, null, 2);
 
   return (
-    <div className="fixed bottom-4 right-4 bg-black/90 text-white p-4 rounded-lg max-w-md max-h-96 overflow-auto text-xs font-mono z-50">
+    <div className="fixed bottom-4 right-4 bg-black/90 text-white p-4 rounded-lg max-w-md max-h-[500px] overflow-auto text-xs font-mono z-50">
       <h3 className="font-bold text-yellow-400 mb-2">State Machine Debug</h3>
 
       {/* Current State */}
@@ -110,9 +110,11 @@ export function StateMachineDebug() {
           <span>City: {context.currentCityId || 'none'}</span>
           <span>Index: {context.cityIndex}</span>
           <span>Wrong City: {context.wrongCity ? 'yes' : 'no'}</span>
-          <span>Spots Used: {context.spotsUsedInCity}</span>
+          <span className="text-yellow-300">Spots Used: {context.spotsUsedInCity}</span>
           <span>Encounter: {context.encounterType || 'none'}</span>
           <span>Clue Variant: {context.witnessClueVariant || 'none'}</span>
+          <span>Gadgets: {context.availableGadgets?.length || 0}</span>
+          <span>Investigated: {context.investigatedSpots?.length || 0}</span>
         </div>
       </div>
 
@@ -180,14 +182,20 @@ export function StateMachineDebug() {
           </button>
         )}
 
-        {isEncounter && context.encounterType === 'henchman' && (
+        {/* Henchman/Assassination - choosing gadget or endure */}
+        {isChoosingAction && (
           <>
-            <button
-              onClick={() => chooseGadget('gadget-1')}
-              className="bg-cyan-600 px-2 py-1 rounded mr-1"
-            >
-              Use Gadget
-            </button>
+            <span className="text-yellow-300 block mb-1">
+              {context.encounterType} encounter - choose:
+            </span>
+            {context.availableGadgets?.length > 0 && (
+              <button
+                onClick={() => chooseGadget(context.availableGadgets[0].id)}
+                className="bg-cyan-600 px-2 py-1 rounded mr-1"
+              >
+                Use {context.availableGadgets[0].name}
+              </button>
+            )}
             <button
               onClick={chooseEndure}
               className="bg-red-600 px-2 py-1 rounded mr-1"
@@ -197,8 +205,10 @@ export function StateMachineDebug() {
           </>
         )}
 
-        {isEncounter && context.encounterType === 'goodDeed' && (
+        {/* Good deed - choosing help or ignore */}
+        {isChoosingGoodDeed && (
           <>
+            <span className="text-yellow-300 block mb-1">Good deed - choose:</span>
             <button
               onClick={helpNpc}
               className="bg-green-600 px-2 py-1 rounded mr-1"
@@ -214,22 +224,38 @@ export function StateMachineDebug() {
           </>
         )}
 
-        {isEncounter && ['rogueAction', 'apprehension', 'timeOut'].includes(context.encounterType) && (
-          <button
-            onClick={resolveEncounter}
-            className="bg-blue-600 px-2 py-1 rounded mr-1"
-          >
-            Resolve Encounter
-          </button>
+        {/* Resolving any encounter - need to dismiss */}
+        {isResolvingEncounter && (
+          <>
+            <span className="text-yellow-300 block mb-1">
+              Resolved {context.encounterType} - dismiss:
+            </span>
+            <button
+              onClick={resolveEncounter}
+              className="bg-blue-600 px-2 py-1 rounded mr-1"
+            >
+              Continue
+            </button>
+          </>
+        )}
+
+        {/* Non-interactive encounters go straight to resolving */}
+        {isEncounter && !isChoosingAction && !isChoosingGoodDeed && !isResolvingEncounter && (
+          <span className="text-gray-400">Processing encounter...</span>
         )}
 
         {isWitnessClue && (
-          <button
-            onClick={continueAfterClue}
-            className="bg-blue-600 px-2 py-1 rounded mr-1"
-          >
-            Continue
-          </button>
+          <>
+            <span className="text-yellow-300 block mb-1">
+              Clue ({context.witnessClueVariant}):
+            </span>
+            <button
+              onClick={continueAfterClue}
+              className="bg-blue-600 px-2 py-1 rounded mr-1"
+            >
+              Continue
+            </button>
+          </>
         )}
 
         {isSleeping && (
@@ -239,6 +265,18 @@ export function StateMachineDebug() {
           >
             Wake Up
           </button>
+        )}
+
+        {isConfirmingSleep && (
+          <>
+            <span className="text-red-400 block mb-1">Sleep will cause timeout!</span>
+            <button
+              onClick={confirmSleep}
+              className="bg-red-600 px-2 py-1 rounded mr-1"
+            >
+              Sleep Anyway
+            </button>
+          </>
         )}
 
         {isApprehended && (
@@ -275,6 +313,13 @@ export function StateMachineDebug() {
         goodDeed={context.hadGoodDeedInCase ? '1' : '0'},
         rogue={context.rogueUsedInCity ? '1' : '0'}
       </div>
+
+      {/* Debug: investigated spots list */}
+      {context.investigatedSpots?.length > 0 && (
+        <div className="mt-2 text-xs text-gray-500">
+          Spots: {context.investigatedSpots.join(', ')}
+        </div>
+      )}
     </div>
   );
 }
