@@ -46,170 +46,216 @@ actionQueueState: 'idle' | 'pending' | 'ticking' | 'complete'
 
 ## Proposed Architecture
 
+> **Reference:** See `docs/game-states.md` for the complete state machine specification.
+> This section summarizes the key architectural decisions.
+
 ### 1. Explicit Finite State Machine
 
-Replace implicit state with a proper state machine using hierarchical states:
+Replace implicit state with a proper state machine using hierarchical states.
 
+**Primary States (Game Flow):**
 ```
-                    ┌─────────────────────────────────────────────────┐
-                    │                    GAME                         │
-                    │  ┌──────┐  ┌─────────┐  ┌───────┐  ┌────────┐  │
-                    │  │ MENU │→│BRIEFING │→│ TRIAL │→│DEBRIEF │  │
-                    │  └──────┘  └────┬────┘  └───────┘  └────────┘  │
-                    │                 │                               │
-                    │                 ▼                               │
-                    │  ┌─────────────────────────────────────────────┐│
-                    │  │              PLAYING (Hierarchical)         ││
-                    │  │                                             ││
-                    │  │  ┌──────┐   ┌────────────┐   ┌──────────┐  ││
-                    │  │  │ IDLE │ → │INVESTIGATING│ → │ REVEAL  │  ││
-                    │  │  └──────┘   └────────────┘   └────┬─────┘  ││
-                    │  │      ▲                            │        ││
-                    │  │      │      ┌───────────┐         │        ││
-                    │  │      │   ┌─→│ ENCOUNTER │←────────┤        ││
-                    │  │      │   │  └─────┬─────┘         │        ││
-                    │  │      │   │        │               │        ││
-                    │  │      │   │  ┌─────▼─────┐         │        ││
-                    │  │      │   │  │ GOOD_DEED │         │        ││
-                    │  │      │   │  └─────┬─────┘         │        ││
-                    │  │      │   │        │               │        ││
-                    │  │      │   │  ┌─────▼─────────┐     │        ││
-                    │  │      └───┴──┤ TRAVELING    │◄────┘        ││
-                    │  │             └───────────────┘              ││
-                    │  │                                             ││
-                    │  │  ┌───────────────────────────────────────┐ ││
-                    │  │  │          FINAL_CITY (substates)       │ ││
-                    │  │  │  ASSASSINATION → APPREHENSION → TRIAL │ ││
-                    │  │  └───────────────────────────────────────┘ ││
-                    │  └─────────────────────────────────────────────┘│
-                    └─────────────────────────────────────────────────┘
+menu → briefing → playing → apprehended → trial → debrief → menu
+                     ↓
+                  debrief (time out)
 ```
 
-### 2. State Machine Implementation
+**Activity States (within `playing`):**
+```
+idle ←───────────────────────────────────────────────────────────┐
+  │                                                              │
+  │ (on entry: checkingIdle → if 11pm-7am → sleeping)            │
+  │                                                              │
+  ├──► traveling ──► [idle check] ───────────────────────────────┤
+  │                                                              │
+  ├──► investigating ──┬──► encounter ──► witnessClue ──► [idle] │
+  │                    │                                         │
+  │                    └──► witnessClue ──► [idle] ──────────────┤
+  │                                                              │
+  └──► sleeping ──► idle ────────────────────────────────────────┘
+```
 
-Use a dedicated state machine library for explicit transitions:
+**Key Design Decisions:**
+- `checkingIdle` intermediate state handles sleep/timeout checks cleanly
+- `witnessClue` is a distinct state with variants (normal vs rogue)
+- Encounter queue allows stacking (rogue action can stack with henchman/assassination)
+- `wrongCity` is a context flag, not a substate
+
+### 2. State Machine Implementation (XState)
 
 ```javascript
-// Option A: XState (recommended for complex games)
 import { createMachine, interpret } from 'xstate';
 
 const gameMachine = createMachine({
   id: 'carmen',
   initial: 'menu',
   context: {
-    // All game data lives in context
+    // See GameContext interface in game-states.md for full structure
     currentCase: null,
-    currentCityIndex: 0,
+    cityIndex: 0,
     timeRemaining: 72,
-    collectedClues: { city: [], suspect: [] },
+    currentHour: 9,
+    wrongCity: false,
+    encounterQueue: [],        // Enables encounter stacking
+    witnessClueVariant: null,  // 'normal' | 'rogue'
     // ... etc
   },
   states: {
     menu: {
-      on: { START_NEW_CASE: 'briefing' }
+      on: {
+        START_CASE: { target: 'briefing', actions: 'generateCase' },
+        LOAD_SAVE: { target: 'playing', actions: 'loadSavedContext' }
+      }
     },
     briefing: {
-      entry: 'generateCase',
-      on: { ACCEPT_CASE: 'playing' }
+      on: { ACCEPT_BRIEFING: 'playing' }
     },
     playing: {
-      initial: 'idle',
+      initial: 'checkingIdle',
       states: {
+        checkingIdle: {
+          always: [
+            { target: 'sleeping', cond: 'shouldSleep' },
+            { target: 'idle' }
+          ]
+        },
         idle: {
           on: {
             INVESTIGATE: 'investigating',
-            TRAVEL: 'traveling',
-            ROGUE_ACTION: 'rogueAction'
+            TRAVEL: 'traveling'
           }
         },
         investigating: {
-          entry: 'startInvestigationTimer',
-          on: {
-            TICK_COMPLETE: [
-              { target: 'encounter', cond: 'hasEncounter' },
-              { target: 'goodDeed', cond: 'hasGoodDeed' },
-              { target: 'reveal' }
-            ]
-          }
-        },
-        reveal: {
-          entry: 'revealClue',
-          on: {
-            CONTINUE: 'idle'
-          }
+          entry: 'buildEncounterQueue',  // Determine what encounters happen
+          always: [
+            { target: 'encounter', cond: 'hasQueuedEncounter' },
+            { target: 'witnessClue' }
+          ]
         },
         encounter: {
-          on: {
-            GADGET_SELECTED: { target: 'idle', actions: 'resolveEncounter' },
-            TIMER_EXPIRED: { target: 'idle', actions: 'penalizeNoGadget' }
+          initial: 'presenting',
+          states: {
+            presenting: {
+              on: {
+                CHOOSE_GADGET: 'resolving',
+                CHOOSE_ENDURE: 'resolving',
+                HELP_NPC: 'resolving',
+                IGNORE_NPC: 'resolving'
+              }
+            },
+            resolving: {
+              entry: 'resolveEncounter',
+              always: [
+                { target: '#carmen.playing.encounter.presenting', cond: 'hasMoreEncounters' },
+                { target: '#carmen.playing.witnessClue' }
+              ]
+            }
           }
         },
-        goodDeed: {
+        witnessClue: {
+          entry: 'revealClue',
           on: {
-            HELP: { target: 'idle', actions: 'completeGoodDeed' },
-            SKIP: 'idle'
+            CONTINUE: 'checkingIdle'
           }
         },
         traveling: {
           entry: 'startTravelAnimation',
           on: {
-            TRAVEL_COMPLETE: [
-              { target: 'idle', cond: 'notFinalCity' },
-              { target: 'finalCity', cond: 'isFinalCity' }
-            ]
+            ARRIVE: {
+              target: 'checkingIdle',
+              actions: ['updateLocation', 'advanceTime']
+            }
           }
         },
-        finalCity: {
-          initial: 'investigating',
-          states: {
-            investigating: { /* ... */ },
-            assassination: { /* ... */ },
-            apprehension: { /* ... */ }
+        sleeping: {
+          entry: 'advanceTimeToMorning',
+          on: {
+            WAKE: 'idle'
           }
         }
       },
       on: {
-        TIME_EXPIRED: 'debrief'
+        // Global transitions from any playing substate
+        TIME_EXPIRED: {
+          target: 'debrief',
+          actions: 'setTimeoutOutcome'
+        }
       }
     },
+    apprehended: {
+      on: { PROCEED_TO_TRIAL: 'trial' }
+    },
     trial: {
-      on: { VERDICT: 'debrief' }
+      on: { COMPLETE_TRIAL: 'debrief' }
     },
     debrief: {
       on: {
-        NEW_CASE: 'briefing',
         RETURN_TO_MENU: 'menu'
       }
     }
   }
 });
+```
 
-// Option B: Simple custom FSM (lighter weight)
-class GameStateMachine {
-  constructor() {
-    this.state = 'menu';
-    this.substate = null;
-    this.context = {};
-    this.transitions = new Map();
-    this.guards = new Map();
+### 3. Encounter Queue System
+
+Encounters can stack. The queue is built when investigation starts:
+
+```javascript
+// Encounter eligibility logic (see game-states.md for full rules)
+function buildEncounterQueue(context) {
+  const queue = [];
+  const { cityIndex, spotsUsedInCity, wrongCity, hadEncounterInCity } = context;
+  const isFirstInvestigation = spotsUsedInCity === 0;
+  const isFinalCity = cityIndex === context.currentCase.cities.length - 1;
+
+  // Mandatory encounters (first investigation only)
+  if (isFirstInvestigation && !wrongCity) {
+    if (isFinalCity && !hadEncounterInCity) {
+      queue.push('assassination');
+    } else if (cityIndex > 0 && !hadEncounterInCity) {
+      queue.push('henchman');
+    }
   }
 
-  transition(event, payload) {
-    const key = `${this.state}:${event}`;
-    const handler = this.transitions.get(key);
-    if (!handler) {
-      console.warn(`No transition for ${key}`);
-      return false;
-    }
-    const { target, guard, actions } = handler;
-    if (guard && !this.guards.get(guard)(this.context, payload)) {
-      return false;
-    }
-    actions?.forEach(action => this.executeAction(action, payload));
-    this.state = target;
-    this.emit('stateChange', this.state);
-    return true;
+  // Check for apprehension (final city, assassination done)
+  if (isFinalCity && hadEncounterInCity) {
+    queue.push('apprehension');  // Triggers state change to apprehended
+    return queue;
   }
+
+  // Rogue action (if player selected, not used in city)
+  if (context.pendingRogueAction && !context.rogueUsedInCity) {
+    queue.push('rogueAction');
+  }
+
+  // Good deed (2nd+ investigation, not in wrong city, dice roll)
+  if (!isFirstInvestigation && !wrongCity && !context.hadGoodDeedInCase) {
+    if (context.goodDeedRoll < 0.25) {
+      queue.push('goodDeed');
+    }
+  }
+
+  return queue;
+}
+```
+
+### 4. The Final City Bug Fix
+
+**Problem:** Player could exhaust investigation spots without triggering apprehension.
+
+**Solution:** When `isFinalCity && hadEncounterInCity`:
+- If spots remain → next investigation triggers apprehension
+- If NO spots remain → auto-transition to apprehension
+
+This is handled in `checkingIdle`:
+```javascript
+checkingIdle: {
+  always: [
+    { target: '#carmen.apprehended', cond: 'shouldAutoApprehend' },
+    { target: 'sleeping', cond: 'shouldSleep' },
+    { target: 'idle' }
+  ]
 }
 ```
 
@@ -391,197 +437,110 @@ src/
 
 ## State Machine Deep Dive
 
-### Current Pain Points & Solutions
+> **Full specification:** See `docs/game-states.md` for complete details including
+> TypeScript types, all guards, and edge case handling.
 
-#### Problem 1: Encounter/Investigation Race Conditions
+### Key Improvements Over Current Implementation
 
-**Current code:**
-```javascript
-// useGameState.js - multiple effects can conflict
-useEffect(() => {
-  if (lastFoundClue && !currentEncounter) {
-    maybeStartGoodDeed();
-  }
-}, [lastFoundClue]);
-
-useEffect(() => {
-  if (currentEncounter) {
-    // handle encounter
-  }
-}, [currentEncounter]);
-```
-
-**Solution: Sequential state machine**
-```javascript
-// Only one active state at a time
-states: {
-  investigating: {
-    entry: 'startTimer',
-    on: {
-      COMPLETE: [
-        { target: 'encounter', cond: 'hasEncounter' },
-        { target: 'goodDeed', cond: 'shouldTriggerGoodDeed' },
-        { target: 'clueReveal' }
-      ]
-    }
-  },
-  encounter: {
-    on: { RESOLVED: 'clueReveal' }
-  },
-  goodDeed: {
-    on: { RESOLVED: 'clueReveal' }
-  },
-  clueReveal: {
-    on: { CONTINUE: 'idle' }
-  }
-}
-```
-
-#### Problem 2: Time Updates During Actions
-
-**Current code:**
-```javascript
-// Action queue manages ticking independently
-const [actionQueueState, setActionQueueState] = useState('idle');
-// Can conflict with encounter timers
-```
-
-**Solution: Unified time controller**
-```javascript
-class TimeController {
-  constructor(stateMachine) {
-    this.sm = stateMachine;
-  }
-
-  async tickHours(count, onTick) {
-    // Block state transitions during ticking
-    this.sm.lock();
-    for (let i = 0; i < count; i++) {
-      await this.animateTick();
-      onTick();
-    }
-    this.sm.unlock();
-    this.sm.send('TICK_COMPLETE');
-  }
-}
-```
-
-#### Problem 3: Wrong City State Overlap
-
-**Current code:**
-```javascript
-// wrongCity boolean exists alongside normal gameplay
-if (wrongCity) {
-  // Show dead-end clues
-} else {
-  // Normal clues
-}
-```
-
-**Solution: Wrong city as explicit substate**
-```javascript
-playing: {
-  states: {
-    normalCity: {
-      // Normal investigation flow
-    },
-    wrongCity: {
-      // Dead-end investigation flow
-      // Must find correct destination to leave
-      on: {
-        FOUND_CORRECT_CITY: 'traveling'
-      }
-    }
-  }
-}
-```
+| Problem | Current Code | New Solution |
+|---------|-------------|--------------|
+| Race conditions | Multiple `useEffect` hooks updating same state | Single state machine, one transition at a time |
+| Time conflicts | Action queue + encounter timers can conflict | Centralized `advanceTime` action, state machine blocks during ticking |
+| Wrong city overlap | Boolean flag alongside normal gameplay | Context flag checked in guards, affects clue content only |
+| Final city bug | Could exhaust spots without apprehension | `shouldAutoApprehend` guard in `checkingIdle` |
+| Encounter stacking | Not supported | `encounterQueue` array, processed sequentially |
 
 ### State Context Structure
 
-```javascript
-const gameContext = {
-  // === CASE DATA (generated once per case) ===
-  currentCase: {
-    id: 'case_123',
-    cities: ['paris', 'tokyo', 'rio', 'cairo'],
-    suspect: { id: 'viktor', name: 'Viktor', gender: 'male', hair: 'dark', hobby: 'intellectual' },
-    stolenItem: { name: 'Ancient Artifact' },
-    gadgets: ['lockpick', 'disguise', 'tracker'],
-    cityData: [ /* pre-generated city details */ ]
-  },
+```typescript
+interface GameContext {
+  // === Persistent (across cases) ===
+  karma: number;
+  notoriety: number;
+  solvedCases: string[];
 
-  // === PROGRESS (changes during gameplay) ===
-  progress: {
-    currentCityIndex: 0,
-    investigatedLocations: [],
-    collectedClues: { city: [], suspect: [] },
-    usedGadgets: [],
-    selectedTraits: { gender: null, hair: null, hobby: null },
-    selectedWarrant: null,
-    hadEncounterInCity: false,
-    hadGoodDeedInCase: false,
-    rogueUsedInCity: false
-  },
+  // === Case data ===
+  currentCase: CaseData | null;
 
-  // === TIME (tick-based) ===
-  time: {
-    remaining: 72,
-    currentHour: 9 // 9am
-  },
+  // === Time ===
+  currentHour: number;           // 0-23
+  timeRemaining: number;         // Hours left in case
 
-  // === PERSISTENT PROFILE ===
-  profile: {
-    karma: 5,
-    notoriety: 2,
-    solvedCases: 3,
-    savedNPCs: [],
-    permanentInjuries: []
-  },
+  // === Location ===
+  cityIndex: number;
+  currentCityId: string | null;
+  wrongCity: boolean;
+  originCityId: string | null;   // For wrong city return
 
-  // === VOLATILE (current action only) ===
-  volatile: {
-    pendingInvestigation: null,
-    activeEncounter: null,
-    activeGoodDeed: null,
-    travelDestination: null
-  }
-};
+  // === Investigation ===
+  investigatedSpots: string[];   // Format: "cityId:spotIndex"
+  spotsUsedInCity: number;
+
+  // === Progress flags ===
+  hadEncounterInCity: boolean;
+  hadGoodDeedInCase: boolean;
+  rogueUsedInCity: boolean;
+  warrantIssued: boolean;
+  selectedWarrant: Suspect | null;
+
+  // === Gadgets & Health ===
+  availableGadgets: Gadget[];
+  usedGadgets: Gadget[];
+  wounds: number;
+
+  // === Activity state data (transient) ===
+  encounterType: EncounterType;
+  encounterQueue: EncounterType[];
+  witnessClueVariant: 'normal' | 'rogue' | null;
+  pendingRogueAction: boolean;
+  travelHours: number | null;
+  goodDeedRoll: number | null;   // Pre-rolled for determinism
+}
 ```
 
-### Transition Validation
+### Travel Time Calculation
+
+Travel time is proportional to distance (from `game-states.md`):
 
 ```javascript
-const transitionGuards = {
-  canInvestigate: (ctx) => {
-    return ctx.time.remaining > 0 &&
-           ctx.progress.investigatedLocations.length < 3;
-  },
-
-  canTravel: (ctx) => {
-    return ctx.time.remaining >= 4 && // travel cost
-           ctx.progress.investigatedLocations.length > 0; // must have clue
-  },
-
-  canIssueWarrant: (ctx) => {
-    const { gender, hair, hobby } = ctx.progress.selectedTraits;
-    return gender && hair && hobby;
-  },
-
-  hasEncounter: (ctx) => {
-    return ctx.currentCase.cityData[ctx.progress.currentCityIndex].encounter &&
-           !ctx.progress.hadEncounterInCity;
-  },
-
-  shouldTriggerGoodDeed: (ctx) => {
-    return !ctx.progress.hadGoodDeedInCase &&
-           Math.random() < 0.25; // 25% chance
-  },
-
-  isFinalCity: (ctx) => {
-    return ctx.progress.currentCityIndex === ctx.currentCase.cities.length - 1;
-  }
-};
+function getTravelHours(fromCity, toCity) {
+  const distanceKm = haversineDistance(
+    fromCity.lat, fromCity.lng,
+    toCity.lat, toCity.lng
+  );
+  // ~800 km/h average (accounts for airports, connections)
+  const hours = Math.round(distanceKm / 800);
+  return Math.max(2, Math.min(16, hours));  // 2-16 hour range
+}
 ```
+
+| Route | Distance | Hours |
+|-------|----------|-------|
+| Paris → London | ~340 km | 2 hours |
+| New York → Chicago | ~1,150 km | 2 hours |
+| Tokyo → Sydney | ~7,800 km | 10 hours |
+| London → Tokyo | ~9,500 km | 12 hours |
+
+### Save Points
+
+Game saves automatically at these moments:
+- On transition to `idle` (after investigation, travel, encounter)
+- Major state changes: `briefing→playing`, `playing→apprehended`, etc.
+
+**What gets saved:** All context except transient activity data (`encounterQueue`, `travelHours`, etc.)
+
+**Load behavior:** Always resumes in `idle` state - never mid-encounter or mid-animation.
+
+### Debrief Outcomes
+
+All game endings flow through `debrief` with one of four outcomes:
+
+| Outcome | Trigger | Message |
+|---------|---------|---------|
+| `time_out` | `timeRemaining <= 0` | "The suspect escaped. Case unsolved." |
+| `no_warrant` | Trial with no warrant | "No warrant to present. Case dismissed." |
+| `wrong_warrant` | Trial with wrong suspect | "Wrong person arrested. Real culprit escapes." |
+| `success` | Trial with correct warrant | "Case solved! [Suspect] convicted." |
 
 ---
 
@@ -694,54 +653,58 @@ const transitionGuards = {
 
 ## Recommended Implementation Order
 
-```
-Week 1-2: Foundation
-├── Phaser project setup
-├── State machine implementation
-├── Game context extraction
-└── Boot/Menu scenes
+### Phase 1: Foundation
+- Phaser project setup with Vite
+- State machine implementation (XState)
+- Game context extraction from `useGameState.js`
+- Boot/Menu scenes
 
-Week 3-4: Core Gameplay
-├── PlayScene skeleton
-├── Tab system
-├── Investigation flow
-└── State machine integration
+### Phase 2: Core Gameplay
+- PlayScene skeleton
+- Tab system
+- Investigation flow
+- State machine integration
 
-Week 5-6: Maps & Animation
-├── City map implementation
-├── Travel animation
-├── Time ticking system
-└── Encounter system
+### Phase 3: Maps & Animation
+- City map implementation
+- Travel animation
+- Time ticking system
+- Encounter system
 
-Week 7-8: Polish
-├── All scenes complete
-├── Responsive design
-├── PWA support
-└── Testing & fixes
-```
+### Phase 4: Polish
+- All scenes complete
+- Responsive design
+- PWA support
+- Testing & fixes
 
 ---
 
-## Questions to Resolve
+## Decisions Made
 
-1. **State machine library**: XState vs custom implementation?
-2. **Map approach**: Tilemap vs procedural vs hybrid?
-3. **UI framework**: Pure Phaser vs plugin (rexUI) vs DOM overlay?
-4. **Asset strategy**: Keep existing images or redesign?
-5. **Responsive approach**: Scale mode or multiple layouts?
+1. **State machine library**: ✅ XState (see `docs/game-states.md`)
+2. **Map approach**: TBD - Tilemap vs procedural vs hybrid
+3. **UI framework**: TBD - Pure Phaser vs plugin (rexUI) vs DOM overlay
+4. **Asset strategy**: TBD - Keep existing images or redesign
+5. **Responsive approach**: TBD - Scale mode or multiple layouts
 
 ---
 
 ## Next Steps
 
-1. Review and approve this plan
+1. Copy `game-states.md` to this branch
 2. Set up Phaser project with Vite
-3. Create state machine proof-of-concept
+3. Implement XState machine per `game-states.md` spec
 4. Extract game logic to `GameContext`
 5. Build BootScene and MenuScene
 6. Iterate through phases
 
 ---
 
+## Related Documents
+
+- `docs/game-states.md` - Complete state machine specification (in `feature/state-machine-planning` branch)
+
+---
+
 *Document created: January 2026*
-*Last updated: [Current session]*
+*Last updated: January 2026*
