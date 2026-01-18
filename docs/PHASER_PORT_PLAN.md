@@ -54,25 +54,42 @@ actionQueueState: 'idle' | 'pending' | 'ticking' | 'complete'
 Replace implicit state with a proper state machine using hierarchical states.
 
 **Primary States (Game Flow):**
-```
-menu → briefing → playing → apprehended → trial → debrief → menu
-                     ↓
-                  debrief (time out)
+
+```mermaid
+stateDiagram-v2
+    [*] --> menu
+    menu --> briefing: START_CASE
+    menu --> playing: LOAD_SAVE
+    briefing --> playing: ACCEPT_BRIEFING
+    playing --> apprehended: apprehension
+    playing --> debrief: TIME_EXPIRED
+    apprehended --> trial: PROCEED_TO_TRIAL
+    trial --> debrief: COMPLETE_TRIAL
+    debrief --> menu: RETURN_TO_MENU
 ```
 
 **Activity States (within `playing`):**
-```
-idle ←───────────────────────────────────────────────────────────┐
-  │                                                              │
-  │ (on entry: checkingIdle → if 11pm-7am → sleeping)            │
-  │                                                              │
-  ├──► traveling ──► [idle check] ───────────────────────────────┤
-  │                                                              │
-  ├──► investigating ──┬──► encounter ──► witnessClue ──► [idle] │
-  │                    │                                         │
-  │                    └──► witnessClue ──► [idle] ──────────────┤
-  │                                                              │
-  └──► sleeping ──► idle ────────────────────────────────────────┘
+
+```mermaid
+stateDiagram-v2
+    [*] --> checkingIdle
+
+    checkingIdle --> sleeping: shouldSleep
+    checkingIdle --> idle: else
+
+    idle --> investigating: INVESTIGATE
+    idle --> traveling: TRAVEL
+
+    investigating --> encounter: hasQueuedEncounter
+    investigating --> witnessClue: no encounter
+
+    encounter --> witnessClue: RESOLVED
+
+    witnessClue --> checkingIdle: CONTINUE
+
+    traveling --> checkingIdle: ARRIVE
+
+    sleeping --> idle: WAKE
 ```
 
 **Key Design Decisions:**

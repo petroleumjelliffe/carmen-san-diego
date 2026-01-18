@@ -20,47 +20,23 @@ menu, briefing, playing, apprehended, trial, debrief
 
 ## Current Transitions (as implemented)
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                                                                  │
-│    ┌──────┐                                                      │
-│    │ menu │◄─────────────────────────────────────────────────────┤
-│    └──┬───┘                                                      │
-│       │                                                          │
-│       ├──────────────────────┐                                   │
-│       │ startNewCase()       │ loadSaveState()                   │
-│       ▼                      │ (resume saved)                    │
-│    ┌──────────┐              │                                   │
-│    │ briefing │              │                                   │
-│    └────┬─────┘              │                                   │
-│         │                    │                                   │
-│         │ acceptBriefing()   │                                   │
-│         ▼                    ▼                                   │
-│    ┌─────────────────────────────┐                               │
-│    │          playing            │                               │
-│    └──────┬──────────────┬───────┘                               │
-│           │              │                                       │
-│           │ time runs    │ 2nd investigation                     │
-│           │ out          │ at final city                         │
-│           │              │ + warrant selected                    │
-│           │              ▼                                       │
-│           │         ┌────────────┐                               │
-│           │         │ apprehended│                               │
-│           │         └─────┬──────┘                               │
-│           │               │                                      │
-│           │               │ proceedToTrial()                     │
-│           │               ▼                                      │
-│           │          ┌─────────┐                                 │
-│           │          │  trial  │                                 │
-│           │          └────┬────┘                                 │
-│           │               │                                      │
-│           │               │ completeTrial()                      │
-│           ▼               ▼                                      │
-│    ┌─────────────────────────────┐                               │
-│    │          debrief            │───────── returnToMenu() ──────┘
-│    └─────────────────────────────┘
-│
-└──────────────────────────────────────────────────────────────────┘
+```mermaid
+stateDiagram-v2
+    [*] --> menu
+
+    menu --> briefing: startNewCase()
+    menu --> playing: loadSaveState()
+
+    briefing --> playing: acceptBriefing()
+
+    playing --> debrief: time runs out
+    playing --> apprehended: 2nd investigation at final city
+
+    apprehended --> trial: proceedToTrial()
+
+    trial --> debrief: completeTrial()
+
+    debrief --> menu: returnToMenu()
 ```
 
 ---
@@ -94,10 +70,17 @@ menu, briefing, playing, apprehended, trial, debrief
 
 ### Primary States (Game Flow)
 
-```
-menu → briefing → playing → apprehended → trial → debrief → menu
-                     ↓
-                  debrief (time out)
+```mermaid
+stateDiagram-v2
+    [*] --> menu
+    menu --> briefing: START_CASE
+    menu --> playing: LOAD_SAVE
+    briefing --> playing: ACCEPT_BRIEFING
+    playing --> apprehended: apprehension encounter
+    playing --> debrief: TIME_EXPIRED
+    apprehended --> trial: PROCEED_TO_TRIAL
+    trial --> debrief: COMPLETE_TRIAL
+    debrief --> menu: RETURN_TO_MENU
 ```
 
 - `menu` - Main menu / case selection
@@ -111,21 +94,29 @@ menu → briefing → playing → apprehended → trial → debrief → menu
 
 These are mutually exclusive activities:
 
-```
-idle ←───────────────────────────────────────────────────────────┐
-  │                                                              │
-  │ (on entry: if 11pm-7am → sleeping)                           │
-  │                                                              │
-  ├──► traveling ──► [idle check] ───────────────────────────────┤
-  │                                                              │
-  ├──► investigating ──┬──► encounter ──► witnessClue ──► [idle] │
-  │                    │                                         │
-  │                    └──► witnessClue ──► [idle] ──────────────┤
-  │                                                              │
-  └──► sleeping ──► idle ────────────────────────────────────────┘
+```mermaid
+stateDiagram-v2
+    [*] --> checkingIdle
 
-[idle check] = if currentHour >= 23 || currentHour < 7 → sleeping, else → idle
+    checkingIdle --> sleeping: currentHour >= 23 OR < 7
+    checkingIdle --> idle: else
+
+    idle --> investigating: INVESTIGATE
+    idle --> traveling: TRAVEL
+
+    investigating --> encounter: hasQueuedEncounter
+    investigating --> witnessClue: no encounter
+
+    encounter --> witnessClue: RESOLVED
+
+    witnessClue --> checkingIdle: CONTINUE
+
+    traveling --> checkingIdle: ARRIVE
+
+    sleeping --> idle: WAKE
 ```
+
+**Note:** `[idle check]` = if `currentHour >= 23 || currentHour < 7` → sleeping, else → idle
 
 - `idle` - Waiting for player action
 - `traveling` - Moving between cities (animation)
@@ -180,34 +171,41 @@ Encounters are phases that happen BEFORE the witness clue is revealed.
 
 ### Encounter Eligibility Logic
 
-```
-Investigation started:
-  │
-  ├─► Final city, assassination done
-  │     → apprehension encounter → APPREHENDED state
-  │     (no witness clue, exits playing)
-  │
-  ├─► City 1, first investigation
-  │     → [rogueAction if selected] → witnessClue
-  │
-  ├─► Cities 2 to n-1, first investigation, !wrongCity
-  │     → henchman → [rogueAction if selected] → witnessClue
-  │
-  ├─► Final city, first investigation
-  │     → assassination → [rogueAction if selected] → witnessClue
-  │
-  └─► 2nd+ investigation:
-        │
-        ├─► rogueAction selected
-        │     → rogueAction → witnessClue
-        │
-        ├─► !wrongCity && !hadGoodDeedInCase && diceRoll
-        │     → goodDeed → witnessClue
-        │
-        └─► otherwise → witnessClue (no encounter)
+```mermaid
+flowchart TD
+    A[Investigation started] --> B{Final city +<br/>assassination done?}
+    B -->|YES| C[apprehension encounter]
+    C --> D[APPREHENDED state]
 
-[rogueAction if selected] = only runs if player initiated rogue action AND !rogueUsedInCity
+    B -->|NO| E{City 1, first<br/>investigation?}
+    E -->|YES| F{rogueAction<br/>selected?}
+    F -->|YES| G[rogueAction]
+    F -->|NO| H[witnessClue]
+    G --> H
+
+    E -->|NO| I{Cities 2 to n-1,<br/>first investigation,<br/>!wrongCity?}
+    I -->|YES| J[henchman]
+    J --> K{rogueAction<br/>selected?}
+    K -->|YES| L[rogueAction]
+    K -->|NO| M[witnessClue]
+    L --> M
+
+    I -->|NO| N{Final city,<br/>first investigation?}
+    N -->|YES| O[assassination]
+    O --> P{rogueAction<br/>selected?}
+    P -->|YES| Q[rogueAction]
+    P -->|NO| R[witnessClue]
+    Q --> R
+
+    N -->|NO| S{2nd+ investigation}
+    S --> T{rogueAction<br/>selected?}
+    T -->|YES| U[rogueAction → witnessClue]
+    T -->|NO| V{goodDeed<br/>eligible?}
+    V -->|YES| W[goodDeed → witnessClue]
+    V -->|NO| X[witnessClue only]
 ```
+
+**Note:** `[rogueAction if selected]` = only runs if player initiated rogue action AND `!rogueUsedInCity`
 
 ### Game Flags (properties, not states)
 
@@ -239,48 +237,31 @@ When in `idle`, show contextual guidance based on flags:
 
 ## Investigation Flow Detail
 
-```
-Player clicks investigate spot (normal or rogue action)
-            │
-            ▼
-   ┌─────────────────┐
-   │  investigating  │
-   └────────┬────────┘
-            │
-            │ Check: Final city + assassination done?
-            │    YES → apprehension → APPREHENDED STATE (exit)
-            │
-            │ Check: Mandatory encounter? (first investigation)
-            │    City 1: none
-            │    Cities 2 to n-1 + !wrongCity: henchman
-            │    Final city: assassination
-            │
-            ▼
-   ┌─────────────────┐
-   │  mandatory      │ (henchman/assassination, if applicable)
-   │  encounter      │
-   └────────┬────────┘
-            │
-            │ Check: Rogue action selected + !rogueUsedInCity?
-            │    YES → rogueAction encounter
-            │
-            ▼
-   ┌─────────────────┐
-   │  rogueAction    │ (if selected)
-   │  encounter      │
-   └────────┬────────┘
-            │
-            │ Check: 2nd+ investigation, goodDeed eligible?
-            │    YES → goodDeed encounter (only if no rogue action)
-            │
-            ▼
-   ┌─────────────────┐
-   │  witnessClue    │
-   │   revealing...  │
-   └────────┬────────┘
-            │
-            ▼
-       idle (+ save)
+```mermaid
+flowchart TD
+    A[Player clicks investigate spot] --> B[investigating]
+    B --> C{Final city +<br/>assassination done?}
+    C -->|YES| D[apprehension]
+    D --> E[APPREHENDED STATE]
+
+    C -->|NO| F{Mandatory encounter?<br/>first investigation}
+    F -->|City 1| G[no encounter]
+    F -->|Cities 2 to n-1 + !wrongCity| H[henchman encounter]
+    F -->|Final city| I[assassination encounter]
+
+    G --> J{rogueAction selected +<br/>!rogueUsedInCity?}
+    H --> J
+    I --> J
+
+    J -->|YES| K[rogueAction encounter]
+    J -->|NO| L{2nd+ investigation,<br/>goodDeed eligible?}
+    K --> M[witnessClue]
+
+    L -->|YES| N[goodDeed encounter]
+    L -->|NO| M
+    N --> M
+
+    M --> O[idle + save]
 ```
 
 ### Encounter Sequence Examples
@@ -345,23 +326,14 @@ investigating → apprehension → APPREHENDED (main state change)
 
 ### Travel Flow
 
-```
-Player selects destination from travel options
-            │
-            ▼
-   ┌─────────────────┐
-   │   traveling     │
-   │   (animation)   │
-   │   duration =    │
-   │   travelHours   │
-   └────────┬────────┘
-            │
-            │ Destination correct?
-            │    YES → arrive at next correct city
-            │    NO  → arrive at wrong city (wrongCity = true)
-            │
-            ▼
-       idle (+ save)
+```mermaid
+flowchart TD
+    A[Player selects destination] --> B[traveling<br/>animation runs<br/>duration = travelHours]
+    B --> C{Destination correct?}
+    C -->|YES| D[arrive at next correct city]
+    C -->|NO| E[arrive at wrong city<br/>wrongCity = true]
+    D --> F[idle + save]
+    E --> F
 ```
 
 ### Travel Time Calculation
@@ -445,35 +417,14 @@ function getTravelHours(distanceKm) {
 
 ### Sleep Flow
 
-```
-Any action completes → attempting to enter idle
-            │
-            ▼
-   ┌─────────────────────────────────────┐
-   │  Check: currentHour >= 23           │
-   │         OR currentHour < 7?         │
-   └────────────────┬────────────────────┘
-                    │
-        ┌───────────┴───────────┐
-        │                       │
-        ▼                       ▼
-      YES                      NO
-        │                       │
-        ▼                       ▼
-   ┌──────────┐            ┌──────────┐
-   │ sleeping │            │   idle   │
-   │          │            │          │
-   │ Advance  │            │ (normal) │
-   │ time to  │            │          │
-   │  7am     │            │          │
-   └────┬─────┘            └──────────┘
-        │
-        │ Time advanced, show message
-        ▼
-   ┌──────────┐
-   │   idle   │
-   │ (+ save) │
-   └──────────┘
+```mermaid
+flowchart TD
+    A[Any action completes] --> B{currentHour >= 23<br/>OR currentHour < 7?}
+    B -->|YES| C[sleeping]
+    B -->|NO| D[idle - normal]
+    C --> E[Advance time to 7am]
+    E --> F[Show message:<br/>You rested until 7am]
+    F --> G[idle + save]
 ```
 
 ### Sleep Rules
@@ -507,59 +458,25 @@ const hoursUntil7am = currentHour >= 23
 
 ## Final City Special Logic
 
-```
-Arrive at final city
-            │
-            ▼
-   ┌─────────────────────────────────────┐
-   │  idle (at final city)              │
-   │  No special message yet            │
-   └────────────────┬────────────────────┘
-                    │
-                    │ Player investigates
-                    ▼
-   ┌─────────────────────────────────────┐
-   │  assassination encounter            │
-   │  (first investigation triggers it) │
-   └────────────────┬────────────────────┘
-                    │
-                    │ Resolve encounter
-                    ▼
-   ┌─────────────────────────────────────┐
-   │  witnessClue → idle                │
-   │  hadEncounterInCity = true         │
-   └────────────────┬────────────────────┘
-                    │
-                    │ Show contextual message:
-                    │   - No warrant: "Review evidence for warrant"
-                    │   - Has warrant: "Warrant ready. Make the arrest."
-                    │
-                    │ (Messages are guidance only - player can proceed either way)
-                    │
-                    ▼
-   ┌─────────────────────────────────────┐
-   │  Player investigates again         │
-   │  (or auto-apprehend if no spots)   │
-   └────────────────┬────────────────────┘
-                    │
-                    ▼
-   ┌─────────────────────────────────────┐
-   │  apprehension encounter            │
-   │  → APPREHENDED (main state)        │
-   └────────────────┬────────────────────┘
-                    │
-                    ▼
-   ┌─────────────────────────────────────┐
-   │            trial                   │
-   └────────────────┬────────────────────┘
-                    │
-        ┌───────────┼───────────┐
-        │           │           │
-        ▼           ▼           ▼
-   No warrant?  Wrong suspect?  Correct warrant?
-        │           │           │
-        ▼           ▼           ▼
-      FAIL        FAIL       SUCCESS
+```mermaid
+flowchart TD
+    A[Arrive at final city] --> B[idle at final city]
+    B --> C[Player investigates]
+    C --> D[assassination encounter<br/>first investigation triggers it]
+    D --> E[Resolve encounter]
+    E --> F[witnessClue → idle<br/>hadEncounterInCity = true]
+    F --> G{Warrant status?}
+    G -->|No warrant| H[Message: Review evidence for warrant]
+    G -->|Has warrant| I[Message: Warrant ready. Make the arrest.]
+    H --> J[Player investigates again<br/>or auto-apprehend if no spots]
+    I --> J
+    J --> K[apprehension encounter]
+    K --> L[APPREHENDED state]
+    L --> M[trial]
+    M --> N{Warrant check}
+    N -->|No warrant| O[FAIL]
+    N -->|Wrong suspect| P[FAIL]
+    N -->|Correct warrant| Q[SUCCESS]
 ```
 
 ### Trial Outcomes
@@ -585,19 +502,12 @@ The key insight: once assassination is resolved, the player should ALWAYS be abl
 
 When time runs out, show a failure encounter before debrief:
 
-```
-Time expires (timeRemaining <= 0)
-            │
-            ▼
-   ┌─────────────────────────────────────┐
-   │  timeOut encounter                  │
-   │  "The suspect got away!"            │
-   │  [Continue] button                  │
-   └────────────────┬────────────────────┘
-                    │
-                    ▼
-              DEBRIEF state
-              (outcome: time_out)
+```mermaid
+flowchart TD
+    A[Time expires<br/>timeRemaining <= 0] --> B[timeOut encounter]
+    B --> C["The suspect got away!"]
+    C --> D["[Continue] button"]
+    D --> E[DEBRIEF state<br/>outcome: time_out]
 ```
 
 Same UI pattern as apprehension encounter - message displayed in playing state, then transitions to debrief.
