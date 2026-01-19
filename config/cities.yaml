@@ -11,6 +11,14 @@ cities:
     icon: 🗼
     fact: "The Eiffel Tower was originally intended to be a temporary structure, built for the 1889 World's Fair."
     background_image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1920&q=80"  # Eiffel Tower at dusk
+    clues:
+      - text: "They asked about flights to the city of lights"
+      - text: "They asked about TGV trains across the Channel"
+      - text: "They asked about the Eiffel Tower's viewing deck"
+      - text: "They asked about the Moulin Rouge"
+      - text: "They asked about the Musée d'Orsay"
+      - text: "They asked about the Arc de Triomphe"
+      - text: "They asked about the Palace of Versailles"
     landmarks:
       - id: plaza_athenee
         name: Plaza Athénée
@@ -61,6 +69,14 @@ cities:
     icon: 🗾
     fact: "Tokyo's Shibuya Crossing is the busiest pedestrian intersection in the world, with up to 3,000 people crossing at once."
     background_image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1920&q=80"  # Tokyo night
+    clues:
+      - text: "They asked about bullet trains to a city with cherry blossoms"
+      - text: "They were reading about samurai history"
+      - text: "They were interested in Mount Fuji excursions"
+      - text: "They were interested in Shinjuku's nightlife"
+      - text: "They were interested in the Tsukiji fish market"
+      - text: "They were interested in robot restaurants"
+      - text: "They were researching the Imperial Palace"
     landmarks:
       - id: park_hyatt_tokyo
         name: Park Hyatt Tokyo
@@ -111,6 +127,14 @@ cities:
     icon: 🔺
     fact: "The Great Pyramid of Giza was the tallest man-made structure in the world for over 3,800 years."
     background_image: "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?w=1920&q=80"  # Pyramids
+    clues:
+      - text: "They were reading about pyramids and the Nile"
+      - text: "They mentioned wanting to see the Sphinx"
+      - text: "They mentioned the Valley of the Kings"
+      - text: "They mentioned cruising the Nile"
+      - text: "They mentioned the Aswan High Dam"
+      - text: "They mentioned the Egyptian Museum"
+      - text: "They were studying hieroglyphics at a bookstore"
     landmarks:
       - id: mena_house
         name: Marriott Mena House
@@ -161,6 +185,14 @@ cities:
     icon: 🏰
     fact: "Big Ben is actually the name of the bell inside the tower, not the tower itself."
     background_image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=1920&q=80"  # London skyline
+    clues:
+      - text: "They mentioned crossing the Channel to see Big Ben"
+      - text: "They wanted to visit the British Museum"
+      - text: "They mentioned the Thames and Tower Bridge"
+      - text: "They wanted to see Shakespeare's Globe Theatre"
+      - text: "They wanted to see the changing of the guard"
+      - text: "They wanted to ride the London Eye"
+      - text: "They mentioned wanting to see Buckingham Palace"
     landmarks:
       - id: the_savoy
         name: The Savoy
@@ -211,6 +243,14 @@ cities:
     icon: 🏛️
     fact: "The Trevi Fountain collects roughly 3,000 euros in coins every day, which goes to charity."
     background_image: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1920&q=80"  # Colosseum
+    clues:
+      - text: "They booked a flight to see the Colosseum"
+      - text: "They booked a flight to Leonardo da Vinci airport"
+      - text: "They wanted to visit the Trevi Fountain"
+      - text: "They asked about the Vatican Museums"
+      - text: "They asked about the Spanish Steps"
+      - text: "They asked about the Sistine Chapel"
+      - text: "They booked tickets to see Vatican City"
     landmarks:
       - id: hotel_hassler
         name: Hotel Hassler
@@ -261,6 +301,14 @@ cities:
     icon: 🚪
     fact: "Berlin has more bridges than Venice — over 1,700 compared to Venice's 400."
     background_image: "https://images.unsplash.com/photo-1560969184-10fe8719e047?w=1920&q=80"  # Brandenburg Gate
+    clues:
+      - text: "They asked about the Brandenburg Gate"
+      - text: "They asked about Checkpoint Charlie"
+      - text: "They asked about Museum Island"
+      - text: "They were researching the Reichstag building"
+      - text: "They were researching the Pergamon Museum"
+      - text: "They asked about remnants of a famous wall"
+      - text: "They were learning German phrases"
     landmarks:
       - id: hotel_adlon
         name: Hotel Adlon Kempinski
@@ -311,6 +359,14 @@ cities:
     icon: 🎭
     fact: "The Sydney Opera House's roof is covered with over 1 million tiles that were made in Sweden."
     background_image: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=1920&q=80"  # Opera House
+    clues:
+      - text: "They were researching the Opera House down under"
+      - text: "They were researching the Great Barrier Reef"
+      - text: "They asked about kangaroos and the outback"
+      - text: "They were looking at flights to the Southern Hemisphere"
+      - text: "They were interested in Sydney Harbour Bridge"
+      - text: "They were looking at maps of Bondi Beach"
+      - text: "They mentioned the Blue Mountains"
     landmarks:
       - id: park_hyatt_sydney
         name: Park Hyatt Sydney
@@ -361,6 +417,14 @@ cities:
     icon: 🏰
     fact: "Moscow's metro system is so deep that some stations double as nuclear bunkers."
     background_image: "https://images.unsplash.com/photo-1513326738677-b964603b136d?w=1920&q=80"  # Red Square
+    clues:
+      - text: "They mentioned Red Square and the Kremlin"
+      - text: "They mentioned wanting to see Saint Basil's Cathedral"
+      - text: "They mentioned the Bolshoi Theatre"
+      - text: "They mentioned the Moscow Metro's ornate stations"
+      - text: "They mentioned wanting to see the Hermitage"
+      - text: "They mentioned the GUM department store"
+      - text: "They mentioned the Arbat Street"
     landmarks:
       - id: hotel_national
         name: Hotel National

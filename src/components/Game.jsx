@@ -44,6 +44,7 @@ export function Game({ gameData }) {
     isResolvingEncounter,
     startCase,
     acceptBriefing,
+    continueFromClue,
     investigate,
     travel,
     arrive,
@@ -331,7 +332,10 @@ export function Game({ gameData }) {
         setCurrentEncounter({ ...preAssignedEncounter, type: context.encounterType });
       }
     }
-  }, [currentCity, currentHour, context.encounterType, goodDeeds, currentCase, cityIndex]);
+
+    // Send CONTINUE event to state machine to return to idle
+    continueFromClue();
+  }, [currentCity, currentHour, context.encounterType, goodDeeds, currentCase, cityIndex, continueFromClue]);
 
   // Wrapped investigate for action queue
   const queuedInvestigate = useCallback((locationIndex) => {
@@ -413,7 +417,10 @@ export function Game({ gameData }) {
         suspect: [...prev.suspect, { text: suspectClue, cityName, locationName: rogueAction.name, timeCollected: currentHour }],
       }));
     }
-  }, [currentCase, cityIndex, currentCity, currentHour]);
+
+    // Send CONTINUE event to state machine to return to idle
+    continueFromClue();
+  }, [currentCase, cityIndex, currentCity, currentHour, continueFromClue]);
 
   // Wrapped rogue for action queue
   const handleRogueAction = useCallback((rogueAction) => {
@@ -494,14 +501,25 @@ export function Game({ gameData }) {
   const completeTravelAnimation = useCallback(() => {
     setLocalTravelOrigin(null);
     setLocalTravelDestination(null);
-    setLastVisitedLocation(null);
+
+    // Set last visited location to hotel (if available) for next travel animation
+    const arrivalHotel = currentCase?.cityData?.[cityIndex]?.hotel;
+    if (arrivalHotel) {
+      setLastVisitedLocation({
+        ...arrivalHotel,
+        lon: arrivalHotel.lon || arrivalHotel.lng,
+      });
+    } else {
+      setLastVisitedLocation(null);
+    }
+
     setLastFoundClue({ city: null, suspect: null });
     setLastRogueAction(null);
     setLastSleepResult(null);
 
     arrive();
     setActiveTab('home');
-  }, [arrive]);
+  }, [arrive, currentCase, cityIndex]);
 
   // Flight animation complete handler
   const handleFlightAnimationComplete = useCallback(() => {

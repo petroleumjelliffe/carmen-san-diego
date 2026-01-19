@@ -1,6 +1,5 @@
 import settings from '../../config/settings.yaml';
 import cities from '../../config/cities.yaml';
-import destinationClues from '../../config/destination_clues.yaml';
 import suspectClues from '../../config/suspect_clues.yaml';
 import investigationSpots from '../../config/investigation_spots.yaml';
 import suspects from '../../config/suspects.yaml';
@@ -31,7 +30,15 @@ export function loadGameData() {
   const assassinationList = assassinationAttempts.assassination_attempts;
   const finalCluesList = finalCityClues.final_city_clues;
   const deadEndsList = deadEnds.dead_ends;
-  const destClues = destinationClues.destination_clues;
+
+  // Extract destination clues from cities
+  const destClues = citiesList.reduce((acc, city) => {
+    if (city.clues) {
+      acc[city.id] = city.clues;
+    }
+    return acc;
+  }, {});
+
   const suspClues = suspectClues.suspect_clues;
   const goodDeedsList = goodDeeds.good_deeds;
   const fakeGoodDeedsList = goodDeeds.fake_good_deeds;

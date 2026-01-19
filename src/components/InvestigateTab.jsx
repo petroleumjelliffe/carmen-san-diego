@@ -311,6 +311,17 @@ export function InvestigateTab({
               const investigated = investigatedLocations.includes(clue.spot.id);
               const actionBusy = actionPhase && actionPhase !== 'idle';
 
+              // DEBUG: Log investigation status for each spot
+              if (i === 0 || investigated) {
+                console.log(`[InvestigateTab] Spot ${i} (${clue.spot.name}):`, {
+                  spotId: clue.spot.id,
+                  spotIdType: typeof clue.spot.id,
+                  investigated,
+                  investigatedLocations,
+                  investigatedTypes: investigatedLocations.map(id => typeof id),
+                });
+              }
+
               return (
                 <div key={clue.spot.id} className="snap-start">
                   <OptionCard

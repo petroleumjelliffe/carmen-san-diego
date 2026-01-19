@@ -91,6 +91,8 @@ export function GameMachineProvider({ children }) {
 
       acceptBriefing: () => send({ type: 'ACCEPT_BRIEFING' }),
 
+      continueFromClue: () => send({ type: 'CONTINUE' }),
+
       /**
        * Travel to a destination
        * Calculates travel time based on distance
