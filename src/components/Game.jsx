@@ -247,25 +247,31 @@ export function Game({ gameData }) {
 
   // Investigate location
   const handleInvestigate = useCallback((locationIndex) => {
-    if (!cityClues || !cityClues[locationIndex]) return null;
+    if (!cityClues || !cityClues[locationIndex]) return;
 
     const clue = cityClues[locationIndex];
     const spot = clue.spot;
 
     // Check if already investigated (compare by spot.id)
     if (investigatedLocations.includes(spot?.id)) {
-      return null;
+      return;
     }
 
     // Check time
     const timeCost = 2 * Math.pow(2, context.spotsUsedInCity);
     if (timeRemaining < timeCost) {
       setMessage("Not enough time for this investigation!");
-      return null;
+      return;
     }
 
-    // Store pending investigation
-    pendingInvestigationRef.current = { locationIndex, spot, clue };
+    // Store pending investigation with timestamp
+    pendingInvestigationRef.current = {
+      locationIndex,
+      spot,
+      clue,
+      timeCost,
+      timestamp: Date.now(),
+    };
 
     // Clear previous displays
     setLastFoundClue({ city: null, suspect: null });
@@ -273,15 +279,10 @@ export function Game({ gameData }) {
     setLastSleepResult(null);
 
     // Send to state machine - use locationIndex, not spotsUsedInCity
+    // Machine will validate with hasAvailableSpots guard
     investigate(locationIndex, false);
 
-    // Return action config for queue
-    return {
-      type: 'investigate',
-      hoursCost: timeCost,
-      spinnerDuration: 500,
-      label: `Investigating ${spot?.name || 'location'}...`,
-    };
+    // DON'T return action config - queuing happens in useEffect when machine confirms
   }, [cityClues, investigatedLocations, context.spotsUsedInCity, timeRemaining, investigate]);
 
   // Complete investigation - reveal clue
@@ -337,19 +338,51 @@ export function Game({ gameData }) {
     continueFromClue();
   }, [currentCity, currentHour, context.encounterType, goodDeeds, currentCase, cityIndex, continueFromClue]);
 
-  // Wrapped investigate for action queue
-  const queuedInvestigate = useCallback((locationIndex) => {
-    const actionConfig = handleInvestigate(locationIndex);
-    if (actionConfig) {
+  // Watch for machine confirmation of investigation (guard passed)
+  useEffect(() => {
+    const pending = pendingInvestigationRef.current;
+
+    // Machine transitioned to investigating state - guard passed!
+    if (xstateInvestigating && pending) {
       queueAction({
-        ...actionConfig,
+        type: 'investigate',
+        hoursCost: pending.timeCost,
+        spinnerDuration: 500,
+        label: `Investigating ${pending.spot?.name || 'location'}...`,
         onComplete: () => {
           completeInvestigation();
           completeAction();
         },
       });
+
+      // Clear pending - action is now queued
+      pendingInvestigationRef.current = null;
     }
-  }, [handleInvestigate, queueAction, completeInvestigation, completeAction]);
+  }, [xstateInvestigating, queueAction, completeInvestigation, completeAction]);
+
+  // Watch for machine guard rejection
+  useEffect(() => {
+    const pending = pendingInvestigationRef.current;
+
+    // Machine is idle but we have a pending investigation - guard must have rejected it
+    if (isIdle && pending) {
+      // Check if request is stale (>1 second old)
+      const isStale = Date.now() - pending.timestamp > 1000;
+
+      if (isStale) {
+        // Guard rejected the investigation (e.g., no spots available)
+        setMessage("Investigation not available right now");
+        pendingInvestigationRef.current = null;
+      }
+      // If not stale, machine might still be transitioning - wait
+    }
+  }, [isIdle]);
+
+  // Wrapped investigate for action queue
+  const queuedInvestigate = useCallback((locationIndex) => {
+    // Just send the investigate intent - queuing happens in useEffect when machine confirms
+    handleInvestigate(locationIndex);
+  }, [handleInvestigate]);
 
   // Rogue investigate
   const rogueInvestigate = useCallback((rogueAction) => {
