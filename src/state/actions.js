@@ -166,20 +166,32 @@ export const resetCityFlags = assign({
 // INVESTIGATION
 // ============================================
 
-export const setInvestigationParams = assign(({ event }) => ({
-  pendingRogueAction: event.isRogueAction || false,
-  currentSpotIndex: event.spotIndex,
-}));
+export const setInvestigationParams = assign(({ event }) => {
+  console.log('[DEBUG] setInvestigationParams called with event:', event);
+  return {
+    pendingRogueAction: event.isRogueAction || false,
+    currentSpotIndex: event.spotIndex,
+  };
+});
 
-export const recordInvestigation = assign(({ context }) => ({
-  // NOTE: Uses context.currentSpotIndex set by setInvestigationParams
-  investigatedSpots: [
-    ...context.investigatedSpots,
-    `${context.currentCityId}:${context.currentSpotIndex}`,
-  ],
-  spotsUsedInCity: context.spotsUsedInCity + 1,
-  currentSpotIndex: null,
-}));
+export const recordInvestigation = assign(({ context }) => {
+  const newSpot = `${context.currentCityId}:${context.currentSpotIndex}`;
+  console.log('[DEBUG] recordInvestigation called:', {
+    currentCityId: context.currentCityId,
+    currentSpotIndex: context.currentSpotIndex,
+    newSpot,
+    existingSpots: context.investigatedSpots,
+  });
+  return {
+    // NOTE: Uses context.currentSpotIndex set by setInvestigationParams
+    investigatedSpots: [
+      ...context.investigatedSpots,
+      newSpot,
+    ],
+    spotsUsedInCity: context.spotsUsedInCity + 1,
+    currentSpotIndex: null,
+  };
+});
 
 // ============================================
 // ENCOUNTER SETUP

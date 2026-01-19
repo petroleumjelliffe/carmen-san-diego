@@ -37,8 +37,16 @@ export const isCities2ToNMinus1 = ({ context }) =>
 
 export const hasAvailableSpots = ({ context }) => {
   if (!context.currentCase) return false;
-  const city = context.currentCase.cities[context.cityIndex];
-  return context.spotsUsedInCity < city.investigationSpots;
+  // Note: cities is an array of city ID strings, cityData has the actual data
+  const cityData = context.currentCase.cityData?.[context.cityIndex];
+  if (!cityData) return false;
+  const totalSpots = cityData.investigationSpots?.length || 3;
+  console.log('[DEBUG] hasAvailableSpots:', {
+    spotsUsedInCity: context.spotsUsedInCity,
+    totalSpots,
+    result: context.spotsUsedInCity < totalSpots,
+  });
+  return context.spotsUsedInCity < totalSpots;
 };
 
 // === Investigation routing ===

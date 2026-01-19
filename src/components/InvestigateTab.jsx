@@ -48,11 +48,23 @@ export function InvestigateTab({
   const [investigatingSpotIndex, setInvestigatingSpotIndex] = useState(null);
   const [isInvestigatingRogue, setIsInvestigatingRogue] = useState(false);
 
+  // DEBUG: Log what InvestigateTab receives
+  console.log('[DEBUG] InvestigateTab received:', {
+    investigatedLocations,
+    investigatedLocationsTypes: investigatedLocations?.map(x => typeof x),
+    cityCluesIds: cityClues?.map(c => c?.spot?.id),
+  });
+
   // Track last investigated spot for animation starting point
   // Use second-to-last to avoid animating from the spot we just clicked to itself
   const lastInvestigatedSpotId = investigatedLocations.length > 1
     ? investigatedLocations[investigatedLocations.length - 2]
     : null;
+
+  // DEBUG: Validate lastInvestigatedSpotId
+  if (lastInvestigatedSpotId !== null && typeof lastInvestigatedSpotId !== 'string') {
+    console.error('[BUG] lastInvestigatedSpotId is not a string:', lastInvestigatedSpotId, typeof lastInvestigatedSpotId);
+  }
 
   // Handler for investigating - sets animation index and calls parent handler
   const handleInvestigateClick = (index) => {

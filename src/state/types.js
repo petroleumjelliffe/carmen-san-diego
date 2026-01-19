@@ -40,23 +40,46 @@
  */
 
 /**
- * @typedef {Object} CityData
- * @property {string} id - e.g., "paris", "tokyo"
- * @property {string} name
- * @property {number} lat
- * @property {number} lng
- * @property {number} investigationSpots - Total spots available (typically 3)
- * @property {string|null} correctDestination - Next city ID, null if final
- * @property {string[]} wrongDestinations - Decoy city IDs
+ * @typedef {Object} InvestigationSpot
+ * @property {string} id - e.g., "informant", "police"
+ * @property {string} name - Display name
+ * @property {number} time_cost - Hours to investigate
+ * @property {string[]} gives - ["suspect"] or ["destination"] or both
+ * @property {number} [lat] - Optional coordinates for map display
+ * @property {number} [lon] - Optional coordinates for map display
  */
 
 /**
+ * City data for a specific city in the case trail.
+ * IMPORTANT: This is NOT the same as the cities array!
+ * The cities array contains city ID strings, cityData contains these objects.
+ *
+ * @typedef {Object} CityData
+ * @property {string} cityId - e.g., "paris", "tokyo"
+ * @property {string} cityName - Display name
+ * @property {boolean} isFinalCity - Whether this is the last city in the trail
+ * @property {InvestigationSpot[]} investigationSpots - Array of spot objects (NOT a number!)
+ * @property {Object|null} encounter - Henchman or assassination encounter for this city
+ * @property {Object|null} rogueAction - Rogue action available in this city
+ * @property {Object|null} hotel - City's hotel landmark for player location
+ * @property {Object|null} rogueLocation - Location for rogue action
+ * @property {Object[]} [destinations] - Available destinations from this city (non-final only)
+ */
+
+/**
+ * Case data structure produced by caseGenerator.js.
+ *
+ * CRITICAL: cities is an array of city ID STRINGS, NOT CityData objects!
+ * CityData objects are in a SEPARATE cityData array that runs parallel to cities.
+ *
  * @typedef {Object} CaseData
- * @property {string} id
  * @property {Suspect} suspect
- * @property {CityData[]} cities
+ * @property {string[]} cities - Array of city ID strings like ["paris", "tokyo"] (NOT objects!)
+ * @property {CityData[]} cityData - Parallel array with city-specific data (same length as cities)
  * @property {number} totalCities
- * @property {Gadget[]} [startingGadgets]
+ * @property {Gadget[]} [gadgets] - Gadgets available for this case
+ * @property {Object} [stolenItem] - The item that was stolen
+ * @property {string[]} [traitOrder] - Order to reveal suspect traits
  */
 
 /**

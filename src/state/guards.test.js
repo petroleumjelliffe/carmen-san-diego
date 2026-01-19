@@ -26,34 +26,11 @@ import {
   hasAvailableGadget,
   hasAnyGadgets,
 } from './guards.js';
+import { createMockContext } from '../test/factories/createMockCase.js';
 
-// Helper to create minimal context
-const createContext = (overrides = {}) => ({
-  currentHour: 12,
-  timeRemaining: 48,
-  currentCase: {
-    totalCities: 5,
-    cities: [
-      { id: 'city1', investigationSpots: 3 },
-      { id: 'city2', investigationSpots: 3 },
-      { id: 'city3', investigationSpots: 3 },
-      { id: 'city4', investigationSpots: 3 },
-      { id: 'city5', investigationSpots: 3 },
-    ],
-  },
-  cityIndex: 0,
-  wrongCity: false,
-  spotsUsedInCity: 0,
-  hadEncounterInCity: false,
-  hadGoodDeedInCase: false,
-  pendingRogueAction: false,
-  rogueUsedInCity: false,
-  encounterQueue: [],
-  encounterType: null,
-  goodDeedRoll: null,
-  availableGadgets: [],
-  ...overrides,
-});
+// Helper to create minimal context using the shared factory
+// This ensures all test mocks match the production data structure
+const createContext = (overrides = {}) => createMockContext(overrides);
 
 // ============================================
 // TIME CHECKS

@@ -193,6 +193,22 @@ export function CityMapView({
   isInvestigatingRogue = false,
   isAnimating = false,
 }) {
+  // DEBUG: Log what CityMapView receives
+  console.log('[DEBUG] CityMapView received:', {
+    investigatedSpots,
+    investigatedSpotsTypes: investigatedSpots?.map(x => typeof x),
+    spotIds: spots?.map(s => s?.spot?.id),
+    lastInvestigatedSpotId,
+    lastInvestigatedSpotIdType: typeof lastInvestigatedSpotId,
+  });
+
+  // DEBUG: Validate investigatedSpots format
+  investigatedSpots?.forEach((item, i) => {
+    if (typeof item !== 'string') {
+      console.error(`[BUG] CityMapView.investigatedSpots[${i}] is ${typeof item} (${item}), expected string`);
+    }
+  });
+
   const mapRef = useRef(null);
   const [animationProgress, setAnimationProgress] = useState(0);
   const [lastAnimationEnd, setLastAnimationEnd] = useState(null);
@@ -331,6 +347,18 @@ export function CityMapView({
         {spots?.map((spotData, index) => {
           const spot = spotData.spot;
           const isInvestigated = investigatedSpots.includes(spot.id);
+
+          // DEBUG: Log comparison for first render
+          if (index === 0 && investigatedSpots.length > 0) {
+            console.log('[DEBUG] CityMapView marker comparison:', {
+              spotId: spot.id,
+              spotIdType: typeof spot.id,
+              investigatedSpots,
+              investigatedSpotsTypes: investigatedSpots.map(x => typeof x),
+              includes: investigatedSpots.includes(spot.id),
+              manualCheck: investigatedSpots.some(x => x === spot.id),
+            });
+          }
 
           if (!spot.lat || !spot.lon) return null;
 

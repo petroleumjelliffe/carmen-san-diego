@@ -141,17 +141,38 @@ export function Game({ gameData }) {
     return getDestinations(gameData, currentCase, cityIndex);
   }, [gameData, currentCase, cityIndex, gameState]);
 
-  // Investigated locations for current city
+  // Investigated locations for current city (returns spot.id strings for CityMapView compatibility)
   const investigatedLocations = useMemo(() => {
-    const currentCitySpots = context.investigatedSpots
+    const indices = context.investigatedSpots
       .filter(s => s.startsWith(`${context.currentCityId}:`))
       .map(s => parseInt(s.split(':')[1], 10));
 
-    if (!cityClues) return [];
-    return cityClues
-      .filter((_, idx) => currentCitySpots.includes(idx))
-      .map(c => c.spot?.id)
-      .filter(Boolean);
+    if (!cityClues) {
+      console.warn('[DEBUG] investigatedLocations: cityClues is null/undefined');
+      return [];
+    }
+
+    const result = indices.map(idx => cityClues[idx]?.spot?.id).filter(Boolean);
+
+    // DEBUG: Log what we're computing
+    console.log('[DEBUG] investigatedLocations:', {
+      raw: context.investigatedSpots,
+      currentCity: context.currentCityId,
+      indices,
+      cityCluesLength: cityClues?.length,
+      cityClueIds: cityClues?.map(c => c?.spot?.id),
+      result,
+      resultTypes: result.map(r => typeof r),
+    });
+
+    // ASSERTION: Throw if we accidentally return numbers instead of strings
+    result.forEach((item, i) => {
+      if (typeof item !== 'string') {
+        throw new Error(`[BUG] investigatedLocations[${i}] is ${typeof item} (${item}), expected string`);
+      }
+    });
+
+    return result;
   }, [context.investigatedSpots, context.currentCityId, cityClues]);
 
   // Progressive investigation cost
@@ -230,7 +251,7 @@ export function Game({ gameData }) {
     const clue = cityClues[locationIndex];
     const spot = clue.spot;
 
-    // Check if already investigated
+    // Check if already investigated (compare by spot.id)
     if (investigatedLocations.includes(spot?.id)) {
       return null;
     }
@@ -270,7 +291,11 @@ export function Game({ gameData }) {
     const { spot, clue } = pending;
     pendingInvestigationRef.current = null;
 
-    setLastVisitedLocation(spot);
+    // Normalize coordinates (.lng -> .lon) for travel animation
+    setLastVisitedLocation({
+      ...spot,
+      lon: spot.lon || spot.lng,
+    });
 
     // Reveal clue
     setLastFoundClue({
@@ -366,7 +391,11 @@ export function Game({ gameData }) {
 
     const rogueSpot = currentCase?.cityData?.[cityIndex]?.rogueLocation;
     if (rogueSpot) {
-      setLastVisitedLocation(rogueSpot);
+      // Normalize coordinates (.lng -> .lon) for travel animation
+      setLastVisitedLocation({
+        ...rogueSpot,
+        lon: rogueSpot.lon || rogueSpot.lng,
+      });
     }
 
     setActiveRogueAction({ action: rogueAction, locationClue, suspectClue });
