@@ -345,7 +345,11 @@ export function Game({ gameData }) {
     const pending = pendingInvestigationRef.current;
 
     // Machine transitioned to investigating state - guard passed!
-    if (xstateInvestigating && pending) {
+    // Only queue if not already queued (prevent double-queuing on re-renders)
+    if (xstateInvestigating && pending && !pending.queued) {
+      // Mark as queued to prevent double-queuing
+      pendingInvestigationRef.current = { ...pending, queued: true };
+
       queueAction({
         type: 'investigate',
         hoursCost: pending.timeCost,
@@ -356,8 +360,9 @@ export function Game({ gameData }) {
           completeAction();
         },
       });
-      // Note: Don't clear pendingInvestigationRef here - completeInvestigation needs it
-      // and will clear it when done
+
+      // Don't clear ref here - it will be cleared in completeInvestigation
+      // This ensures completeInvestigation has access to the data it needs
     }
   }, [xstateInvestigating, queueAction, completeInvestigation, completeAction]);
 
