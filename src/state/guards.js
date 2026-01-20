@@ -2,7 +2,34 @@
  * Pure guard functions for the game state machine
  *
  * XState v5 signature: ({ context, event }) => boolean
+ *
+ * IMPORTANT: All guards must log warnings when rejecting to aid debugging
  */
+
+// === Tab Navigation ===
+
+export const canSwitchTabs = ({ context, event }) => {
+  // Cannot switch tabs during encounters, travel, or sleep
+  const isInEncounter = !!context.encounterType && context.encounterType !== null;
+  const isTraveling = context.travelDestination !== null;
+  const isSleeping = context.currentHour >= 23 || context.currentHour < 7; // TODO: Better sleep state detection
+
+  const canSwitch = !isInEncounter && !isTraveling && !isSleeping;
+
+  if (!canSwitch) {
+    console.warn('[GUARD REJECTED] canSwitchTabs', {
+      event: event?.type,
+      isInEncounter,
+      isTraveling,
+      isSleeping,
+      encounterType: context.encounterType,
+      travelDestination: context.travelDestination,
+      currentHour: context.currentHour
+    });
+  }
+
+  return canSwitch;
+};
 
 // === Time checks ===
 
@@ -38,17 +65,29 @@ export const isCities2ToNMinus1 = ({ context }) =>
 // === Investigation spots ===
 
 export const hasAvailableSpots = ({ context }) => {
-  if (!context.currentCase) return false;
+  if (!context.currentCase) {
+    console.warn('[GUARD REJECTED] hasAvailableSpots - no current case');
+    return false;
+  }
   // Note: cities is an array of city ID strings, cityData has the actual data
   const cityData = context.currentCase.cityData?.[context.cityIndex];
-  if (!cityData) return false;
+  if (!cityData) {
+    console.warn('[GUARD REJECTED] hasAvailableSpots - no city data', {
+      cityIndex: context.cityIndex
+    });
+    return false;
+  }
   const totalSpots = cityData.investigationSpots?.length || 3;
-  console.log('[DEBUG] hasAvailableSpots:', {
-    spotsUsedInCity: context.spotsUsedInCity,
-    totalSpots,
-    result: context.spotsUsedInCity < totalSpots,
-  });
-  return context.spotsUsedInCity < totalSpots;
+  const available = context.spotsUsedInCity < totalSpots;
+
+  if (!available) {
+    console.warn('[GUARD REJECTED] hasAvailableSpots', {
+      spotsUsedInCity: context.spotsUsedInCity,
+      totalSpots
+    });
+  }
+
+  return available;
 };
 
 // === Investigation routing ===
@@ -121,6 +160,7 @@ export const hasCorrectWarrant = ({ context }) =>
  * All guards as an object for XState machine config
  */
 export const guards = {
+  canSwitchTabs,
   isSleepTime,
   isTimeExpired,
   sleepWouldCauseTimeout,

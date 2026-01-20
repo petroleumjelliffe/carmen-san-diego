@@ -8,13 +8,16 @@ const TABS = [
 ];
 
 // Mobile bottom nav button
-function MobileTabButton({ active, onClick, icon: Icon, label }) {
+function MobileTabButton({ active, onClick, icon: Icon, label, disabled }) {
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       className={`flex-1 flex flex-col items-center justify-center gap-1 px-2 py-3 min-h-[56px] font-bold transition-all ${
         active
           ? 'bg-yellow-400 text-red-900'
+          : disabled
+          ? 'bg-red-900/50 text-yellow-100/30 cursor-not-allowed'
           : 'bg-red-800 text-yellow-100 hover:bg-red-700 active:bg-red-600'
       }`}
     >
@@ -25,13 +28,16 @@ function MobileTabButton({ active, onClick, icon: Icon, label }) {
 }
 
 // Desktop sidebar button
-function SidebarTabButton({ active, onClick, icon: Icon, label }) {
+function SidebarTabButton({ active, onClick, icon: Icon, label, disabled }) {
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       className={`flex items-center gap-3 px-4 py-4 text-left font-bold transition-all w-full ${
         active
           ? 'bg-yellow-400 text-red-900'
+          : disabled
+          ? 'text-yellow-100/30 cursor-not-allowed'
           : 'text-yellow-100 hover:bg-red-800/50'
       }`}
     >
@@ -41,7 +47,7 @@ function SidebarTabButton({ active, onClick, icon: Icon, label }) {
   );
 }
 
-export function TabBar({ activeTab, setActiveTab, variant = 'auto' }) {
+export function TabBar({ activeTab, onTabClick, disabled = false, variant = 'auto' }) {
   // Sidebar variant - desktop only (md and up)
   if (variant === 'sidebar') {
     return (
@@ -50,9 +56,10 @@ export function TabBar({ activeTab, setActiveTab, variant = 'auto' }) {
           <SidebarTabButton
             key={tab.id}
             active={activeTab === tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => onTabClick(tab.id)}
             icon={tab.icon}
             label={tab.label}
+            disabled={disabled}
           />
         ))}
       </div>
@@ -68,9 +75,10 @@ export function TabBar({ activeTab, setActiveTab, variant = 'auto' }) {
             <MobileTabButton
               key={tab.id}
               active={activeTab === tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => onTabClick(tab.id)}
               icon={tab.icon}
               label={tab.label}
+              disabled={disabled}
             />
           ))}
         </div>
@@ -88,9 +96,10 @@ export function TabBar({ activeTab, setActiveTab, variant = 'auto' }) {
             <MobileTabButton
               key={tab.id}
               active={activeTab === tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => onTabClick(tab.id)}
               icon={tab.icon}
               label={tab.label}
+              disabled={disabled}
             />
           ))}
         </div>
@@ -103,9 +112,10 @@ export function TabBar({ activeTab, setActiveTab, variant = 'auto' }) {
             <MobileTabButton
               key={tab.id}
               active={activeTab === tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => onTabClick(tab.id)}
               icon={tab.icon}
               label={tab.label}
+              disabled={disabled}
             />
           ))}
         </div>

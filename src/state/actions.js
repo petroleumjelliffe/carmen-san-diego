@@ -355,6 +355,33 @@ export const clearCaseState = assign({
 });
 
 // ============================================
+// GUARD REJECTION FEEDBACK
+// ============================================
+
+export const logGuardRejection = ({ context, event }) => {
+  console.warn('[STATE MACHINE] Guard rejected event', {
+    event: event.type,
+    timestamp: Date.now(),
+    context: {
+      cityIndex: context.cityIndex,
+      encounterType: context.encounterType,
+      spotsUsedInCity: context.spotsUsedInCity,
+      travelDestination: context.travelDestination
+    }
+  });
+};
+
+export const showNoSpotsMessage = assign({
+  message: 'No investigation spots remaining in this city. Travel to continue.',
+  messageType: 'warning'
+});
+
+export const showTabLockMessage = assign({
+  message: 'Cannot switch tabs during active encounter or travel.',
+  messageType: 'info'
+});
+
+// ============================================
 // PERSISTENCE
 // ============================================
 
@@ -431,6 +458,9 @@ export const actions = {
   updateStats,
   clearTransientState,
   clearCaseState,
+  logGuardRejection,
+  showNoSpotsMessage,
+  showTabLockMessage,
   saveGame,
 };
 

@@ -1,7 +1,7 @@
 /**
  * EncounterDialog - Displays encounters (henchman, assassination, good deed, etc.)
  *
- * Only renders when state.matches('playing.encounter')
+ * Only renders when state.matches('playing.investigate.encountering')
  * Handles different encounter types and user choices
  */
 import { useGameMachine } from '../hooks/useGameMachine.jsx';
@@ -19,9 +19,9 @@ function EncounterDialog() {
 
   const { encounterType, encounterMessage, encounterChoice, availableGadgets } = context;
 
-  const isChoosingAction = state.matches('playing.encounter.choosingAction');
-  const isChoosingGoodDeed = state.matches('playing.encounter.choosingGoodDeed');
-  const isResolving = state.matches('playing.encounter.resolving');
+  const isChoosingAction = state.matches('playing.investigate.encountering.choosingAction');
+  const isChoosingGoodDeed = state.matches('playing.investigate.encountering.choosingGoodDeed');
+  const isResolving = state.matches('playing.investigate.encountering.resolving');
 
   const handleGadgetChoice = (gadgetId) => {
     chooseGadget(gadgetId);

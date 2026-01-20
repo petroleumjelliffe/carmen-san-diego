@@ -2,7 +2,7 @@
  * Carmen Sandiego XState Game Machine
  *
  * Hierarchical state machine managing all game state transitions.
- * Activity states are nested inside the 'playing' state.
+ * Tabs are now first-class states within 'playing'.
  */
 import { createMachine } from 'xstate';
 import { initialContext } from './types.js';
@@ -15,7 +15,12 @@ import { actions } from './actions.js';
  * States:
  * - menu: Main menu / case selection
  * - briefing: Case briefing before starting
- * - playing: Active gameplay (contains nested activity states)
+ * - playing: Active gameplay (tabs as hierarchical states)
+ *   - home: Home tab (city info)
+ *   - investigate: Investigation tab (with encountering, witnessClue sub-states)
+ *   - airport: Airport tab (with traveling sub-state)
+ *   - dossier: Dossier/Evidence tab
+ *   - sleeping: Sleep flow (global)
  * - apprehended: Suspect in custody, pre-trial
  * - trial: Courtroom verdict
  * - debrief: Post-case summary
@@ -49,272 +54,353 @@ export const gameMachine = createMachine(
       briefing: {
         on: {
           ACCEPT_BRIEFING: {
-            target: 'playing',
+            target: 'playing.investigate',
             actions: 'saveGame',
           },
         },
       },
 
       // ========================================
-      // PLAYING - Contains nested activity states
+      // PLAYING - Tabs as hierarchical states
       // ========================================
       playing: {
-        initial: 'checkingIdle',
+        initial: 'investigate',
+
+        // Global events handled at playing level
+        on: {
+          // Tab navigation events
+          GOTO_HOME: [
+            {
+              target: '.home',
+              guard: 'canSwitchTabs',
+            },
+            {
+              // Guard rejected - log and show message
+              actions: ['logGuardRejection', 'showTabLockMessage'],
+            },
+          ],
+          GOTO_INVESTIGATE: [
+            {
+              target: '.investigate',
+              guard: 'canSwitchTabs',
+            },
+            {
+              actions: ['logGuardRejection', 'showTabLockMessage'],
+            },
+          ],
+          GOTO_AIRPORT: [
+            {
+              target: '.airport',
+              guard: 'canSwitchTabs',
+            },
+            {
+              actions: ['logGuardRejection', 'showTabLockMessage'],
+            },
+          ],
+          GOTO_DOSSIER: [
+            {
+              target: '.dossier',
+              guard: 'canSwitchTabs',
+            },
+            {
+              actions: ['logGuardRejection', 'showTabLockMessage'],
+            },
+          ],
+        },
 
         states: {
-          // Entry point - checks if we should sleep, timeout, or go to idle
-          checkingIdle: {
-            entry: (context) => console.log('[STATE MACHINE] Entered checkingIdle state', { cityIndex: context.cityIndex, currentHour: context.currentHour, timeRemaining: context.timeRemaining }),
-            always: [
-              // Check timeout first (after time-consuming action)
-              {
-                target: 'encounter',
-                guard: 'isTimeExpired',
-                actions: 'setTimeOutEncounter',
-              },
-              // Then check sleep time
-              {
-                target: 'sleepWarning',
-                guard: 'isSleepTime',
-              },
-              { target: 'idle' },
+          // ========================================
+          // HOME TAB
+          // ========================================
+          home: {
+            entry: [
+              (context) => console.log('[STATE MACHINE] Entered home tab', { cityIndex: context.cityIndex }),
+              'saveGame',
+              'clearTransientState',
             ],
+            // Tab navigation handled by parent playing state
           },
 
-          // Normal idle state - waiting for player action
-          idle: {
-            entry: [
-              (context) => console.log('[STATE MACHINE] Entered idle state', { cityIndex: context.cityIndex, spotsUsedInCity: context.spotsUsedInCity }),
-              'saveGame',
-              'clearTransientState'
-            ],
-            on: {
-              INVESTIGATE: [
-                {
-                  target: 'investigating',
-                  guard: 'hasAvailableSpots',
-                  actions: [
-                    (context, event) => console.log('[STATE MACHINE] INVESTIGATE event accepted - guard passed', { event, spotsUsedInCity: context.spotsUsedInCity }),
-                    'setInvestigationParams',
-                    'rollGoodDeedDice'
+          // ========================================
+          // INVESTIGATE TAB
+          // ========================================
+          investigate: {
+            initial: 'idle',
+
+            states: {
+              // Idle - waiting for investigation action
+              idle: {
+                entry: [
+                  (context) => console.log('[STATE MACHINE] Entered investigate.idle', { cityIndex: context.cityIndex, spotsUsedInCity: context.spotsUsedInCity }),
+                  'saveGame',
+                  'clearTransientState',
+                ],
+                on: {
+                  INVESTIGATE: [
+                    {
+                      target: 'investigating',
+                      guard: 'hasAvailableSpots',
+                      actions: [
+                        (context, event) => console.log('[STATE MACHINE] INVESTIGATE event accepted', { event, spotsUsedInCity: context.spotsUsedInCity }),
+                        'setInvestigationParams',
+                        'rollGoodDeedDice',
+                      ],
+                    },
+                    {
+                      // Guard failed - stay in idle but log and show message
+                      actions: [
+                        (context, event) => console.log('[STATE MACHINE] ❌ INVESTIGATE event REJECTED', { event, spotsUsedInCity: context.spotsUsedInCity }),
+                        'logGuardRejection',
+                        'showNoSpotsMessage',
+                      ],
+                    },
                   ],
                 },
-                {
-                  // Guard failed - stay in idle but log the rejection
-                  actions: (context, event) => console.log('[STATE MACHINE] ❌ INVESTIGATE event REJECTED - guard failed', { event, spotsUsedInCity: context.spotsUsedInCity }),
+              },
+
+              // Investigation in progress - determines what happens next
+              investigating: {
+                entry: [
+                  (context) => console.log('[STATE MACHINE] Entered investigating', { cityIndex: context.cityIndex, spotsUsedInCity: context.spotsUsedInCity, currentSpotIndex: context.currentSpotIndex }),
+                  'advanceTimeForInvestigation',
+                  'recordInvestigation',
+                ],
+                always: [
+                  // Check timeout first (after time-consuming action)
+                  {
+                    target: 'encountering',
+                    guard: 'isTimeExpired',
+                    actions: 'setTimeOutEncounter',
+                  },
+                  // Priority 1: Apprehension (final city, assassination done)
+                  {
+                    target: 'encountering',
+                    guard: 'shouldApprehend',
+                    actions: 'setApprehensionEncounter',
+                  },
+                  // Priority 2: Mandatory encounter (henchman/assassination)
+                  {
+                    target: 'encountering',
+                    guard: 'shouldHenchman',
+                    actions: 'setHenchmanEncounter',
+                  },
+                  {
+                    target: 'encountering',
+                    guard: 'shouldAssassination',
+                    actions: 'setAssassinationEncounter',
+                  },
+                  // Priority 3: Rogue action (if selected, no mandatory encounter)
+                  {
+                    target: 'encountering',
+                    guard: 'shouldRogueActionAlone',
+                    actions: 'setRogueEncounter',
+                  },
+                  // Priority 4: Good deed (2nd+ investigation, dice roll)
+                  {
+                    target: 'encountering',
+                    guard: 'shouldGoodDeed',
+                    actions: 'setGoodDeedEncounter',
+                  },
+                  // Default: straight to witness clue
+                  {
+                    target: 'witnessClue',
+                    actions: [
+                      (context) => console.log('[STATE MACHINE] No encounter - going to witnessClue'),
+                      'setNormalClue',
+                    ],
+                  },
+                ],
+              },
+
+              // Encountering - overlays on investigate tab
+              encountering: {
+                initial: 'presenting',
+                states: {
+                  // Show encounter message, determine if choice needed
+                  presenting: {
+                    always: [
+                      {
+                        target: 'choosingAction',
+                        guard: 'requiresGadgetChoice',
+                      },
+                      {
+                        target: 'choosingGoodDeed',
+                        guard: 'isGoodDeed',
+                      },
+                      // Non-interactive encounters
+                      { target: 'resolving' },
+                    ],
+                  },
+
+                  // Henchman/Assassination: choose gadget or endure
+                  choosingAction: {
+                    on: {
+                      CHOOSE_GADGET: {
+                        target: 'resolving',
+                        guard: 'hasAvailableGadget',
+                        actions: ['useGadget', 'setEncounterChoice'],
+                      },
+                      CHOOSE_ENDURE: {
+                        target: 'resolving',
+                        actions: ['applyInjury', 'applyTimePenalty', 'setEncounterChoice'],
+                      },
+                    },
+                  },
+
+                  // Good deed: help or ignore
+                  choosingGoodDeed: {
+                    on: {
+                      HELP_NPC: {
+                        target: 'resolving',
+                        actions: ['increaseKarma', 'markGoodDeedComplete'],
+                      },
+                      IGNORE_NPC: {
+                        target: 'resolving',
+                        actions: 'markGoodDeedComplete',
+                      },
+                    },
+                  },
+
+                  // Show resolution, wait for dismiss
+                  resolving: {
+                    on: {
+                      RESOLVE_ENCOUNTER: [
+                        // Check for stacked rogue action
+                        {
+                          target: 'presenting',
+                          guard: 'hasStackedRogueAction',
+                          actions: 'popRogueFromQueue',
+                        },
+                        // Terminal encounters exit playing
+                        {
+                          target: '#carmenSandiego.apprehended',
+                          guard: 'isApprehension',
+                          actions: 'saveGame',
+                        },
+                        {
+                          target: '#carmenSandiego.debrief',
+                          guard: 'isTimeOut',
+                          actions: 'setTimeOutOutcome',
+                        },
+                        // Normal flow: proceed to witness clue
+                        {
+                          target: '#carmenSandiego.playing.investigate.witnessClue',
+                          actions: 'markEncounterComplete',
+                        },
+                      ],
+                    },
+                  },
                 },
-              ],
-              TRAVEL: {
-                target: 'traveling',
-                actions: 'setTravelDestination',
+              },
+
+              // Witness clue - overlays on investigate tab
+              witnessClue: {
+                entry: (context) => console.log('[STATE MACHINE] Entered witnessClue', { encounterType: context.encounterType }),
+                on: {
+                  CONTINUE: {
+                    target: 'idle',
+                    actions: (context) => console.log('[STATE MACHINE] CONTINUE from witnessClue -> idle'),
+                  },
+                },
               },
             },
           },
 
-          // Check if sleeping would cause timeout
+          // ========================================
+          // AIRPORT TAB
+          // ========================================
+          airport: {
+            initial: 'idle',
+
+            states: {
+              // Idle - destination selection
+              idle: {
+                entry: [
+                  (context) => console.log('[STATE MACHINE] Entered airport.idle', { cityIndex: context.cityIndex }),
+                  'saveGame',
+                  'clearTransientState',
+                ],
+                on: {
+                  TRAVEL: {
+                    target: 'traveling',
+                    actions: 'setTravelDestination',
+                  },
+                },
+              },
+
+              // Traveling animation
+              traveling: {
+                entry: [
+                  (context) => console.log('[STATE MACHINE] Entered traveling', { fromCity: context.cityIndex, destination: context.travelDestination }),
+                  'advanceTimeForTravel',
+                ],
+                on: {
+                  ARRIVE: [
+                    // Check timeout first
+                    {
+                      target: '#carmenSandiego.playing.investigate.encountering',
+                      guard: 'isTimeExpired',
+                      actions: ['updateLocation', 'setTimeOutEncounter'],
+                    },
+                    // Normal arrival -> go to home tab
+                    {
+                      target: '#carmenSandiego.playing.home',
+                      actions: [
+                        (context) => console.log('[STATE MACHINE] ARRIVE - updating location', { newCityIndex: context.cityIndex + (context.isCorrectPath ? 1 : 0) }),
+                        'updateLocation',
+                        'resetCityFlags',
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+          },
+
+          // ========================================
+          // DOSSIER TAB
+          // ========================================
+          dossier: {
+            entry: [
+              (context) => console.log('[STATE MACHINE] Entered dossier tab', { cityIndex: context.cityIndex }),
+              'saveGame',
+              'clearTransientState',
+            ],
+            // Tab navigation handled by parent playing state
+          },
+
+          // ========================================
+          // SLEEPING (Global within playing)
+          // ========================================
           sleepWarning: {
             entry: 'calculateSleepTimeout',
             always: [
-              // If sleep would timeout, show warning first
               {
                 target: 'confirmingSleep',
                 guard: 'sleepWouldCauseTimeout',
               },
-              // Otherwise go straight to sleeping
               { target: 'sleeping' },
             ],
           },
 
-          // Warning: sleep will cause timeout
           confirmingSleep: {
-            // UI shows: "Sleeping now will cause you to run out of time. Continue?"
             on: {
               CONFIRM_SLEEP: 'sleeping',
-              CANCEL_SLEEP: 'idle',
+              CANCEL_SLEEP: 'investigate.idle', // Return to investigate tab
             },
           },
 
-          // Sleep state - advances time to morning
           sleeping: {
             entry: ['advanceTimeToMorning', 'setSleepMessage'],
             on: {
               WAKE: [
-                // After sleeping, check if time ran out
                 {
-                  target: '#carmenSandiego.playing.encounter',
+                  target: 'investigate.encountering',
                   guard: 'isTimeExpired',
                   actions: 'setTimeOutEncounter',
                 },
-                { target: 'idle' },
+                { target: 'investigate.idle' }, // Return to investigate tab
               ],
-            },
-          },
-
-          // Traveling between cities
-          traveling: {
-            entry: [
-              (context) => console.log('[STATE MACHINE] Entered traveling state', { fromCity: context.cityIndex, destination: context.travelDestination }),
-              'advanceTimeForTravel'
-            ],
-            on: {
-              ARRIVE: [
-                // Check timeout first
-                {
-                  target: '#carmenSandiego.playing.encounter',
-                  guard: 'isTimeExpired',
-                  actions: ['updateLocation', 'setTimeOutEncounter'],
-                },
-                // Normal arrival
-                {
-                  target: 'checkingIdle',
-                  actions: [
-                    (context) => console.log('[STATE MACHINE] ARRIVE - updating location and resetting city flags', { newCityIndex: context.cityIndex + (context.isCorrectPath ? 1 : 0) }),
-                    'updateLocation',
-                    'resetCityFlags'
-                  ],
-                },
-              ],
-            },
-          },
-
-          // Investigation started - determines what happens next
-          investigating: {
-            entry: [
-              (context) => console.log('[STATE MACHINE] Entered investigating state', { cityIndex: context.cityIndex, spotsUsedInCity: context.spotsUsedInCity, currentSpotIndex: context.currentSpotIndex }),
-              'advanceTimeForInvestigation',
-              'recordInvestigation'
-            ],
-            always: [
-              // Priority 1: Apprehension (final city, assassination done)
-              {
-                target: 'encounter',
-                guard: 'shouldApprehend',
-                actions: 'setApprehensionEncounter',
-              },
-              // Priority 2: Mandatory encounter (henchman/assassination)
-              {
-                target: 'encounter',
-                guard: 'shouldHenchman',
-                actions: 'setHenchmanEncounter',
-              },
-              {
-                target: 'encounter',
-                guard: 'shouldAssassination',
-                actions: 'setAssassinationEncounter',
-              },
-              // Priority 3: Rogue action (if selected, no mandatory encounter)
-              {
-                target: 'encounter',
-                guard: 'shouldRogueActionAlone',
-                actions: 'setRogueEncounter',
-              },
-              // Priority 4: Good deed (2nd+ investigation, dice roll)
-              {
-                target: 'encounter',
-                guard: 'shouldGoodDeed',
-                actions: 'setGoodDeedEncounter',
-              },
-              // Default: straight to clue
-              {
-                target: 'witnessClue',
-                actions: [
-                  (context) => console.log('[STATE MACHINE] No encounter - going to witnessClue'),
-                  'setNormalClue'
-                ],
-              },
-            ],
-          },
-
-          // Encounter state - has sub-states for different encounter phases
-          encounter: {
-            initial: 'presenting',
-            states: {
-              // Show encounter message, determine if choice needed
-              presenting: {
-                always: [
-                  // Encounters requiring player choice
-                  {
-                    target: 'choosingAction',
-                    guard: 'requiresGadgetChoice',
-                  },
-                  {
-                    target: 'choosingGoodDeed',
-                    guard: 'isGoodDeed',
-                  },
-                  // Non-interactive encounters (apprehension, timeOut, rogueAction)
-                  { target: 'resolving' },
-                ],
-              },
-
-              // Henchman/Assassination: choose gadget or endure
-              choosingAction: {
-                on: {
-                  CHOOSE_GADGET: {
-                    target: 'resolving',
-                    guard: 'hasAvailableGadget',
-                    actions: ['useGadget', 'setEncounterChoice'],
-                  },
-                  CHOOSE_ENDURE: {
-                    target: 'resolving',
-                    actions: ['applyInjury', 'applyTimePenalty', 'setEncounterChoice'],
-                  },
-                },
-              },
-
-              // Good deed: help or ignore
-              choosingGoodDeed: {
-                on: {
-                  HELP_NPC: {
-                    target: 'resolving',
-                    actions: ['increaseKarma', 'markGoodDeedComplete'],
-                  },
-                  IGNORE_NPC: {
-                    target: 'resolving',
-                    actions: 'markGoodDeedComplete',
-                  },
-                },
-              },
-
-              // Show resolution, wait for dismiss
-              resolving: {
-                on: {
-                  RESOLVE_ENCOUNTER: [
-                    // Check for stacked rogue action
-                    {
-                      target: '#carmenSandiego.playing.encounter',
-                      guard: 'hasStackedRogueAction',
-                      actions: 'popRogueFromQueue',
-                    },
-                    // Terminal encounters exit playing
-                    {
-                      target: '#carmenSandiego.apprehended',
-                      guard: 'isApprehension',
-                      actions: 'saveGame',
-                    },
-                    {
-                      target: '#carmenSandiego.debrief',
-                      guard: 'isTimeOut',
-                      actions: 'setTimeOutOutcome',
-                    },
-                    // Normal flow: proceed to witness clue
-                    {
-                      target: '#carmenSandiego.playing.witnessClue',
-                      actions: 'markEncounterComplete',
-                    },
-                  ],
-                },
-              },
-            },
-          },
-
-          // Witness clue display
-          witnessClue: {
-            entry: (context) => console.log('[STATE MACHINE] Entered witnessClue state', { encounterType: context.encounterType }),
-            on: {
-              CONTINUE: {
-                target: 'checkingIdle',
-                actions: (context) => console.log('[STATE MACHINE] CONTINUE from witnessClue -> checkingIdle'),
-              },
             },
           },
         },
