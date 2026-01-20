@@ -64,6 +64,7 @@ export const gameMachine = createMachine(
         states: {
           // Entry point - checks if we should sleep, timeout, or go to idle
           checkingIdle: {
+            entry: (context) => console.log('[STATE MACHINE] Entered checkingIdle state', { cityIndex: context.cityIndex, currentHour: context.currentHour, timeRemaining: context.timeRemaining }),
             always: [
               // Check timeout first (after time-consuming action)
               {
@@ -82,13 +83,27 @@ export const gameMachine = createMachine(
 
           // Normal idle state - waiting for player action
           idle: {
-            entry: ['saveGame', 'clearTransientState'],
+            entry: [
+              (context) => console.log('[STATE MACHINE] Entered idle state', { cityIndex: context.cityIndex, spotsUsedInCity: context.spotsUsedInCity }),
+              'saveGame',
+              'clearTransientState'
+            ],
             on: {
-              INVESTIGATE: {
-                target: 'investigating',
-                guard: 'hasAvailableSpots',
-                actions: ['setInvestigationParams', 'rollGoodDeedDice'],
-              },
+              INVESTIGATE: [
+                {
+                  target: 'investigating',
+                  guard: 'hasAvailableSpots',
+                  actions: [
+                    (context, event) => console.log('[STATE MACHINE] INVESTIGATE event accepted - guard passed', { event, spotsUsedInCity: context.spotsUsedInCity }),
+                    'setInvestigationParams',
+                    'rollGoodDeedDice'
+                  ],
+                },
+                {
+                  // Guard failed - stay in idle but log the rejection
+                  actions: (context, event) => console.log('[STATE MACHINE] ❌ INVESTIGATE event REJECTED - guard failed', { event, spotsUsedInCity: context.spotsUsedInCity }),
+                },
+              ],
               TRAVEL: {
                 target: 'traveling',
                 actions: 'setTravelDestination',
@@ -137,7 +152,10 @@ export const gameMachine = createMachine(
 
           // Traveling between cities
           traveling: {
-            entry: 'advanceTimeForTravel',
+            entry: [
+              (context) => console.log('[STATE MACHINE] Entered traveling state', { fromCity: context.cityIndex, destination: context.travelDestination }),
+              'advanceTimeForTravel'
+            ],
             on: {
               ARRIVE: [
                 // Check timeout first
@@ -149,7 +167,11 @@ export const gameMachine = createMachine(
                 // Normal arrival
                 {
                   target: 'checkingIdle',
-                  actions: ['updateLocation', 'resetCityFlags'],
+                  actions: [
+                    (context) => console.log('[STATE MACHINE] ARRIVE - updating location and resetting city flags', { newCityIndex: context.cityIndex + (context.isCorrectPath ? 1 : 0) }),
+                    'updateLocation',
+                    'resetCityFlags'
+                  ],
                 },
               ],
             },
@@ -157,7 +179,11 @@ export const gameMachine = createMachine(
 
           // Investigation started - determines what happens next
           investigating: {
-            entry: ['advanceTimeForInvestigation', 'recordInvestigation'],
+            entry: [
+              (context) => console.log('[STATE MACHINE] Entered investigating state', { cityIndex: context.cityIndex, spotsUsedInCity: context.spotsUsedInCity, currentSpotIndex: context.currentSpotIndex }),
+              'advanceTimeForInvestigation',
+              'recordInvestigation'
+            ],
             always: [
               // Priority 1: Apprehension (final city, assassination done)
               {
@@ -191,7 +217,10 @@ export const gameMachine = createMachine(
               // Default: straight to clue
               {
                 target: 'witnessClue',
-                actions: 'setNormalClue',
+                actions: [
+                  (context) => console.log('[STATE MACHINE] No encounter - going to witnessClue'),
+                  'setNormalClue'
+                ],
               },
             ],
           },
@@ -280,9 +309,11 @@ export const gameMachine = createMachine(
 
           // Witness clue display
           witnessClue: {
+            entry: (context) => console.log('[STATE MACHINE] Entered witnessClue state', { encounterType: context.encounterType }),
             on: {
               CONTINUE: {
                 target: 'checkingIdle',
+                actions: (context) => console.log('[STATE MACHINE] CONTINUE from witnessClue -> checkingIdle'),
               },
             },
           },

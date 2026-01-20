@@ -7,7 +7,9 @@
 // === Time checks ===
 
 export const isSleepTime = ({ context }) =>
-  context.currentHour >= 23 || context.currentHour < 7;
+  false; // DISABLED: No sleep UI exists yet, so disable sleep transitions
+  // TODO: Re-enable when sleep dialog is implemented
+  // context.currentHour >= 23 || context.currentHour < 7;
 
 export const isTimeExpired = ({ context }) => context.timeRemaining <= 0;
 

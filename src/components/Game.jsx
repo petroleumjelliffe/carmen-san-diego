@@ -18,6 +18,10 @@ import { Briefing } from './Briefing';
 import { Trial } from './Trial';
 import { Debrief } from './Debrief';
 import { VersionWarning } from './VersionWarning';
+import IdleContent from './IdleContent.jsx';
+import ClueDialog from './ClueDialog.jsx';
+import EncounterDialog from './EncounterDialog.jsx';
+import PlayingLayout from './PlayingLayout.jsx';
 
 export function Game({ gameData }) {
   // ============================================
@@ -66,7 +70,7 @@ export function Game({ gameData }) {
   // ============================================
   // LOCAL UI STATE
   // ============================================
-  const [activeTab, setActiveTab] = useState('home');
+  // activeTab state moved to PlayingLayout to persist across state transitions
   const [message, setMessage] = useState(null);
   const [showVersionWarning, setShowVersionWarning] = useState(false);
   const [selectedTraits, setSelectedTraits] = useState({ gender: null, hair: null, hobby: null });
@@ -232,7 +236,7 @@ export function Game({ gameData }) {
     setCurrentEncounter(null);
     setLastSleepResult(null);
     setMessage(null);
-    setActiveTab('investigate');
+    // activeTab now managed by PlayingLayout
     setSelectedTraits({ gender: null, hair: null, hobby: null });
 
     // Send to state machine
@@ -242,7 +246,7 @@ export function Game({ gameData }) {
   // Accept briefing
   const handleAcceptBriefing = useCallback(() => {
     acceptBriefing();
-    setActiveTab('home');
+    // activeTab now managed by PlayingLayout
   }, [acceptBriefing]);
 
   // Investigate location
@@ -610,7 +614,7 @@ export function Game({ gameData }) {
     setLastSleepResult(null);
 
     arrive();
-    setActiveTab('home');
+    // activeTab now managed by PlayingLayout
   }, [arrive, currentCase, cityIndex]);
 
   // Flight animation complete handler
@@ -804,152 +808,71 @@ export function Game({ gameData }) {
     );
   }
 
-  // Get background image
-  const travelingBackground = backgrounds?.traveling || '';
-  const currentCityId = wrongCity && wrongCityData ? wrongCityData.id : currentCity?.id;
-  const cityData = currentCityId ? citiesById[currentCityId] : null;
-  const currentCityBackground = cityData?.background_image || travelingBackground;
-  const backgroundUrl = (isAnimating || isTraveling) ? travelingBackground : currentCityBackground;
-
-  // Main game UI
-  return (
-    <div
-      className="h-screen flex flex-col overflow-hidden bg-gray-900"
-      style={{
-        backgroundImage: `
-          linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.4)),
-          url('${backgroundUrl}')
-        `,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
-    >
-      <Header
-        currentCity={currentCity}
+  // Playing state - delegate to PlayingLayout
+  if (isPlaying) {
+    return (
+      <PlayingLayout
+        message={message}
         wrongCity={wrongCity}
         wrongCityData={wrongCityData}
+        currentCity={currentCity}
+        cityFact={currentCity?.fact}
+        hotel={hotel}
         timeRemaining={timeRemaining}
         currentHour={currentHour}
         maxTime={settings.total_time}
         timeTickSpeed={settings.time_tick_speed || 0.5}
         lastSleepResult={lastSleepResult}
+        isFinalCity={isFinalCity}
+        cityClues={cityClues}
+        investigatedLocations={investigatedLocations}
+        nextInvestigationCost={nextInvestigationCost}
+        collectedClues={collectedClues}
+        lastFoundClue={lastFoundClue}
+        lastRogueAction={lastRogueAction}
+        activeRogueAction={activeRogueAction}
+        onResolveRogueAction={resolveRogueActionDisplay}
+        rogueUsedInCity={rogueUsedInCity}
+        currentGoodDeed={currentGoodDeed}
+        karma={karma}
+        onInvestigate={queuedInvestigate}
+        cityRogueAction={cityRogueAction}
+        onRogueAction={handleRogueAction}
+        notoriety={notoriety}
+        currentEncounter={currentEncounter}
+        availableGadgets={availableGadgets}
+        onEncounterResolve={handleEncounterResolve}
+        isApprehended={isApprehended}
+        selectedWarrant={selectedWarrant}
+        onProceedToTrial={handleProceedToTrial}
+        encounterTimers={encounterTimers}
+        isInvestigating={isInvestigating}
+        actionPhase={actionPhase}
+        actionLabel={pendingAction?.label}
+        actionHoursRemaining={actionHoursRemaining}
+        rogueLocation={rogueLocation}
+        witnessPhrases={witnessPhrases}
+        destinations={destinations}
+        travelTime={settings.travel_time}
+        onTravel={handleTravel}
+        citiesById={citiesById}
+        suspects={suspects}
+        onSelectWarrant={setSelectedWarrant}
+        onIssueWarrant={issueWarrant}
+        selectedTraits={selectedTraits}
+        onCycleTrait={cycleSelectedTrait}
+        onResetTraits={resetSelectedTraits}
+        settings={settings}
+        travelData={lastTravelData}
+        progress={isAnimating || (actionPhase === 'ticking' && pendingAction?.type === 'travel') ? progress : 1.0}
+        isAnimating={isAnimating}
+        backgrounds={backgrounds}
       />
+    );
+  }
 
-      <div className="flex-1 flex overflow-hidden">
-        <TabBar
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          variant="sidebar"
-        />
-
-        <div className="flex-1 overflow-y-auto">
-          <div
-            className="max-w-6xl mx-auto p-4 pb-24 md:pb-4 min-h-full grid"
-            style={{ alignItems: isAnimating || (actionPhase === 'ticking' && pendingAction?.type === 'travel') ? 'center' : 'end' }}
-          >
-            <div>
-              {showMap && lastTravelData ? (
-                <TravelAnimation
-                  travelData={lastTravelData}
-                  progress={isAnimating || (actionPhase === 'ticking' && pendingAction?.type === 'travel') ? progress : 1.0}
-                  backgroundImage={backgrounds?.traveling}
-                />
-              ) : null}
-
-              {!showMap || !(isAnimating || (actionPhase === 'ticking' && pendingAction?.type === 'travel')) ? <>
-                {message && (
-                  <div className="bg-yellow-400/20 border border-yellow-400 text-yellow-100 px-4 py-2 rounded mb-4">
-                    {message}
-                  </div>
-                )}
-
-                {activeTab === 'home' && (
-                  <HomeTab
-                    currentCity={wrongCity && wrongCityData ? wrongCityData : currentCity}
-                    cityFact={wrongCity && wrongCityData ? wrongCityData.fact : currentCity?.fact}
-                  />
-                )}
-
-                {activeTab === 'investigate' && (
-                  <InvestigateTab
-                    isFinalCity={isFinalCity}
-                    wrongCity={wrongCity}
-                    cityClues={cityClues}
-                    investigatedLocations={investigatedLocations}
-                    timeRemaining={timeRemaining}
-                    nextInvestigationCost={nextInvestigationCost}
-                    collectedClues={collectedClues}
-                    lastFoundClue={lastFoundClue}
-                    lastRogueAction={lastRogueAction}
-                    activeRogueAction={activeRogueAction}
-                    onResolveRogueAction={resolveRogueActionDisplay}
-                    rogueUsedInCity={rogueUsedInCity}
-                    currentGoodDeed={currentGoodDeed}
-                    karma={karma}
-                    onInvestigate={queuedInvestigate}
-                    cityRogueAction={cityRogueAction}
-                    onRogueAction={handleRogueAction}
-                    notoriety={notoriety}
-                    currentEncounter={currentEncounter}
-                    availableGadgets={availableGadgets}
-                    onEncounterResolve={handleEncounterResolve}
-                    isApprehended={isApprehended}
-                    selectedWarrant={selectedWarrant}
-                    onProceedToTrial={handleProceedToTrial}
-                    encounterTimers={encounterTimers}
-                    isInvestigating={isInvestigating}
-                    cityFact={wrongCity && wrongCityData ? wrongCityData.fact : currentCity?.fact}
-                    actionPhase={actionPhase}
-                    actionLabel={pendingAction?.label}
-                    actionHoursRemaining={actionHoursRemaining}
-                    currentCity={wrongCity && wrongCityData ? wrongCityData : currentCity}
-                    hotel={hotel}
-                    rogueLocation={rogueLocation}
-                    witnessPhrases={witnessPhrases}
-                  />
-                )}
-
-                {activeTab === 'airport' && (
-                  <AirportTab
-                    destinations={destinations}
-                    timeRemaining={timeRemaining}
-                    travelTime={settings.travel_time}
-                    onTravel={handleTravel}
-                    currentCity={wrongCity && wrongCityData ? citiesById[wrongCityData.id] || wrongCityData : currentCity}
-                  />
-                )}
-
-                {activeTab === 'dossier' && (
-                  <DossierTab
-                    collectedClues={collectedClues}
-                    suspects={suspects}
-                    selectedWarrant={selectedWarrant}
-                    isFinalCity={isFinalCity}
-                    onSelectWarrant={setSelectedWarrant}
-                    onIssueWarrant={issueWarrant}
-                    selectedTraits={selectedTraits}
-                    onCycleTrait={cycleSelectedTrait}
-                    onResetTraits={resetSelectedTraits}
-                    currentCity={currentCity}
-                  />
-                )}
-              </> : null}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <TabBar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        variant="mobile"
-      />
-
-      {showVersionWarning && (
-        <VersionWarning onDismiss={() => setShowVersionWarning(false)} />
-      )}
-    </div>
-  );
+  // Fallback - should never reach here
+  return null;
 }
 
 export default Game;
