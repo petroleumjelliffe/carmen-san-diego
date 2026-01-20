@@ -247,23 +247,39 @@ export function Game({ gameData }) {
 
   // Investigate location
   const handleInvestigate = useCallback((locationIndex) => {
-    if (!cityClues || !cityClues[locationIndex]) return;
+    console.log('[DEBUG] ===== handleInvestigate CALLED =====');
+    console.log('[DEBUG] locationIndex:', locationIndex);
+    console.log('[DEBUG] cityClues:', cityClues);
+    console.log('[DEBUG] investigatedLocations:', investigatedLocations);
+    console.log('[DEBUG] context.spotsUsedInCity:', context.spotsUsedInCity);
+    console.log('[DEBUG] timeRemaining:', timeRemaining);
+
+    if (!cityClues || !cityClues[locationIndex]) {
+      console.log('[DEBUG] EARLY RETURN: No city clues or invalid locationIndex');
+      return;
+    }
 
     const clue = cityClues[locationIndex];
     const spot = clue.spot;
+    console.log('[DEBUG] spot:', spot);
+    console.log('[DEBUG] spot.id:', spot?.id);
 
     // Check if already investigated (compare by spot.id)
     if (investigatedLocations.includes(spot?.id)) {
+      console.log('[DEBUG] EARLY RETURN: Location already investigated');
       return;
     }
 
     // Check time
     const timeCost = 2 * Math.pow(2, context.spotsUsedInCity);
+    console.log('[DEBUG] timeCost:', timeCost);
     if (timeRemaining < timeCost) {
+      console.log('[DEBUG] EARLY RETURN: Not enough time');
       setMessage("Not enough time for this investigation!");
       return;
     }
 
+    console.log('[DEBUG] All checks passed - setting pendingInvestigationRef');
     // Store pending investigation with timestamp
     pendingInvestigationRef.current = {
       locationIndex,
@@ -278,15 +294,23 @@ export function Game({ gameData }) {
     setLastRogueAction(null);
     setLastSleepResult(null);
 
+    console.log('[DEBUG] Current state machine state:', state.value);
+    console.log('[DEBUG] isIdle:', isIdle);
+    console.log('[DEBUG] isPlaying:', isPlaying);
+    console.log('[DEBUG] Calling investigate() with locationIndex:', locationIndex);
     // Send to state machine - use locationIndex, not spotsUsedInCity
     // Machine will validate with hasAvailableSpots guard
     investigate(locationIndex, false);
+    console.log('[DEBUG] investigate() called - waiting for state machine response');
+    console.log('[DEBUG] State after investigate():', state.value);
 
     // DON'T return action config - queuing happens in useEffect when machine confirms
   }, [cityClues, investigatedLocations, context.spotsUsedInCity, timeRemaining, investigate]);
 
   // Complete investigation - reveal clue
   const completeInvestigation = useCallback(() => {
+    console.log('[DEBUG] completeInvestigation called! pendingInvestigationRef.current:', pendingInvestigationRef.current);
+
     const pending = pendingInvestigationRef.current;
     if (!pending) {
       throw new Error('[BUG] completeInvestigation called but pendingInvestigationRef is null - was it cleared prematurely?');
@@ -296,10 +320,12 @@ export function Game({ gameData }) {
     pendingInvestigationRef.current = null;
 
     // Normalize coordinates (.lng -> .lon) for travel animation
-    setLastVisitedLocation({
+    const visitedLoc = {
       ...spot,
       lon: spot.lon || spot.lng,
-    });
+    };
+    console.log('[DEBUG] completeInvestigation - setting lastVisitedLocation:', visitedLoc);
+    setLastVisitedLocation(visitedLoc);
 
     // Reveal clue
     setLastFoundClue({
@@ -341,12 +367,23 @@ export function Game({ gameData }) {
   }, [currentCity, currentHour, context.encounterType, goodDeeds, currentCase, cityIndex, continueFromClue]);
 
   // Watch for machine confirmation of investigation (guard passed)
+  // NOTE: investigating is a transient state - machine immediately transitions to witnessClue or encounter
+  // So we check for those states instead of the transient investigating state
   useEffect(() => {
     const pending = pendingInvestigationRef.current;
+    console.log('[DEBUG] investigation useEffect FIRED');
+    console.log('[DEBUG] - state.value:', state.value);
+    console.log('[DEBUG] - isIdle:', isIdle);
+    console.log('[DEBUG] - isWitnessClue:', isWitnessClue);
+    console.log('[DEBUG] - isEncounter:', isEncounter);
+    console.log('[DEBUG] - pending:', pending);
 
-    // Machine transitioned to investigating state - guard passed!
+    // Machine transitioned through investigating state and is now in witnessClue or encounter
+    // This means the guard passed and investigation was recorded
     // Only queue if not already queued (prevent double-queuing on re-renders)
-    if (xstateInvestigating && pending && !pending.queued) {
+    if ((isWitnessClue || isEncounter) && pending && !pending.queued) {
+      console.log('[DEBUG] Queuing investigation action for:', pending.spot?.name);
+
       // Mark as queued to prevent double-queuing
       pendingInvestigationRef.current = { ...pending, queued: true };
 
@@ -356,6 +393,7 @@ export function Game({ gameData }) {
         spinnerDuration: 500,
         label: `Investigating ${pending.spot?.name || 'location'}...`,
         onComplete: () => {
+          console.log('[DEBUG] Investigation onComplete callback running!');
           completeInvestigation();
           completeAction();
         },
@@ -364,21 +402,30 @@ export function Game({ gameData }) {
       // Don't clear ref here - it will be cleared in completeInvestigation
       // This ensures completeInvestigation has access to the data it needs
     }
-  }, [xstateInvestigating, queueAction, completeInvestigation, completeAction]);
+  }, [state, isIdle, isWitnessClue, isEncounter, queueAction, completeInvestigation, completeAction]);
 
   // Watch for machine guard rejection
   useEffect(() => {
     const pending = pendingInvestigationRef.current;
+    console.log('[DEBUG] guard rejection useEffect FIRED');
+    console.log('[DEBUG] - isIdle:', isIdle);
+    console.log('[DEBUG] - pending:', pending);
+    console.log('[DEBUG] - pending.queued:', pending?.queued);
 
     // Machine is idle but we have a pending investigation - guard must have rejected it
-    if (isIdle && pending) {
+    // Only clear if NOT already queued (queued means it was accepted)
+    if (isIdle && pending && !pending.queued) {
+      console.log('[DEBUG] Machine is idle with pending investigation - checking if guard rejected...');
       // Check if request is stale (>1 second old)
       const isStale = Date.now() - pending.timestamp > 1000;
 
       if (isStale) {
+        console.log('[DEBUG] Investigation is stale - guard rejected it!');
         // Guard rejected the investigation (e.g., no spots available)
         setMessage("Investigation not available right now");
         pendingInvestigationRef.current = null;
+      } else {
+        console.log('[DEBUG] Investigation is NOT stale - machine might still be transitioning');
       }
       // If not stale, machine might still be transitioning - wait
     }
@@ -506,7 +553,11 @@ export function Game({ gameData }) {
       return null;
     }
 
-    setLocalTravelOrigin(lastVisitedLocation || originCity);
+    console.log('[DEBUG] handleTravel - lastVisitedLocation:', lastVisitedLocation);
+    console.log('[DEBUG] handleTravel - originCity:', originCity);
+    const travelOrigin = lastVisitedLocation || originCity;
+    console.log('[DEBUG] handleTravel - using origin:', travelOrigin);
+    setLocalTravelOrigin(travelOrigin);
     setLocalTravelDestination(destination);
 
     travel(destCity, originCity, destination.isCorrect);

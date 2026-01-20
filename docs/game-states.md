@@ -2023,6 +2023,743 @@ After implementation:
 
 ---
 
-## Edit Below: Your Proposed Changes
+---
+
+## Hierarchical State Machine Architecture (v2)
+
+### Overview
+
+This section documents the **state-driven UI architecture** that we're migrating toward. The key principle: **the state machine controls what renders, components have zero conditional logic**.
+
+### Core Principles
+
+1. **State-Driven Rendering**: Components render purely based on `state.matches()` with no conditional logic
+2. **Hierarchical Components Mirror Hierarchical States**: Parent state renders shared layout, child states render overlays
+3. **No Duplicate Validation**: State machine guards are the single source of truth - components don't re-validate
+4. **1:1 State-to-View Mapping**: Each state renders exactly one view component
+5. **Tabs are Local UI State**: NOT state machine states - tabs exist within the `IdleContent` component
+
+### Benefits Over Current Flat Structure
+
+| Current Problem | Hierarchical Solution |
+|----------------|----------------------|
+| Silent failures (events ignored) | Impossible states can't render - bugs are visible |
+| Buttons work when they shouldn't | Buttons only exist when state allows them |
+| Re-mounting heavy components (Map) | Parent state mounts once, stays mounted |
+| Duplicate state checks in components | Components trust state machine completely |
+| Hard to debug state bugs | Wrong component renders instead of silent failure |
+
+---
+
+## Hierarchical State Structure
+
+### Top-Level States (Layouts)
+
+Each top-level state renders a distinct layout:
+
+```javascript
+{
+  menu: {
+    // Renders: <MenuLayout />
+    // Contains: Case selection, continue game, settings
+  },
+
+  briefing: {
+    // Renders: <BriefingLayout />
+    // Contains: Case briefing, suspect description, accept button
+  },
+
+  playing: {
+    // Renders: <PlayingLayout>
+    //   <Map /> (mounted once, stays mounted)
+    //   <Header /> (time, karma, notoriety)
+    //   {child state overlays}
+    // </PlayingLayout>
+
+    states: {
+      // Child states render overlays on top of Map + Header
+      checkingIdle: {},
+      idle: {},           // Renders: <IdleContent /> (contains tabs)
+      investigating: {},  // Transient state, no render
+      witnessClue: {},    // Renders: <ClueDialog />
+      encounter: {},      // Renders: <EncounterDialog />
+      traveling: {},      // Renders: <TravelAnimation />
+      sleeping: {},       // Renders: <SleepDialog />
+      sleepWarning: {},   // Renders: <SleepWarningDialog />
+    }
+  },
+
+  apprehended: {
+    // Renders: <ApprehendedLayout />
+    // Contains: Arrest message, proceed to trial button
+  },
+
+  trial: {
+    // Renders: <TrialLayout />
+    // Contains: Trial outcome, verdict message
+  },
+
+  debrief: {
+    // Renders: <DebriefLayout />
+    // Contains: Case summary, stats, return to menu
+  }
+}
+```
+
+### PlayingLayout Component Structure
+
+```mermaid
+graph TB
+    Playing[PlayingLayout]
+    Playing --> Map["Map (always mounted)"]
+    Playing --> Header["Header (always mounted)"]
+    Playing --> Overlays[Child State Overlays]
+
+    Overlays -.-> Idle["playing.idle → IdleContent"]
+    Overlays -.-> Clue["playing.witnessClue → ClueDialog"]
+    Overlays -.-> Encounter["playing.encounter → EncounterDialog"]
+    Overlays -.-> Travel["playing.traveling → TravelAnimation"]
+    Overlays -.-> Sleep["playing.sleeping → SleepDialog"]
+    Overlays -.-> SleepWarn["playing.sleepWarning → SleepWarningDialog"]
+
+    style Map fill:#90EE90
+    style Header fill:#90EE90
+    style Idle fill:#FFE4B5
+    style Clue fill:#FFE4B5
+    style Encounter fill:#FFE4B5
+    style Travel fill:#FFE4B5
+    style Sleep fill:#FFE4B5
+    style SleepWarn fill:#FFE4B5
+```
+
+**Key Benefits:**
+- Map and Header mount ONCE when entering `playing` state
+- Map never re-mounts during gameplay (performance)
+- Overlays appear/disappear based on child states
+- Impossible to render wrong overlay (state machine prevents it)
+
+---
+
+## Component-to-State Mapping
+
+### 1:1 State-to-View Mapping
+
+Each state renders exactly one component. No conditional logic.
+
+**Current (BAD) - Conditional Logic:**
+```jsx
+function Game() {
+  const { state } = useGameMachine();
+
+  // ❌ Component has to know about state conditions
+  if (state.matches('playing.idle') && !hasSpots) {
+    return <NoSpotsMessage />;
+  }
+
+  if (state.matches('playing.idle')) {
+    return <IdleContent />;
+  }
+
+  if (state.matches('playing.witnessClue')) {
+    return <ClueDialog />;
+  }
+
+  // ... more conditions
+}
+```
+
+**New (GOOD) - State-Driven:**
+```jsx
+function PlayingLayout() {
+  const { state } = useGameMachine();
+
+  return (
+    <div className="playing-layout">
+      <Map />
+      <Header />
+
+      {/* ✅ Pure state matching, no logic */}
+      {state.matches('playing.idle') && <IdleContent />}
+      {state.matches('playing.witnessClue') && <ClueDialog />}
+      {state.matches('playing.encounter') && <EncounterDialog />}
+      {state.matches('playing.traveling') && <TravelAnimation />}
+      {state.matches('playing.sleeping') && <SleepDialog />}
+      {state.matches('playing.sleepWarning') && <SleepWarningDialog />}
+    </div>
+  );
+}
+```
+
+### Sub-Component Reuse
+
+Sub-components ARE reused across state-specific views:
+
+**Shared Components:**
+- `<Map />` - Used in PlayingLayout (always mounted)
+- `<Header />` - Used in PlayingLayout (always mounted)
+- `<Button />` - Used in all layouts
+- `<Dialog />` - Base for ClueDialog, EncounterDialog, etc.
+
+**State-Specific Components:**
+- `<IdleContent />` - Only when `state.matches('playing.idle')`
+- `<ClueDialog />` - Only when `state.matches('playing.witnessClue')`
+- `<EncounterDialog />` - Only when `state.matches('playing.encounter')`
+
+**Potential Issues & Solutions:**
+
+| Issue | Solution |
+|-------|----------|
+| Component re-mounting (performance) | Keep heavy components (Map) in parent state |
+| Local component state loss | Use state machine context, not local useState |
+| Props duplication | Wrapper component or React Context |
+| Animation interruption | State machine prevents invalid transitions |
+
+---
+
+## Tab Handling (Local UI State)
+
+**Key Decision: Tabs are NOT state machine states.**
+
+Tabs are local navigation within the `IdleContent` component:
+
+```javascript
+function IdleContent() {
+  const [activeTab, setActiveTab] = useState('home');  // Local state
+  const { state, context, send } = useGameMachine();
+
+  // ✅ State machine guarantees we're in idle
+  // ✅ Tabs are local UI navigation
+
+  return (
+    <div className="idle-content">
+      <TabBar activeTab={activeTab} onChange={setActiveTab} />
+
+      {activeTab === 'home' && <HomeTab />}
+      {activeTab === 'investigate' && <InvestigateTab />}
+      {activeTab === 'airport' && <AirportTab />}
+      {activeTab === 'dossier' && <DossierTab />}
+    </div>
+  );
+}
+```
+
+**Why Tabs Are Local State:**
+
+1. **User can switch freely** - No state machine transition needed
+2. **No gameplay impact** - Switching tabs doesn't affect game state
+3. **Persists across returns to idle** - User stays on last active tab
+4. **Simpler machine** - Fewer states to manage
+5. **Clearer separation** - Game logic (machine) vs UI navigation (component)
+
+**What IS State Machine State:**
+
+- `idle` - Player is at a city, waiting for action
+- `investigating` - Processing investigation (transient)
+- `traveling` - Moving between cities
+- `witnessClue` - Showing clue dialog
+
+**Tabs Within Idle:**
+
+| Tab | Purpose | Events Sent |
+|-----|---------|-------------|
+| Home | City info, current status | None |
+| Investigate | Investigation locations | `INVESTIGATE` |
+| Airport | Travel destinations | `TRAVEL` |
+| Dossier | Clues, suspects, evidence | `SELECT_WARRANT` (if final city) |
+
+---
+
+## State-Driven Rendering Patterns
+
+### Pattern 1: Pure State Matching
+
+**Rule:** Components render based ONLY on `state.matches()`, with no additional conditions.
+
+```jsx
+// ✅ CORRECT - Pure state matching
+function App() {
+  const { state } = useGameMachine();
+
+  return (
+    <>
+      {state.matches('menu') && <MenuLayout />}
+      {state.matches('briefing') && <BriefingLayout />}
+      {state.matches('playing') && <PlayingLayout />}
+      {state.matches('apprehended') && <ApprehendedLayout />}
+      {state.matches('trial') && <TrialLayout />}
+      {state.matches('debrief') && <DebriefLayout />}
+    </>
+  );
+}
+```
+
+```jsx
+// ❌ WRONG - Conditional logic in component
+function App() {
+  const { state, context } = useGameMachine();
+
+  if (state.matches('playing')) {
+    // ❌ Component shouldn't check context conditions
+    if (context.timeRemaining <= 0) {
+      return <TimeOutScreen />;
+    }
+
+    // ❌ Component shouldn't validate state machine logic
+    if (context.isFinalCity && context.hadEncounterInCity) {
+      return <ReadyToApprehendScreen />;
+    }
+
+    return <PlayingLayout />;
+  }
+}
+```
+
+**Why Wrong?** If these conditions should affect rendering, the **state machine** should have explicit states for them:
+- `playing.timeOut` (with encounter)
+- `apprehended` state (explicit state change)
+
+### Pattern 2: Button Availability
+
+**Rule:** Buttons only exist when state machine allows the action.
+
+```jsx
+// ✅ CORRECT - Button exists based on state
+function InvestigateTab() {
+  const { state, context, send } = useGameMachine();
+
+  // Button ONLY renders when we're in idle
+  // State machine guarantees idle = actions are valid
+  if (!state.matches('playing.idle')) {
+    return null;  // Tab shouldn't render if not idle
+  }
+
+  return (
+    <div>
+      {context.cityClues.map((clue, index) => {
+        const spotId = clue.spot.id;
+        const investigated = context.investigatedSpots.includes(`${context.currentCityId}:${index}`);
+
+        return (
+          <button
+            key={spotId}
+            disabled={investigated}  // ✅ Simple disabled state
+            onClick={() => send({ type: 'INVESTIGATE', spotIndex: index })}
+          >
+            {clue.spot.name}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+```
+
+```jsx
+// ❌ WRONG - Button validates state machine logic
+function InvestigateTab() {
+  const { state, context, send } = useGameMachine();
+
+  return (
+    <div>
+      {context.cityClues.map((clue, index) => {
+        const spotId = clue.spot.id;
+        const investigated = context.investigatedSpots.includes(`${context.currentCityId}:${index}`);
+
+        // ❌ Duplicates hasAvailableSpots guard
+        const hasSpots = context.spotsUsedInCity < 3;
+
+        // ❌ Duplicates isIdle check
+        const canInvestigate = state.matches('playing.idle') && hasSpots;
+
+        return (
+          <button
+            key={spotId}
+            disabled={investigated || !canInvestigate}  // ❌ Duplicate validation
+            onClick={() => send({ type: 'INVESTIGATE', spotIndex: index })}
+          >
+            {clue.spot.name}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+```
+
+**Why Wrong?** Component is re-implementing `hasAvailableSpots` guard. If state machine is in `idle`, it GUARANTEES actions are valid. If no spots available, machine should transition to different state (or show different view).
+
+**Better Approach:**
+
+```javascript
+// In state machine
+idle: {
+  always: [
+    // If no spots available, show message instead
+    { target: 'noSpotsAvailable', cond: 'hasNoAvailableSpots' }
+  ],
+  on: {
+    INVESTIGATE: {
+      target: 'investigating',
+      // Guard ensures event only accepted when valid
+      cond: 'hasAvailableSpots'
+    }
+  }
+}
+```
+
+```jsx
+// In component - pure state matching
+function PlayingLayout() {
+  const { state } = useGameMachine();
+
+  return (
+    <>
+      <Map />
+      <Header />
+
+      {state.matches('playing.idle') && <IdleContent />}
+      {state.matches('playing.noSpotsAvailable') && <NoSpotsMessage />}
+      {/* ... other states */}
+    </>
+  );
+}
+```
+
+### Pattern 3: Guard Rejection Feedback
+
+**Rule:** If a guard rejects an event, state machine should provide feedback, not the component.
+
+**Current Issue:**
+```javascript
+// Component tries to detect guard rejection
+useEffect(() => {
+  if (isIdle && pending && !pending.queued) {
+    const isStale = Date.now() - pending.timestamp > 1000;
+    if (isStale) {
+      // ❌ Component guessing that guard rejected
+      setMessage("Investigation not available right now");
+    }
+  }
+}, [isIdle]);
+```
+
+**Better Approach:**
+
+```javascript
+// State machine handles rejection
+idle: {
+  on: {
+    INVESTIGATE: [
+      {
+        target: 'investigating',
+        cond: 'hasAvailableSpots',
+        actions: 'setInvestigationParams'
+      },
+      {
+        // No transition - stay in idle
+        // But show feedback via action
+        actions: 'showNoSpotsMessage'
+      }
+    ]
+  }
+}
+```
+
+```javascript
+// Action sets message in context
+const actions = {
+  showNoSpotsMessage: assign({
+    message: 'No investigation spots available'
+  })
+};
+```
+
+```jsx
+// Component displays message from context
+function IdleContent() {
+  const { context } = useGameMachine();
+
+  return (
+    <div>
+      {context.message && <Message text={context.message} />}
+      {/* ... tabs */}
+    </div>
+  );
+}
+```
+
+---
+
+## Migration Strategy
+
+### Phase 1: Add Hierarchical States (This Document)
+- ✅ Document new architecture
+- ✅ Define parent-child state structure
+- ✅ Document component mapping
+- ✅ Document tab handling
+
+### Phase 2: Update State Machine Implementation
+- [ ] Add `noSpotsAvailable` state
+- [ ] Add `guardRejection` message handling
+- [ ] Update guards to be pure functions
+- [ ] Add state-based feedback actions
+
+### Phase 3: Refactor Components
+- [ ] Create `<PlayingLayout />` component
+- [ ] Move Map + Header to PlayingLayout
+- [ ] Create state-specific overlays (ClueDialog, EncounterDialog, etc.)
+- [ ] Convert tabs to local state in `<IdleContent />`
+
+### Phase 4: Remove Conditional Logic
+- [ ] Remove all `if` checks for state validation
+- [ ] Remove duplicate guard logic from components
+- [ ] Remove pending ref guard rejection detection
+- [ ] Trust state machine completely
+
+### Phase 5: Add Visual Debugging
+- [ ] Integrate XState Visualizer
+- [ ] Add state indicators in development mode
+- [ ] Add transition logging
+
+---
+
+## Current vs. Proposed Architecture
+
+### Current (Flat Structure)
+
+```mermaid
+graph TB
+    Game[Game Component]
+    Game --> Logic["❌ Conditional Logic<br/>- Validates guards in component<br/>- Detects rejections with timestamps<br/>- Manages pending refs"]
+    Game --> MapBad["Map (re-mounts ⚠️)"]
+    Game --> Render["❌ Conditional Rendering<br/>if isIdle && hasSpots → InvestigateTab<br/>if isWitnessClue → ClueDialog<br/>if isTraveling → TravelAnimation"]
+
+    style Game fill:#FFB6C1
+    style Logic fill:#FFB6C1
+    style MapBad fill:#FFB6C1
+    style Render fill:#FFB6C1
+```
+
+**Issues:**
+- ❌ Silent failures when guards reject events
+- ❌ Component has duplicate validation logic
+- ❌ Map re-mounts (performance issue)
+- ❌ Hard to debug state bugs
+
+### Proposed (Hierarchical Structure)
+
+```mermaid
+graph TB
+    App[App Component]
+    App --> Menu["state.matches('menu')<br/>MenuLayout"]
+    App --> Playing["state.matches('playing')<br/>PlayingLayout"]
+    App --> Trial["state.matches('trial')<br/>TrialLayout"]
+
+    Playing --> Map["✅ Map<br/>(mounted once)"]
+    Playing --> Header["✅ Header<br/>(mounted once)"]
+    Playing --> Idle["state.matches('playing.idle')<br/>IdleContent"]
+    Playing --> Clue["state.matches('playing.witnessClue')<br/>ClueDialog"]
+    Playing --> Encounter["state.matches('playing.encounter')<br/>EncounterDialog"]
+
+    Idle --> TabState["✅ Local State<br/>const [activeTab, setActiveTab]"]
+    TabState --> InvTab["activeTab === 'investigate'<br/>InvestigateTab"]
+    TabState --> AirTab["activeTab === 'airport'<br/>AirportTab"]
+
+    style App fill:#90EE90
+    style Playing fill:#90EE90
+    style Map fill:#90EE90
+    style Header fill:#90EE90
+    style Idle fill:#ADD8E6
+    style TabState fill:#FFE4B5
+```
+
+**Benefits:**
+- ✅ Bugs are visible (wrong component renders)
+- ✅ No duplicate validation
+- ✅ Map never re-mounts
+- ✅ Clear separation of concerns
+- ✅ Easy to debug (visualize state machine)
+
+---
+
+## State Machine Changes Required
+
+### New States to Add
+
+```javascript
+playing: {
+  states: {
+    // ... existing states ...
+
+    noSpotsAvailable: {
+      // Renders: <NoSpotsMessage />
+      // Shows: "No investigation spots remaining in this city"
+      // User can: Travel to next city
+      on: {
+        TRAVEL: 'traveling',
+        OPEN_DOSSIER: 'idle'  // Navigate to dossier tab
+      }
+    },
+
+    guardRejected: {
+      // Transient state - shows message then returns to idle
+      entry: 'setGuardRejectionMessage',
+      always: { target: 'idle', delay: 2000 }
+    }
+  }
+}
+```
+
+### New Actions to Add
+
+```javascript
+const actions = {
+  // ... existing actions ...
+
+  setGuardRejectionMessage: assign((ctx, event) => ({
+    message: `Cannot ${event.type.toLowerCase()} right now`,
+    messageType: 'warning'
+  })),
+
+  clearMessage: assign({
+    message: null,
+    messageType: null
+  })
+};
+```
+
+### Updated Transitions
+
+```javascript
+idle: {
+  entry: 'clearMessage',  // Clear messages when entering idle
+
+  // Check if no spots available
+  always: [
+    { target: 'noSpotsAvailable', cond: 'hasNoAvailableSpots' }
+  ],
+
+  on: {
+    INVESTIGATE: [
+      {
+        target: 'investigating',
+        cond: 'hasAvailableSpots',
+        actions: ['setInvestigationParams', 'rollGoodDeedDice']
+      },
+      {
+        // Guard failed - show message
+        target: 'guardRejected'
+      }
+    ],
+
+    TRAVEL: [
+      {
+        target: 'traveling',
+        cond: 'hasDestinations',
+        actions: 'setTravelDestination'
+      },
+      {
+        // No destinations available
+        target: 'guardRejected'
+      }
+    ]
+  }
+}
+```
+
+---
+
+## Testing State-Driven UI
+
+### Visual Regression Tests
+
+Test that correct component renders for each state:
+
+```javascript
+describe('State-Driven Rendering', () => {
+  it('renders MenuLayout when in menu state', () => {
+    const machine = createMachineInState('menu');
+    const { getByTestId } = render(<App machine={machine} />);
+
+    expect(getByTestId('menu-layout')).toBeInTheDocument();
+    expect(queryByTestId('playing-layout')).not.toBeInTheDocument();
+  });
+
+  it('renders IdleContent when in playing.idle state', () => {
+    const machine = createMachineInState('playing.idle');
+    const { getByTestId } = render(<App machine={machine} />);
+
+    expect(getByTestId('playing-layout')).toBeInTheDocument();
+    expect(getByTestId('idle-content')).toBeInTheDocument();
+    expect(queryByTestId('clue-dialog')).not.toBeInTheDocument();
+  });
+
+  it('renders ClueDialog when in playing.witnessClue state', () => {
+    const machine = createMachineInState('playing.witnessClue');
+    const { getByTestId } = render(<App machine={machine} />);
+
+    expect(getByTestId('playing-layout')).toBeInTheDocument();
+    expect(getByTestId('clue-dialog')).toBeInTheDocument();
+    expect(queryByTestId('idle-content')).not.toBeInTheDocument();
+  });
+});
+```
+
+### Impossible State Tests
+
+Test that impossible states can't render:
+
+```javascript
+describe('Impossible States', () => {
+  it('cannot render investigate tab when not in idle', () => {
+    const machine = createMachineInState('playing.traveling');
+    const { queryByTestId } = render(<App machine={machine} />);
+
+    // Traveling state should show TravelAnimation, not IdleContent
+    expect(queryByTestId('idle-content')).not.toBeInTheDocument();
+    expect(queryByTestId('investigate-tab')).not.toBeInTheDocument();
+  });
+
+  it('cannot send INVESTIGATE when in witnessClue state', () => {
+    const machine = createMachineInState('playing.witnessClue');
+
+    // Attempt to send INVESTIGATE
+    machine.send({ type: 'INVESTIGATE', spotIndex: 0 });
+
+    // Should still be in witnessClue
+    expect(machine.state.matches('playing.witnessClue')).toBe(true);
+  });
+});
+```
+
+---
+
+## Summary of Architectural Changes
+
+| Aspect | Current | Proposed |
+|--------|---------|----------|
+| **Component Logic** | Conditional if/else based on state | Pure state.matches() |
+| **Guard Validation** | Duplicated in components | Only in state machine |
+| **Button Availability** | Component checks context | Button only exists in valid state |
+| **Map Mounting** | Re-mounts on state changes | Mounts once in PlayingLayout |
+| **Tabs** | Unclear how to handle | Local state within IdleContent |
+| **Error Handling** | Silent failures | Visible (wrong component renders) |
+| **Debugging** | Console logs, guesswork | State visualizer, deterministic |
+| **Testing** | Mock complex state | Test state transitions |
+
+---
+
+## Next Steps
+
+1. **Review this document** - Ensure architectural decisions are correct
+2. **Update state machine** - Implement hierarchical structure
+3. **Create layout components** - MenuLayout, PlayingLayout, etc.
+4. **Refactor Game.jsx** - Remove conditional logic
+5. **Add visual debugging** - XState Visualizer integration
+6. **Write tests** - State-driven rendering tests
+
+---
+
+## Edit Below: Additional Proposed Changes
 
 <!-- Add your proposed state changes, new states, or transition modifications here -->
