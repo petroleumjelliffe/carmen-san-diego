@@ -288,7 +288,9 @@ export function Game({ gameData }) {
   // Complete investigation - reveal clue
   const completeInvestigation = useCallback(() => {
     const pending = pendingInvestigationRef.current;
-    if (!pending) return;
+    if (!pending) {
+      throw new Error('[BUG] completeInvestigation called but pendingInvestigationRef is null - was it cleared prematurely?');
+    }
 
     const { spot, clue } = pending;
     pendingInvestigationRef.current = null;
@@ -354,9 +356,8 @@ export function Game({ gameData }) {
           completeAction();
         },
       });
-
-      // Clear pending - action is now queued
-      pendingInvestigationRef.current = null;
+      // Note: Don't clear pendingInvestigationRef here - completeInvestigation needs it
+      // and will clear it when done
     }
   }, [xstateInvestigating, queueAction, completeInvestigation, completeAction]);
 
@@ -421,7 +422,9 @@ export function Game({ gameData }) {
   // Complete rogue investigation
   const completeRogueInvestigation = useCallback(() => {
     const pending = pendingInvestigationRef.current;
-    if (!pending) return;
+    if (!pending) {
+      throw new Error('[BUG] completeRogueInvestigation called but pendingInvestigationRef is null - was it cleared prematurely?');
+    }
 
     const { rogueAction, locationClue, suspectClue } = pending;
     pendingInvestigationRef.current = null;
